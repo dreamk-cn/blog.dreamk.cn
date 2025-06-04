@@ -1,3 +1,4 @@
+'use client'
 import Image from "next/image";
 
 export default function Home() {
@@ -35,7 +36,7 @@ export default function Home() {
             <Image
               className="dark:invert"
               src="/vercel.svg"
-              alt="Vercel logomark"
+              alt="Vercel logo mark"
               width={20}
               height={20}
             />
