@@ -1,5 +1,6 @@
 'use client'
 import Image from "next/image";
+import { ThemeSwitcher } from "./components/ThemeSwitcher";
 
 export default function Home() {
   return (
@@ -25,6 +26,8 @@ export default function Home() {
             Save and see your changes instantly.
           </li>
         </ol>
+
+        <ThemeSwitcher />
 
         <div className="flex gap-4 items-center flex-col sm:flex-row">
           <a
