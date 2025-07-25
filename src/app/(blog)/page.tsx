@@ -4,7 +4,7 @@ export default function Home() {
       Home Page
       {
         Array.from({ length: 20 }).map((_, index) => {
-          return <div>
+          return <div key={index}>
             {index + 1} Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut repellat fugit recusandae ab, corporis quis, adipisci maiores quo, ea dolores sint mollitia debitis illum unde rerum esse labore minus. Recusandae?
           </div>
         })
