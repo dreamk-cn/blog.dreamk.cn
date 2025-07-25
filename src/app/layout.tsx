@@ -30,7 +30,7 @@ export default function RootLayout({
         <meta content="width=device-width, initial-scale=1" name="viewport" />
       </Head>
       <body
-        className={`${notoSansSc.variable} ${geistMono.variable} antialiased`}
+        className={`${notoSansSc.variable} ${geistMono.variable} antialiased duration-200`}
       >
         <AppProviders>
           { children }

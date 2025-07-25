@@ -1,7 +1,7 @@
 'use client'
 
+import { useMounted } from "@/hooks/useMounted";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 
 function SunIcon() {
   return (
@@ -19,22 +19,20 @@ function MoonIcon() {
   )
 }
 
-export function ThemeSwitcher() {
-  const [mounted, setMounted] = useState(false)
-  const { theme, setTheme } = useTheme()
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+export function ThemeSwitcher({ className = ''}) {
+  const mounted = useMounted()
+  const { theme, setTheme, systemTheme } = useTheme()
+  
+  const curTheme = theme === 'system' ? systemTheme : theme
 
   if (!mounted) return null
 
   return (
     <div
-      className="cursor-pointer"
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      className={`cursor-pointer select-none ${className}`}
+      onClick={() => setTheme(curTheme === 'dark' ? 'light' : 'dark')}
     >
-      { theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+      { curTheme === 'dark' ? <SunIcon /> : <MoonIcon />}
     </div>
   )
 }
