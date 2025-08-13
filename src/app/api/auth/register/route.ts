@@ -68,7 +68,7 @@ export async function POST(request: Request) {
       { message: "注册成功" },
       { status: 201 }
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

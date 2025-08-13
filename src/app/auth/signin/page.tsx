@@ -24,7 +24,7 @@ const renderLoginButtons = (
 
 export default function SignIn() {
   const [providers, setProviders] = useState<Providers | null>(null);
-  const [showLogin, toggleShowLogin] = useToggle(true)
+  const [showLogin] = useToggle(true)
 
   useEffect(() => {
     async function fetchProviders() {

@@ -68,7 +68,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               // 如果已经是JSON格式，直接抛出
               JSON.parse(error.message);
               throw error;
-            } catch (e) {
+            } catch {
               // 如果不是JSON格式，包装成结构化错误
               throw new Error(JSON.stringify({
                 errors: [{ 
@@ -116,10 +116,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (session.user?.name) session.user.name = token.name;
       return session;
     },
-    async jwt({ token, user }) {
-      let newUser = { ...user } as any;
-      if (newUser.first_name && newUser.last_name)
-        token.name = `${newUser.first_name} ${newUser.last_name}`;
+    async jwt({ token }) {
       return token;
     },
   },

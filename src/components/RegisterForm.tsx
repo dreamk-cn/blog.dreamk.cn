@@ -80,7 +80,7 @@ export default function RegisterForm() {
           // 解析结构化错误
           const errorData = JSON.parse(signInResult.error);
           setSubmitError(errorData.errors[0].message);
-        } catch (e) {
+        } catch {
           // 如果不是结构化错误，使用通用消息
           setSubmitError("无效的邮箱或密码");
         }
