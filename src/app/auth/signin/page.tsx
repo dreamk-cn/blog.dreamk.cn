@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { getProviders } from "next-auth/react";
 
@@ -40,9 +40,11 @@ export default function SignIn() {
       <h1 className="font-bold text-3xl">
         { showLogin ? '登 录' : '注 册' }
       </h1>
-      {
+      <Suspense>
+        {
         showLogin ? <LoginForm /> : <RegisterForm />
-      }
+        }
+      </Suspense>
       <Divider message="Other Providers" />
       <div className="flex flex-col items-center gap-y-4">
         {renderLoginButtons(providers)}
