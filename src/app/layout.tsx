@@ -1,6 +1,6 @@
+import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { Geist_Mono, Noto_Sans_SC } from "next/font/google";
-import "./globals.css";
 import { AppProviders } from "./providers";
 import Head from "next/head";
 
@@ -25,14 +25,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="zh" suppressHydrationWarning>
+    <html suppressHydrationWarning lang="zh">
       <Head>
         <meta content="width=device-width, initial-scale=1" name="viewport" />
       </Head>
       <body
         className={`${notoSansSc.variable} ${geistMono.variable} antialiased duration-200`}
       >
-        <AppProviders>
+        <AppProviders themeProps={{attribute: 'class', defaultTheme: 'dark'}}>
           { children }
         </AppProviders>
       </body>

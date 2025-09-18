@@ -1,13 +1,31 @@
-import { SessionProvider } from "next-auth/react";
-import {ThemeProvider} from "next-themes";
-import React from "react";
+'use client'
 
-export async function AppProviders({ children }: { children: React.ReactNode}) {
+import type { ThemeProviderProps } from "next-themes";
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { SessionProvider } from "next-auth/react";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { HeroUIProvider, ToastProvider } from "@heroui/react";
+
+
+export interface ProvidersProps {
+  children: React.ReactNode;
+  themeProps?: ThemeProviderProps;
+}
+
+
+export function AppProviders({ children, themeProps }: ProvidersProps) {
+  const router = useRouter()
+
   return (
-    <ThemeProvider defaultTheme="system" enableSystem={true}>
-      <SessionProvider>
-        {children}
-      </SessionProvider>
-    </ThemeProvider>
+    <SessionProvider>
+      <HeroUIProvider navigate={router.push}>
+        <NextThemesProvider {...themeProps}>
+          <ToastProvider />
+          {children}
+        </NextThemesProvider>
+      </HeroUIProvider>
+    </SessionProvider>
   )
 }

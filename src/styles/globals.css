@@ -1,5 +1,6 @@
 @import "tailwindcss";
-@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@config "../../tailwind.config.ts";
 
 :root {
   box-sizing: border-box;
@@ -7,7 +8,7 @@
   --foreground: #171717;
 }
 
-[data-theme="dark"] {
+.dark {
   --background: #171717;
   --foreground: #cccccc;
 }
@@ -45,4 +46,10 @@ body {
 ::-webkit-selection {
   background: var(--color-blue-100);
   color: var(--color-blue-500);
+}
+
+@keyframes float-cloud {
+  0% { background-position: 100% 10%; }
+  50% { background-position: 0 5%; }
+  100% { background-position: 100% 10%; }
 }
