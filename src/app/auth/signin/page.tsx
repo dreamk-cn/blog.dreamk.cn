@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 import { getProviders } from "next-auth/react";
 import { Divider, Tab, Tabs } from '@heroui/react'
@@ -40,10 +40,14 @@ export default function SignIn() {
         onSelectionChange={(key) => setSelected(key)}
       >
         <Tab key="login" title="登录">
-          <LoginForm />
+          <Suspense>
+            <LoginForm />
+          </Suspense>
         </Tab>
         <Tab key="register" title="注册" disabled={true}>
-          <RegisterForm />
+          <Suspense>
+            <RegisterForm />
+          </Suspense>
         </Tab>
       </Tabs>
       <Divider content="Or" className="my-4" />
