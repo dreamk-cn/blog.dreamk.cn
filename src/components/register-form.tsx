@@ -1,6 +1,5 @@
 "use client";
 
-import CryptoJS from 'crypto-js';
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { signIn } from "next-auth/react";
@@ -71,7 +70,7 @@ export default function RegisterForm() {
       // 注册成功后尝试登录
       const signInResult = await signIn("credentials", {
         email: data.email,
-        password: CryptoJS.MD5(data.password).toString(),
+        password: data.password,
         redirect: false,
       });
 

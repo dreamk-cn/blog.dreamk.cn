@@ -3,6 +3,7 @@
 import Image from "next/image";
 
 import { signIn } from "next-auth/react";
+import { Button } from "@heroui/react";
 
 type ClientSafeProvider = {
   id: string;
@@ -25,14 +26,16 @@ const Icon = ({ provider }: { provider: string }) => {
     imagePath = '/images/icons/github.svg'
   }
 
-  return (
-    <Image
-      src={imagePath}
-      width="20"
-      height="20"
-      alt="Google"
-    />
-  );
+  if (imagePath) {
+    return (
+      <Image
+        src={imagePath}
+        width="20"
+        height="20"
+        alt="Google"
+      />
+    );
+  }
 };
 export default function LoginButton({
   auth,
@@ -40,11 +43,7 @@ export default function LoginButton({
   auth: ClientSafeProvider | null;
 }) {
   return (
-    <button
-      type="button"
-      className="cursor-pointer border shadow-1 rounded-md py-1.5 px-4 text-sm font-semibold shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 hover:shadow-lg hover:scale-102 transition duration-150"
-      onClick={() => signIn(auth?.id as string)}
-    >
+    <Button color="default" onPress={() => signIn(auth?.id as string)}>
       {auth ? (
         <div className="flex items-center gap-2">
           <Icon provider={auth.name as string} />
@@ -53,6 +52,6 @@ export default function LoginButton({
       ) : (
         "登录"
       )}
-    </button>
+    </Button>
   );
 }
