@@ -1,17 +1,10 @@
 "use client";
 
-import { EmailRegex, isStrongPassword } from "@/utils/verify";
+import { isStrongPassword } from "@/utils/verify";
 import { Alert, Button, Form, Input } from "@heroui/react";
 import { signIn } from "next-auth/react";
-import Image from "next/image";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { useForm } from "react-hook-form";
-
-type LoginFormProps = {
-  email: string;
-  password: string;
-};
 
 type FormError = {
   email?: string;
@@ -20,7 +13,6 @@ type FormError = {
 
 export default function LoginForm() {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const [formError, setFormError] = useState<{ email?: string, password?: string }>({});
   const [submitError, setSubmitError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -46,8 +38,6 @@ export default function LoginForm() {
     if (passwordError) {
       newFormErr.password = passwordError;
     }
-
-    setFormError(newFormErr)
 
     try {
       const result = await signIn("dreamk-credentials", {
