@@ -14,7 +14,7 @@ export const siteConfig = {
     },
     {
       label: "博客",
-      href: "/post",
+      href: "/posts",
     },
     {
       label: "关于",
