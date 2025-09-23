@@ -1,19 +1,10 @@
 import "@/styles/globals.css";
 import type { Metadata } from "next";
-import { Geist_Mono, Noto_Sans_SC } from "next/font/google";
 import { AppProviders } from "./providers";
 import Head from "next/head";
 import { siteConfig } from "@/config/site";
+import { geistMono, notoSansSc } from "@/config/fonts";
 
-const geistMono = Geist_Mono({
-  variable: "--font-en",
-  subsets: ["latin"],
-});
-
-const notoSansSc = Noto_Sans_SC({
-  variable: "--font-cn",
-  subsets: ["latin"],
-})
 
 export const metadata: Metadata = {
   title: {
