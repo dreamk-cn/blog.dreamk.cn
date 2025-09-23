@@ -2,6 +2,7 @@ export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
   name: "Dreamk",
+  avatar: "/avatar.jpg",
   description: "Dreamk's Blog",
   navItems: [
     {
