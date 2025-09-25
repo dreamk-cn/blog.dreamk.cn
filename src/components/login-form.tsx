@@ -6,22 +6,18 @@ import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 
-type FormError = {
-  email?: string;
-  password?: string;
-}
-
 export default function LoginForm() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [submitError, setSubmitError] = useState('');
+  const [pwdError, setPwdError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
 
   const getPasswordError = (value: string) => {
-    if (!isStrongPassword(value)) {
-      return '密码必须包含大小写字母、数字,长度至少为8位'
+    if (value === '') {
+      return '请输入密码'
     }
     return '';
   };
@@ -31,13 +27,7 @@ export default function LoginForm() {
     e.preventDefault();
     setSubmitError('');
     setLoading(true)
-
-    const newFormErr: FormError = {};
-
-    const passwordError = getPasswordError(formData.password)
-    if (passwordError) {
-      newFormErr.password = passwordError;
-    }
+    setPwdError(getPasswordError(formData.password))
 
     try {
       const result = await signIn("dreamk-credentials", {
@@ -88,8 +78,7 @@ export default function LoginForm() {
         />
         <Input
           isRequired
-          errorMessage={getPasswordError(formData.password)}
-          isInvalid={getPasswordError(formData.password) !== ''}
+          errorMessage={pwdError}
           label="密码"
           labelPlacement="outside"
           name="password"
@@ -97,6 +86,7 @@ export default function LoginForm() {
           type="password"
           value={formData.password}
           onValueChange={(value) => setFormData({ ...formData, password: value })}
+          onBlur={() => setPwdError(getPasswordError(formData.password))}
         />
         <div className="flex gap-2 w-full">
           <Button className="flex-1" color="primary" type="submit" disabled={loading} isLoading={loading}>
