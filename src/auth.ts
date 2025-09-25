@@ -33,6 +33,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               email: true,
               image: true,
               password: true,
+              role: true
             }
           })
 
@@ -55,12 +56,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               }]
             }));
           }
-
           return {
             id: user.id,
             email: user.email,
             name: user.name,
             image: user.image,
+            role: user.role
           }
         } catch (error) {
           if (error instanceof Error) {
@@ -99,30 +100,44 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       if (Object.keys(userDetail).length === 0) {
         return false;
       }
-      // set admin role when the admin email is found
-      const adminEmail = process.env.ADMIN_EMAIL
-      if (adminEmail && userDetail.user.email === adminEmail) {
-        await prisma.user.update({
-          where: { id: userDetail.user.id },
-          data: { role: 'ADMIN' }
-        })
-      }
       return true;
     },
     async redirect({ baseUrl }) {
       return `${baseUrl}`;
     },
     async session({ session, token }) {
-      if (session.user?.name) session.user.name = token.name;
+      // 将 token 中的 role 赋值给 session.user
+      if (token?.role && session.user) {
+        session.user.role = token.role;
+      }
+      // 您之前存在的 name 处理逻辑可以保留
+      if (session.user?.name) {
+        session.user.name = token.name;
+      }
       return session;
     },
-    async jwt({ token }) {
+    async jwt({ token, user }) {
+      if (user) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { role: true }
+        })
+        token.role = dbUser?.role || 'USER'
+      }
       return token;
     },
   },
   events: {
     createUser: async ({ user }) => {
       console.log(`New user created: ${user.email}`)
+      // set admin role when the admin email is found
+      const adminEmail = process.env.ADMIN_EMAIL
+      if (adminEmail && user.email === adminEmail) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { role: 'ADMIN' }
+        })
+      }
     }
   }
 })
