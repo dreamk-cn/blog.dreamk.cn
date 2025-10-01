@@ -4,6 +4,7 @@ import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/libs/prisma'
 import bcrypt from "bcryptjs";
 import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -88,7 +89,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         }
       }
     }),
-    GitHub({})
+    GitHub({}),
+    Google({})
   ],
   pages: {
     signIn: '/auth/signin',
@@ -106,11 +108,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       return `${baseUrl}`;
     },
     async session({ session, token }) {
-      // 将 token 中的 role 赋值给 session.user
       if (token?.role && session.user) {
         session.user.role = token.role;
       }
-      // 您之前存在的 name 处理逻辑可以保留
       if (session.user?.name) {
         session.user.name = token.name;
       }
@@ -129,8 +129,6 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   },
   events: {
     createUser: async ({ user }) => {
-      console.log(`New user created: ${user.email}`)
-      // set admin role when the admin email is found
       const adminEmail = process.env.ADMIN_EMAIL
       if (adminEmail && user.email === adminEmail) {
         await prisma.user.update({
