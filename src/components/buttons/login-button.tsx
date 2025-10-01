@@ -4,6 +4,7 @@ import Image from "next/image";
 
 import { signIn } from "next-auth/react";
 import { Button } from "@heroui/react";
+import { GithubIcon, GoogleIcon, QuestionIcon } from "../icons";
 
 type ClientSafeProvider = {
   id: string;
@@ -14,27 +15,12 @@ type ClientSafeProvider = {
 }
 
 const Icon = ({ provider }: { provider: string }) => {
-  let imagePath = "";
-
-  if (provider === "Google") {
-    imagePath = "/images/icons/google.svg";
-  } else if (provider === "Discord") {
-    imagePath = "/images/icons/discord.svg";
-  } else if (provider === "Auth0") {
-    imagePath = "/images/icons/auth0.svg";
-  } else if (provider === 'GitHub') {
-    imagePath = '/images/icons/github.svg'
-  }
-
-  if (imagePath) {
-    return (
-      <Image
-        src={imagePath}
-        width="20"
-        height="20"
-        alt="Google"
-      />
-    );
+  if (provider === 'GitHub') {
+    return <GithubIcon />
+  } else if (provider === 'Google') {
+    return <GoogleIcon />
+  } else {
+    return <QuestionIcon />
   }
 };
 export default function LoginButton({

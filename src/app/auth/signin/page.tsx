@@ -4,9 +4,9 @@ import { Suspense, useEffect, useState } from "react";
 
 import { getProviders } from "next-auth/react";
 import { Divider, Tab, Tabs } from '@heroui/react'
-import LoginForm from "@/components/login-form";
+import LoginForm from "@/components/auth/login-form";
 import LoginButton from '@/components/buttons/login-button';
-import RegisterForm from "@/components/register-form";
+import RegisterForm from "@/components/auth/register-form";
 
 type Providers = Awaited<ReturnType<typeof getProviders>>
 

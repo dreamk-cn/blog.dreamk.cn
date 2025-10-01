@@ -1,6 +1,5 @@
 "use client";
 
-import { isStrongPassword } from "@/utils/verify";
 import { Alert, Button, Form, Input } from "@heroui/react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from 'next/navigation';
