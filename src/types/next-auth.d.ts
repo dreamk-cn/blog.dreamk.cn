@@ -1,4 +1,4 @@
-import { $Enums, Prisma } from '@prisma/client'
+import { $Enums } from '@prisma/client'
 import type { DefaultSession, DefaultUser } from 'next-auth'
 import { DefaultJWT } from 'next-auth/jwt'
 
