@@ -5,7 +5,7 @@ import { SearchPageSchema } from "./page";
 
 type PostStatus = $Enums.PostStatus;
 
-/** 文章详情查询参数 */
+// 文章详情查询参数（支持id或slug）
 export const PostDetailSchema = z.object({
   id: zValue(z.string().optional()),
   slug: zValue(z.string().optional()),
@@ -21,14 +21,14 @@ export const PostDetailSchema = z.object({
 })
 
 
-/** 文章列表查询参数 */
+// 文章列表查询参数（支持分页、搜索、排序）
 export const PostListSchema = SearchPageSchema.extend({
   sortBy: zValue(z.enum(['createdAt', 'updatedAt', 'title', 'content'], { error: 'sortBy字段错误'}).default('createdAt')),
   status: zValue(z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('PUBLISHED'))
 })
 
 
-/** 文章创建参数 */
+// 文章创建参数（支持草稿、已发布、已归档状态）
 export const PostCreateSchema = z.object({
   title: zValue(z.string().min(1).max(255)),
   slug: zValue(z.string().min(1).max(255)),
@@ -55,8 +55,12 @@ export const PostCreateSchema = z.object({
   ).default([]))
 })
 
+// 文章更新参数（支持草稿、已发布、已归档状态）
+export const PostUpdateSchema = PostCreateSchema.extend({
+  id: zValue(z.string().min(1))
+})
 
-/** 文章删除参数 */
+// 文章删除参数（支持批量删除）
 export const PostDeleteSchema = z.object({
   ids: zValue(z.array(z.string()).default([])),
 })
