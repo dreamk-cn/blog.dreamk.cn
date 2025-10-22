@@ -5,7 +5,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="h-[100vh] flex flex-col relative">
       <Navbar />
-      <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex-1">
         { children }
       </div>
       <Footer />

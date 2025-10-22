@@ -20,12 +20,65 @@ import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switcher";
 import { SearchIcon, LogoIcon } from '@/components/icons';
 import { signOut, useSession } from "next-auth/react";
-import { Divider } from "@heroui/react";
+import { Avatar, Divider, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
+
+export const NavBarUser = () => {
+  const { data: session } = useSession()
+  
+  return (
+    <Dropdown>
+      <DropdownTrigger>
+        <div className="flex gap-2 items-center justify-center">
+          <Avatar src={session?.user?.image || undefined} color="primary" />
+        </div>
+      </DropdownTrigger>
+      <DropdownMenu disabledKeys={["profile", ...(session?.user?.role === 'ADMIN' ? [] : ["dashboard"])]}>
+        <DropdownItem textValue="profile" key="profile">
+          <div className="flex flex-col items-center justify-center gap-2">
+            <div className="flex justify-between">
+              <p>用户名：</p>
+              <p>{session?.user?.name}</p>
+            </div>
+            <p>{session?.user?.email}</p>
+          </div>
+        </DropdownItem>
+        <DropdownItem
+          textValue="dashboard"
+          key="dashboard"
+          className={session?.user?.role === 'ADMIN' ? '' : 'hidden'}
+        >
+          <Link
+            color="primary"
+            href="/admin/dashboard"
+            size="lg"
+            className="flex gap-2"
+          >
+            控制台
+          </Link>
+        </DropdownItem>
+        <DropdownItem textValue="signout" key="signout">
+          <Link
+            color="danger"
+            onPress={() => signOut()}
+            href="void(0)"
+            size="lg"
+            className="flex gap-2"
+          >
+            退出登录
+          </Link>
+        </DropdownItem>
+      </DropdownMenu>
+    </Dropdown>
+  )
+}
 
 export const Navbar = () => {
   const { data: session } = useSession()
   const pathname = usePathname()
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   const searchInput = (
     <Input
       aria-label="Search"
@@ -34,7 +87,7 @@ export const Navbar = () => {
         input: "text-sm",
       }}
       endContent={
-        <Kbd className="hidden lg:inline-block" keys={["command"]}>
+        <Kbd className="hidden lg:inline-block" keys={['shift']}>
           K
         </Kbd>
       }
@@ -47,14 +100,26 @@ export const Navbar = () => {
     />
   );
 
+  const authButton = (
+    session ? 
+    <NavBarUser /> :
+    <Link
+      color="primary"
+      href="/auth/signin"
+      size="lg"
+    >
+      登录
+    </Link>
+  )
+
   return (
-    <HeroUINavbar className="shadow" maxWidth="xl" position="sticky">
+    <HeroUINavbar className="shadow" maxWidth="xl" position="sticky" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
       {/* Logo */}
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarBrand as="li" className="gap-3 max-w-fit">
           <NextLink className="flex justify-start items-center gap-1" href="/">
             <LogoIcon className="dark:invert-90" height={34} width={34} />
-            <p className="font-bold text-inherit text-xl">Dreamk</p>
+            <p className="font-bold text-inherit text-xl">{ siteConfig.name}</p>
           </NextLink>
         </NavbarBrand>
       </NavbarContent>
@@ -84,14 +149,14 @@ export const Navbar = () => {
           ))}
         </ul>
         <NavbarItem className="hidden lg:flex text-primary cursor-pointer">
-          去登录
+          { authButton }
         </NavbarItem>
       </NavbarContent>
       
       {/* 手机端菜单toggle */}
       <NavbarContent className="lg:hidden basis-1 pl-4" justify="end">
         <ThemeSwitch />
-        <NavbarMenuToggle />
+        <NavbarMenuToggle  />
       </NavbarContent>
 
       {/* 手机端菜单 */}
@@ -104,6 +169,7 @@ export const Navbar = () => {
                 color={ item.href === pathname ? "primary" :  "foreground" }
                 href={item.href}
                 size="lg"
+                onPress={() => setIsMenuOpen(false)}
               >
                 {item.label}
               </Link>
@@ -111,24 +177,7 @@ export const Navbar = () => {
           ))}
           <Divider />
           <NavbarMenuItem>
-            {
-              session ? 
-                <Link
-                  color="danger"
-                  onPress={() => signOut()}
-                  href="void(0)"
-                  size="lg"
-                >
-                  退出登录
-                </Link> :
-                <Link
-                  color="primary"
-                  href="/auth/signin"
-                  size="lg"
-                >
-                  登录
-                </Link>
-            }
+            {authButton}
           </NavbarMenuItem>
         </div>
       </NavbarMenu>
