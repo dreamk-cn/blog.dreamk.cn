@@ -44,26 +44,28 @@ export const SidebarWrapper = () => {
                 isActive={pathname === "/post"}
                 title="文章管理"
                 icon={<AccountsIcon />}
-                href="/admin/posts"
+                href="/admin/post/list"
               />
               <SidebarItem
-                isActive={pathname === "/payments"}
+                isActive={pathname === "/admin/comment/list"}
                 title="留言管理"
                 icon={<PaymentsIcon />}
-                href="/admin/comment"
+                href="/admin/comment/list"
               />
             </SidebarMenu>
 
             <SidebarMenu title="分类和标签-管理">
               <SidebarItem
-                isActive={pathname === "/tag"}
-                title="标签"
+                isActive={pathname === "/admin/tag/list"}
+                title="标签管理"
                 icon={<DevIcon />}
+                href="/admin/tag/list"
               />
               <SidebarItem
-                isActive={pathname === "/category"}
-                title="分类"
+                isActive={pathname === "/admin/category/list"}
+                title="分类管理"
                 icon={<ViewIcon />}
+                href="/admin/category/list"
               />
             </SidebarMenu>
 
