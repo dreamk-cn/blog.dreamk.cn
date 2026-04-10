@@ -90,7 +90,6 @@ export default function Post() {
         article={article}
         categories={categories}
         tags={tags}
-        isLoading={loading}
       />
     </div>
   )
