@@ -1,8 +1,9 @@
-import { auth } from '@/auth';
+import { fail, internalError, ok, zodFail } from '@/libs/api-response';
 import { prisma } from '@/libs/prisma';
+import { requireAdmin } from '@/libs/route-auth';
 import { TagCreateSchema, TagUpdateSchema, TagDeleteSchema } from '@/schemas/tag';
 import z from 'zod';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { Prisma } from '@prisma/client';
 
 // 获取标签列表（支持keyword搜索）
@@ -25,31 +26,18 @@ export async function GET(request: NextRequest) {
 
     const tags = await prisma.tag.findMany(query);
 
-    return NextResponse.json({
-      code: 200,
-      message: '获取标签列表成功',
-      data: tags,
-    });
+    return ok(tags, '获取标签列表成功');
   } catch (error) {
     console.error('获取标签列表失败:', error);
-    return NextResponse.json({
-      code: 500,
-      message: '获取标签列表失败',
-      data: [],
-    });
+    return internalError('获取标签列表失败');
   }
 }
 
 // 创建标签（仅管理员）
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ code: 401, message: '请登录后在操作' });
-    }
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ code: 403, message: '您没有操作权限' });
-    }
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
 
     const json = await request.json();
     const parsed = TagCreateSchema.parse(json ?? {});
@@ -60,31 +48,26 @@ export async function POST(request: NextRequest) {
       where: { OR: [{ name }, { slug: normalizedSlug }] },
     });
     if (exists) {
-      return NextResponse.json({ code: 400, message: '标签已存在' });
+      return fail(400, '标签已存在');
     }
 
     const tag = await prisma.tag.create({ data: { name, slug: normalizedSlug } });
 
-    return NextResponse.json({ code: 200, message: '创建标签成功', data: tag });
+    return ok(tag, '创建标签成功');
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ code: 400, message: err.issues[0]?.message || '参数错误' });
+      return zodFail(err.issues[0]?.message || '参数错误');
     }
     console.error('创建标签失败:', err);
-    return NextResponse.json({ code: 500, message: '创建标签失败' });
+    return internalError('创建标签失败');
   }
 }
 
 // 更新标签（仅管理员）
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ code: 401, message: '请登录后在操作' });
-    }
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ code: 403, message: '您没有操作权限' });
-    }
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
 
     const json = await request.json();
     const parsed = TagUpdateSchema.parse(json ?? {});
@@ -98,7 +81,7 @@ export async function PUT(request: NextRequest) {
       },
     });
     if (exists) {
-      return NextResponse.json({ code: 400, message: '标签名或Slug已被使用' });
+      return fail(400, '标签名或Slug已被使用');
     }
 
     const updated = await prisma.tag.update({
@@ -106,26 +89,21 @@ export async function PUT(request: NextRequest) {
       data: { name, slug: normalizedSlug },
     });
 
-    return NextResponse.json({ code: 200, message: '更新标签成功', data: updated });
+    return ok(updated, '更新标签成功');
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ code: 400, message: err.issues[0]?.message || '参数错误' });
+      return zodFail(err.issues[0]?.message || '参数错误');
     }
     console.error('更新标签失败:', err);
-    return NextResponse.json({ code: 500, message: '更新标签失败' });
+    return internalError('更新标签失败');
   }
 }
 
 // 删除标签（仅管理员，查询参数传入id）
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ code: 401, message: '请登录后在操作' });
-    }
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ code: 403, message: '您没有操作权限' });
-    }
+    const admin = await requireAdmin();
+    if (!admin.ok) return admin.response;
 
     const { searchParams } = request.nextUrl;
     const id = searchParams.get('id');
@@ -133,16 +111,16 @@ export async function DELETE(request: NextRequest) {
 
     const exist = await prisma.tag.findUnique({ where: { id: id! } });
     if (!exist) {
-      return NextResponse.json({ code: 400, message: '标签不存在' });
+      return fail(400, '标签不存在');
     }
 
     await prisma.tag.delete({ where: { id: id! } });
-    return NextResponse.json({ code: 200, message: '删除标签成功' });
+    return ok(null, '删除标签成功');
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ code: 400, message: err.issues[0]?.message || '参数错误' });
+      return zodFail(err.issues[0]?.message || '参数错误');
     }
     console.error('删除标签失败:', err);
-    return NextResponse.json({ code: 500, message: '删除标签失败' });
+    return internalError('删除标签失败');
   }
 }

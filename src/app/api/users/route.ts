@@ -1,20 +1,16 @@
-import { auth } from '@/auth'
+import { fail, internalError, ok, zodFail } from '@/libs/api-response'
 import { prisma } from '@/libs/prisma'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { Prisma } from '@prisma/client'
 import z from 'zod'
 import { UserUpdateStatusSchema, UserListQuerySchema } from '@/schemas/user'
+import { requireAdmin } from '@/libs/route-auth'
 
 // 获取用户列表（支持keyword、status筛选）
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ code: 401, message: '请登录后在操作' })
-    }
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ code: 403, message: '您没有操作权限' })
-    }
+    const admin = await requireAdmin()
+    if (!admin.ok) return admin.response
 
     const { searchParams } = request.nextUrl
     const parsed = UserListQuerySchema.parse({
@@ -47,42 +43,34 @@ export async function GET(request: NextRequest) {
     }
 
     const users = await prisma.user.findMany(query)
-    return NextResponse.json({ code: 200, message: '获取用户列表成功', data: users })
+    return ok(users, '获取用户列表成功')
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({
-        code: 400,
-        message: error.issues[0]?.message || '参数错误'
-      })
+      return zodFail(error.issues[0]?.message || '参数错误')
     }
     console.error('获取用户列表失败:', error)
-    return NextResponse.json({ code: 500, message: '获取用户列表失败', data: [] })
+    return internalError('获取用户列表失败')
   }
 }
 
 // 更新用户状态（封禁/解禁，仅管理员）
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth()
-    if (!session?.user?.id) {
-      return NextResponse.json({ code: 401, message: '请登录后在操作' })
-    }
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ code: 403, message: '您没有操作权限' })
-    }
+    const admin = await requireAdmin()
+    if (!admin.ok) return admin.response
 
     const json = await request.json()
     const parsed = UserUpdateStatusSchema.parse(json ?? {})
     const { id, status } = parsed
 
     // 禁止管理员封禁自己，避免锁死
-    if (id === session.user.id) {
-      return NextResponse.json({ code: 400, message: '不能操作自己的状态' })
+    if (id === admin.session.user.id) {
+      return fail(400, '不能操作自己的状态')
     }
 
     const exist = await prisma.user.findUnique({ where: { id } })
     if (!exist) {
-      return NextResponse.json({ code: 400, message: '用户不存在' })
+      return fail(400, '用户不存在')
     }
 
     const updated = await prisma.user.update({
@@ -90,12 +78,12 @@ export async function PUT(request: NextRequest) {
       data: { status },
     })
 
-    return NextResponse.json({ code: 200, message: '更新用户状态成功', data: updated })
+    return ok(updated, '更新用户状态成功')
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({ code: 400, message: err.issues[0]?.message || '参数错误' })
+      return zodFail(err.issues[0]?.message || '参数错误')
     }
     console.error('更新用户状态失败:', err)
-    return NextResponse.json({ code: 500, message: '更新用户状态失败' })
+    return internalError('更新用户状态失败')
   }
 }

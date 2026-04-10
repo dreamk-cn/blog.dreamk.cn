@@ -1,8 +1,8 @@
 import { auth } from '@/auth';
-import { ResponseCode } from '@/config/reponse-code';
+import { internalError, ok, zodFail } from '@/libs/api-response';
 import { prisma } from '@/libs/prisma';
 import { PostListSchema } from '@/schemas/post';
-import { NextRequest, NextResponse} from 'next/server'
+import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
 // 获取文章列表（支持分页、搜索、排序）
@@ -48,30 +48,20 @@ export async function GET(request: NextRequest) {
       prisma.post.findMany(query),
       prisma.post.count({ where: query.where })
     ])
-    return NextResponse.json({
-      code: 200,
-      message: `获取文章列表成功`,
-      data: {
-        list: posts,
-        total: total,
-        totalPages: Math.ceil(total / pageSize),
-        pageNo: pageNo,
-        pageSize: pageSize,
-        sortBy: sortBy,
-        sortOrder: sortOrder,
-      }
-    })
+    return ok({
+      list: posts,
+      total: total,
+      totalPages: Math.ceil(total / pageSize),
+      pageNo: pageNo,
+      pageSize: pageSize,
+      sortBy: sortBy,
+      sortOrder: sortOrder,
+    }, '获取文章列表成功')
   } catch (err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({
-        code: ResponseCode.FAIL,
-        message: err.issues[0]
-      })
+      return zodFail(err.issues[0]?.message || '参数错误')
     }
     console.error('err', err)
-    return NextResponse.json({
-      code: ResponseCode.INTERNAL_SERVER_ERROR,
-      message: '服务器内部错误'
-    })
+    return internalError()
   }
 }

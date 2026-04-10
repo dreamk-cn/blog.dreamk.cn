@@ -1,10 +1,28 @@
 // /api/post
 import { auth } from "@/auth";
-import { ResponseCode, ResponseMap } from "@/config/reponse-code";
+import { ResponseCode } from "@/config/response-code";
+import { fail, internalError, ok, zodFail } from "@/libs/api-response";
 import { prisma } from "@/libs/prisma";
+import { requireAdmin } from "@/libs/route-auth";
 import { PostCreateSchema, PostDeleteSchema, PostDetailSchema, PostUpdateSchema } from "@/schemas/post";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 import z from "zod";
+
+function toTagConnectOrCreate(tags: Array<{ id?: string; name?: string; slug?: string }>): Prisma.TagCreateOrConnectWithoutPostsInput[] {
+  return tags.map((tag) => {
+    const normalizedSlug = (tag.slug || tag.name || "").toLowerCase().replace(/ /g, "-");
+    const tagName = tag.name || normalizedSlug || "untitled-tag";
+
+    return {
+      where: tag.id ? { id: tag.id } : { slug: normalizedSlug },
+      create: {
+        name: tagName,
+        slug: normalizedSlug || tagName,
+      },
+    };
+  });
+}
 
 
 // 获取文章详情（支持id或slug）
@@ -53,49 +71,25 @@ export async function GET(request: NextRequest) {
     const post = await prisma.post.findUnique(query);
 
     if (!post) {
-      return NextResponse.json({
-        code: 400,
-        message: '文章不存在'
-      })
+      return fail(ResponseCode.FAIL, "文章不存在")
     }
     
-    return NextResponse.json({
-      code: 200,
-      message: '获取文章成功',
-      data: post
-    });
+    return ok(post, "获取文章成功");
   } catch(err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({
-        code: 400,
-        message: err.issues[0]?.message || '参数错误'
-      })
+      return zodFail(err.issues[0]?.message || "参数错误")
     }
     console.error('获取文章失败:', err)
-    return NextResponse.json({
-      code: 500,
-      message: '服务器内部错误'
-    })
+    return internalError()
   }
 }
 
 // 创建文章（仅管理员）
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
-    console.warn('session', session)
-    if (!session?.user.id) {
-      return NextResponse.json({
-        code: ResponseCode.UNAUTHORIZED,
-        message: '请登录后在操作'
-      })
-    }
-    if (session?.user?.role !== 'ADMIN') {
-      return NextResponse.json({
-        code: ResponseCode.FORBIDDEN,
-        message: '您没有操作权限'
-      })
-    }
+    const admin = await requireAdmin()
+    if (!admin.ok) return admin.response
+    const userId = admin.session.user.id as string
 
     const json = await request.json()
 
@@ -111,61 +105,31 @@ export async function POST(request: NextRequest) {
         excerpt,
         featured,
         coverUrl,
-        userId: session.user.id,
-        categoryId,
+        user: { connect: { id: userId } },
+        ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
         ...(tags.length > 0 ? {
           tags: {
-            connectOrCreate: tags.map(tag => ({
-              where: {
-                id: tag.id || ''
-              },
-              create: {
-                name: tag.name!,
-                slug: (tag.slug || tag.name)!.toLowerCase().replace(/ /g, '-')
-              }
-            }))
+            connectOrCreate: toTagConnectOrCreate(tags)
           }
         } : {})
       },
     })
 
-    console.warn('newPost', newPost)
-
-    return NextResponse.json({
-      code: ResponseCode.SUCCESS,
-      data: newPost
-    })
+    return ok(newPost, "创建文章成功")
   } catch(err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({
-        code: ResponseCode.FAIL,
-        message: err.issues[0]
-      })
+      return zodFail(err.issues[0]?.message || "参数错误")
     }
     console.warn('err', err)
-    return NextResponse.json({
-      code: ResponseCode.INTERNAL_SERVER_ERROR,
-      message: '服务器内部错误'
-    })
+    return internalError()
   }
 }
 
 // 更新文章（仅管理员）
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth()
-    if (!session?.user.id) {
-      return NextResponse.json({
-        code: ResponseCode.UNAUTHORIZED,
-        message: '请登录后在操作'
-      })
-    }
-    if (session?.user?.role !== 'ADMIN') {
-      return NextResponse.json({
-        code: ResponseCode.FORBIDDEN,
-        message: '您没有操作权限'
-      })
-    }
+    const admin = await requireAdmin()
+    if (!admin.ok) return admin.response
 
     const json = await request.json()
     const parsed = PostUpdateSchema.parse(json ?? {})
@@ -178,10 +142,7 @@ export async function PUT(request: NextRequest) {
     })
 
     if (!existingPost) {
-      return NextResponse.json({
-        code: ResponseCode.FAIL,
-        message: '文章不存在'
-      })
+      return fail(ResponseCode.FAIL, "文章不存在")
     }
 
     // 更新文章
@@ -201,15 +162,7 @@ export async function PUT(request: NextRequest) {
           // 先断开所有已有标签关联
           disconnect: existingPost.tags.map(tag => ({ id: tag.id })),
           // 然后连接新的标签
-          connectOrCreate: tags.map(tag => ({
-            where: {
-              id: tag.id || ''
-            },
-            create: {
-              name: tag.name!,
-              slug: (tag.slug || tag.name)!.toLowerCase().replace(/ /g, '-')
-            }
-          }))
+          connectOrCreate: toTagConnectOrCreate(tags)
         }
       },
       include: {
@@ -218,35 +171,21 @@ export async function PUT(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({
-      code: ResponseCode.SUCCESS,
-      data: updatedPost
-    })
+    return ok(updatedPost, "更新文章成功")
   } catch(err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({
-        code: 400,
-        message: err.issues[0]?.message || '参数错误'
-      })
+      return zodFail(err.issues[0]?.message || "参数错误")
     }
     console.error('更新文章失败:', err)
-    return NextResponse.json({
-      code: 500,
-      message: '服务器内部错误'
-    })
+    return internalError()
   }
 }
 
 // 删除文章（仅管理员）
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth()
-    if (!session?.user.id) {
-      return NextResponse.json(ResponseMap[ResponseCode.UNAUTHORIZED])
-    }
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json(ResponseMap[ResponseCode.FORBIDDEN])
-    }
+    const admin = await requireAdmin()
+    if (!admin.ok) return admin.response
 
     const json = await request.json()
     const { ids } = PostDeleteSchema.parse(json ?? {})
@@ -259,18 +198,12 @@ export async function DELETE(request: NextRequest) {
       }
     })
 
-    return NextResponse.json({
-      code: ResponseCode.SUCCESS,
-      message: `删除${count}条文章`
-    })
+    return ok(null, `删除${count}条文章`)
   } catch(err) {
     if (err instanceof z.ZodError) {
-      return NextResponse.json({
-        code: 400,
-        message: err.issues[0]
-      })
+      return zodFail(err.issues[0]?.message || "参数错误")
     }
     console.error('err', err)
-    return NextResponse.json(ResponseMap[ResponseCode.INTERNAL_SERVER_ERROR])
+    return internalError()
   }
 }
