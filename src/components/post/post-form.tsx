@@ -1,8 +1,7 @@
 'use client';
 
-import { addToast, Button, Card, CardBody, CardHeader, Chip, Form, Input, Select, SelectItem, Switch, Textarea } from "@heroui/react";
+import { addToast, Button, Card, CardBody, CardHeader, Chip, Drawer, Form, Input, Select, SelectItem, Spinner, Switch, Textarea, useDisclosure } from "@heroui/react";
 import { Category, Post, PostStatus, Tag } from "@prisma/client";
-import { ValidationError } from "next/dist/compiled/amphtml-validator";
 import { useState } from "react";
 import { request } from '@/libs/request';
 import { useRouter } from 'next/navigation';
@@ -11,6 +10,8 @@ interface PostDetail extends Post {
   tags: Tag[],
   category: Category
 }
+
+type FormErrors = Partial<Record<'title' | 'slug' | 'content' | 'excerpt', string>>
 
 export function PostForm({
   article,
@@ -33,7 +34,7 @@ export function PostForm({
     excerpt: article?.excerpt || '',
     content: article?.content || '',
     status: article?.status || 'DRAFT',
-    category: article?.category,
+    categoryId: article?.categoryId || undefined,
     featured: article?.featured || false,
     tags: article?.tags || [],
     coverUrl: article?.coverUrl || ''
@@ -84,7 +85,7 @@ export function PostForm({
     }
   }
 
-  const [errors, setErrors] = useState<ValidationError>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   return (
     <Card className="w-full mx-auto" shadow="none">
@@ -124,8 +125,7 @@ export function PostForm({
             <Select
               label="文章分类"
               placeholder="选择文章分类"
-              defaultSelectedKeys={formData.category?.id ? [formData.category?.id] : []}
-              value={formData.category?.id}
+              selectedKeys={formData.categoryId ? [formData.categoryId] : []}
               onSelectionChange={(k) => setFormData(prev => ({ ...prev, categoryId: k.currentKey }))}
             >
               {categories.map(category => (
@@ -262,18 +262,18 @@ export function PostForm({
   // 表单提交处理
   async function handleSubmit() {
     // 简单验证
-    const validationErrors: ValidationError = {};
+    const validationErrors: FormErrors = {};
     if (!formData.title.trim()) {
-      validationErrors.title = { message: '标题不能为空' };
+      validationErrors.title = '标题不能为空';
     }
     if (!formData.slug.trim()) {
-      validationErrors.slug = { message: 'Slug不能为空' };
+      validationErrors.slug = 'Slug不能为空';
     }
     if (!formData.content.trim()) {
-      validationErrors.content = { message: '内容不能为空' };
+      validationErrors.content = '内容不能为空';
     }
     if (!formData.excerpt.trim()) {
-      validationErrors.excerpt = { message: '摘要不能为空' };
+      validationErrors.excerpt = '摘要不能为空';
     }
     
     if (Object.keys(validationErrors).length > 0) {
