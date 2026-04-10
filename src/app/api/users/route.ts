@@ -1,10 +1,9 @@
 import { fail, internalError, ok, zodFail } from '@/libs/api-response'
-import { prisma } from '@/libs/prisma'
 import { NextRequest } from 'next/server'
-import { Prisma } from '@prisma/client'
 import z from 'zod'
 import { UserUpdateStatusSchema, UserListQuerySchema } from '@/schemas/user'
 import { requireAdmin } from '@/libs/route-auth'
+import { listUsers, updateUserStatus } from '@/services/user-service'
 
 // 获取用户列表（支持keyword、status筛选）
 export async function GET(request: NextRequest) {
@@ -17,32 +16,7 @@ export async function GET(request: NextRequest) {
       keyword: searchParams.get('keyword') || undefined,
       status: searchParams.get('status') || undefined,
     })
-
-    const keyword = parsed.keyword ?? ''
-    const status = parsed.status
-
-    const query: Prisma.UserFindManyArgs = {
-      orderBy: { createdAt: 'desc' },
-      where: {},
-    }
-
-    if (keyword) {
-      query.where = {
-        ...query.where,
-        OR: [
-          { name: { contains: keyword, mode: 'insensitive' } },
-          { email: { contains: keyword, mode: 'insensitive' } },
-        ],
-      }
-    }
-    if (status) {
-      query.where = {
-        ...query.where,
-        status,
-      }
-    }
-
-    const users = await prisma.user.findMany(query)
+    const users = await listUsers(parsed)
     return ok(users, '获取用户列表成功')
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -68,17 +42,10 @@ export async function PUT(request: NextRequest) {
       return fail(400, '不能操作自己的状态')
     }
 
-    const exist = await prisma.user.findUnique({ where: { id } })
-    if (!exist) {
-      return fail(400, '用户不存在')
-    }
+    const result = await updateUserStatus({ id, status })
+    if (result.error) return fail(400, result.error)
 
-    const updated = await prisma.user.update({
-      where: { id },
-      data: { status },
-    })
-
-    return ok(updated, '更新用户状态成功')
+    return ok(result.data, '更新用户状态成功')
   } catch (err) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || '参数错误')

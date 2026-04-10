@@ -1,7 +1,7 @@
 import { auth } from '@/auth';
 import { internalError, ok, zodFail } from '@/libs/api-response';
-import { prisma } from '@/libs/prisma';
 import { PostListSchema } from '@/schemas/post';
+import { listPosts } from '@/services/post-service';
 import { NextRequest } from 'next/server'
 import { z } from 'zod'
 
@@ -21,33 +21,15 @@ export async function GET(request: NextRequest) {
     const session = await auth()
     const isAdmin = session?.user.role === 'ADMIN'
     const { pageNo, pageSize, keyword, sortBy, sortOrder, status } = parsedParams;
-    const query: Parameters<typeof prisma.post.findMany>[0] = {
-      include: {
-        category: true,
-        tags: true,
-      },
-      where: {
-        status: isAdmin ? status : 'PUBLISHED',
-      },
-      orderBy: { [sortBy]: sortOrder },
-      skip: (pageNo - 1) * pageSize,
-      take: pageSize,
-    };
-
-    if (keyword) {
-      query.where = {
-        ...query.where,
-        OR: [
-          { title: { contains: keyword, mode: 'insensitive' }},
-          { content: { contains: keyword, mode: 'insensitive' }}
-        ]
-      }
-    }
-
-    const [posts, total] = await Promise.all([
-      prisma.post.findMany(query),
-      prisma.post.count({ where: query.where })
-    ])
+    const { posts, total } = await listPosts({
+      pageNo,
+      pageSize,
+      keyword: keyword ?? undefined,
+      sortBy,
+      sortOrder,
+      status,
+      isAdmin,
+    });
     return ok({
       list: posts,
       total: total,

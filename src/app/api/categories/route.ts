@@ -1,30 +1,16 @@
 import { fail, internalError, ok, zodFail } from '@/libs/api-response';
-import { prisma } from '@/libs/prisma';
 import { requireAdmin } from '@/libs/route-auth';
 import { CategoryCreateSchema, CategoryUpdateSchema, CategoryDeleteSchema } from '@/schemas/category';
+import { createCategory, deleteCategory, listCategories, updateCategory } from '@/services/category-service';
 import z from 'zod';
 import { NextRequest } from 'next/server';
-import { Prisma } from '@prisma/client';
 
 // 获取分类列表（支持keyword搜索）
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     const keyword = searchParams.get('keyword') || '';
-
-    const query: Prisma.CategoryFindManyArgs = {
-      orderBy: { createdAt: 'desc' },
-    };
-    if (keyword) {
-      query.where = {
-        OR: [
-          { name: { contains: keyword, mode: 'insensitive' } },
-          { slug: { contains: keyword, mode: 'insensitive' } },
-        ],
-      };
-    }
-
-    const categories = await prisma.category.findMany(query);
+    const categories = await listCategories(keyword);
 
     return ok(categories, '获取分类列表成功');
   } catch (error) {
@@ -41,18 +27,9 @@ export async function POST(request: NextRequest) {
 
     const json = await request.json();
     const parsed = CategoryCreateSchema.parse(json ?? {});
-    const { name, slug } = parsed;
-    const normalizedSlug = (slug || name).toLowerCase().replace(/\s+/g, '-');
-
-    const exists = await prisma.category.findFirst({
-      where: { OR: [{ name }, { slug: normalizedSlug }] },
-    });
-    if (exists) {
-      return fail(400, '分类已存在');
-    }
-
-    const category = await prisma.category.create({ data: { name, slug: normalizedSlug } });
-    return ok(category, '创建分类成功');
+    const result = await createCategory(parsed);
+    if (result.error) return fail(400, result.error);
+    return ok(result.data, '创建分类成功');
   } catch (err) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || '参数错误');
@@ -70,25 +47,9 @@ export async function PUT(request: NextRequest) {
 
     const json = await request.json();
     const parsed = CategoryUpdateSchema.parse(json ?? {});
-    const { id, name, slug } = parsed;
-    const normalizedSlug = (slug || name).toLowerCase().replace(/\s+/g, '-');
-
-    const exists = await prisma.category.findFirst({
-      where: {
-        OR: [{ name }, { slug: normalizedSlug }],
-        NOT: { id },
-      },
-    });
-    if (exists) {
-      return fail(400, '分类名或Slug已被使用');
-    }
-
-    const updated = await prisma.category.update({
-      where: { id },
-      data: { name, slug: normalizedSlug },
-    });
-
-    return ok(updated, '更新分类成功');
+    const result = await updateCategory(parsed);
+    if (result.error) return fail(400, result.error);
+    return ok(result.data, '更新分类成功');
   } catch (err) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || '参数错误');
@@ -107,14 +68,9 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const id = searchParams.get('id');
     CategoryDeleteSchema.parse({ id });
-
-    const exist = await prisma.category.findUnique({ where: { id: id! } });
-    if (!exist) {
-      return fail(400, '分类不存在');
-    }
-
-    await prisma.category.delete({ where: { id: id! } });
-    return ok(null, '删除分类成功');
+    const result = await deleteCategory(id!);
+    if (result.error) return fail(400, result.error);
+    return ok(result.data, '删除分类成功');
   } catch (err) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || '参数错误');

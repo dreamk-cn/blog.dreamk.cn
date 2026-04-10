@@ -1,30 +1,16 @@
 import { fail, internalError, ok, zodFail } from '@/libs/api-response';
-import { prisma } from '@/libs/prisma';
 import { requireAdmin } from '@/libs/route-auth';
 import { TagCreateSchema, TagUpdateSchema, TagDeleteSchema } from '@/schemas/tag';
+import { createTag, deleteTag, listTags, updateTag } from '@/services/tag-service';
 import z from 'zod';
 import { NextRequest } from 'next/server';
-import { Prisma } from '@prisma/client';
 
 // 获取标签列表（支持keyword搜索）
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
     const keyword = searchParams.get('keyword') || '';
-
-    const query: Prisma.TagFindManyArgs = {
-      orderBy: { createdAt: 'desc' },
-    };
-    if (keyword) {
-      query.where = {
-        OR: [
-          { name: { contains: keyword, mode: 'insensitive' } },
-          { slug: { contains: keyword, mode: 'insensitive' } },
-        ],
-      };
-    }
-
-    const tags = await prisma.tag.findMany(query);
+    const tags = await listTags(keyword);
 
     return ok(tags, '获取标签列表成功');
   } catch (error) {
@@ -41,19 +27,9 @@ export async function POST(request: NextRequest) {
 
     const json = await request.json();
     const parsed = TagCreateSchema.parse(json ?? {});
-    const { name, slug } = parsed;
-    const normalizedSlug = (slug || name).toLowerCase().replace(/\s+/g, '-');
-
-    const exists = await prisma.tag.findFirst({
-      where: { OR: [{ name }, { slug: normalizedSlug }] },
-    });
-    if (exists) {
-      return fail(400, '标签已存在');
-    }
-
-    const tag = await prisma.tag.create({ data: { name, slug: normalizedSlug } });
-
-    return ok(tag, '创建标签成功');
+    const result = await createTag(parsed);
+    if (result.error) return fail(400, result.error);
+    return ok(result.data, '创建标签成功');
   } catch (err) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || '参数错误');
@@ -71,25 +47,9 @@ export async function PUT(request: NextRequest) {
 
     const json = await request.json();
     const parsed = TagUpdateSchema.parse(json ?? {});
-    const { id, name, slug } = parsed;
-    const normalizedSlug = (slug || name).toLowerCase().replace(/\s+/g, '-');
-
-    const exists = await prisma.tag.findFirst({
-      where: {
-        OR: [{ name }, { slug: normalizedSlug }],
-        NOT: { id },
-      },
-    });
-    if (exists) {
-      return fail(400, '标签名或Slug已被使用');
-    }
-
-    const updated = await prisma.tag.update({
-      where: { id },
-      data: { name, slug: normalizedSlug },
-    });
-
-    return ok(updated, '更新标签成功');
+    const result = await updateTag(parsed);
+    if (result.error) return fail(400, result.error);
+    return ok(result.data, '更新标签成功');
   } catch (err) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || '参数错误');
@@ -108,14 +68,9 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = request.nextUrl;
     const id = searchParams.get('id');
     TagDeleteSchema.parse({ id });
-
-    const exist = await prisma.tag.findUnique({ where: { id: id! } });
-    if (!exist) {
-      return fail(400, '标签不存在');
-    }
-
-    await prisma.tag.delete({ where: { id: id! } });
-    return ok(null, '删除标签成功');
+    const result = await deleteTag(id!);
+    if (result.error) return fail(400, result.error);
+    return ok(result.data, '删除标签成功');
   } catch (err) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || '参数错误');
