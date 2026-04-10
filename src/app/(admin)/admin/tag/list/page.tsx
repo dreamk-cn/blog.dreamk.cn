@@ -30,7 +30,7 @@ export default function AdminTagListPage() {
     if (!newTagSlug) {
       setNewTagSlug(newTagName.trim().toLowerCase().replace(/\s+/g, '-'))
     }
-  }, [newTagName])
+  }, [newTagName, newTagSlug])
 
   const fetchTags = async (kw = '') => {
     try {
@@ -250,7 +250,7 @@ export default function AdminTagListPage() {
             <>
               <ModalHeader>删除标签</ModalHeader>
               <ModalBody>
-                <p>确认要删除标签 "{tagToDelete?.name}" 吗？此操作不可撤销。</p>
+                <p>确认要删除标签 &quot;{tagToDelete?.name}&quot; 吗？此操作不可撤销。</p>
               </ModalBody>
               <ModalFooter>
                 <Button variant="ghost" onPress={onClose}>取消</Button>

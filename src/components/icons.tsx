@@ -138,8 +138,8 @@ export const ChevronDownIcon = ({
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
+      width={size ||width}
+      height={size || height}
       viewBox="0 0 24 24"
       {...props}>
       <path
@@ -157,8 +157,8 @@ export const HomeIcon = ({
 }: IconSvgProps) => {
   return (
     <svg
-      width="24"
-      height="24"
+      width={size || width}
+      height={size || height}
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"

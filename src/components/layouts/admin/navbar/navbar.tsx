@@ -1,8 +1,7 @@
-import { Input, Navbar, NavbarContent } from "@heroui/react";
+import { Navbar, NavbarContent } from "@heroui/react";
 import React from "react";
 import { BurguerButton } from "./burguer-button";
 import { UserDropdown } from "./user-dropdown";
-import { SearchIcon } from "@/components/icons";
 import { ThemeSwitch } from "@/components/theme-switcher";
 
 interface Props {

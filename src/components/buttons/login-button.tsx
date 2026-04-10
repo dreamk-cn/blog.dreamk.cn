@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-
 import { signIn } from "next-auth/react";
 import { Button } from "@heroui/react";
 import { GithubIcon, GoogleIcon, QuestionIcon } from "../icons";

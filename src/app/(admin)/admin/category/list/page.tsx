@@ -30,7 +30,7 @@ export default function AdminCategoryListPage() {
     if (!newSlug) {
       setNewSlug(newName.trim().toLowerCase().replace(/\s+/g, '-'))
     }
-  }, [newName])
+  }, [newName, newSlug])
 
   const fetchCategories = async (kw = '') => {
     try {
@@ -248,7 +248,7 @@ export default function AdminCategoryListPage() {
             <>
               <ModalHeader>删除分类</ModalHeader>
               <ModalBody>
-                <p>确认要删除分类 "{categoryToDelete?.name}" 吗？此操作不可撤销。</p>
+                <p>确认要删除分类 &quot;{categoryToDelete?.name}&quot; 吗？此操作不可撤销。</p>
               </ModalBody>
               <ModalFooter>
                 <Button variant="ghost" onPress={onClose}>取消</Button>
