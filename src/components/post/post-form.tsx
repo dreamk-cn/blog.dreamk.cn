@@ -13,6 +13,20 @@ interface PostDetail extends Post {
 
 type FormErrors = Partial<Record<'title' | 'slug' | 'content' | 'excerpt', string>>
 
+function createExcerptFromContent(content: string, maxLength = 160) {
+  const plainText = content
+    .replace(/```[\s\S]*?```/g, " ")
+    .replace(/`[^`]*`/g, " ")
+    .replace(/!\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/\[[^\]]*]\([^)]*\)/g, " ")
+    .replace(/[#>*_\-\n\r]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (plainText.length <= maxLength) return plainText;
+  return `${plainText.slice(0, maxLength)}...`;
+}
+
 export function PostForm({
   article,
   categories = [],
@@ -102,7 +116,12 @@ export function PostForm({
         </div>
       </CardHeader>
 
-      <Form>
+      <Form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void handleSubmit();
+        }}
+      >
         <CardBody className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
@@ -111,7 +130,8 @@ export function PostForm({
               isRequired
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              className={errors.title ? "border-red-500" : ""}
+              isInvalid={!!errors.title}
+              errorMessage={errors.title}
             />
             <Input
               label="Slug"
@@ -119,7 +139,8 @@ export function PostForm({
               isRequired
               value={formData.slug}
               onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-              className={errors.slug ? "border-red-500" : ""}
+              isInvalid={!!errors.slug}
+              errorMessage={errors.slug}
             />
 
             <Select
@@ -159,7 +180,8 @@ export function PostForm({
               minRows={2}
               value={formData.excerpt}
               onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
-              className={errors.excerpt ? "border-red-500" : ""}
+              isInvalid={!!errors.excerpt}
+              errorMessage={errors.excerpt}
             />
 
             {/* 封面图片 */}
@@ -178,7 +200,8 @@ export function PostForm({
               isRequired
               value={formData.content}
               onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-              className={errors.content ? "border-red-500" : ""}
+              isInvalid={!!errors.content}
+              errorMessage={errors.content}
             />
           </div>
           <Switch 
@@ -249,7 +272,7 @@ export function PostForm({
             </Button>
           )}
           <Button 
-            onPress={handleSubmit} 
+            type="submit"
             disabled={loading}
           >
             {loading ? '提交中...' : (article?.id ? '更新文章' : '发布文章')}
@@ -272,12 +295,11 @@ export function PostForm({
     if (!formData.content.trim()) {
       validationErrors.content = '内容不能为空';
     }
-    if (!formData.excerpt.trim()) {
-      validationErrors.excerpt = '摘要不能为空';
-    }
-    
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      addToast({
+        title: `表单校验未通过：${Object.values(validationErrors).join("、")}`,
+      });
       return;
     }
     
@@ -288,6 +310,7 @@ export function PostForm({
       // 准备提交数据
       const submitData = {
         ...formData,
+        excerpt: formData.excerpt.trim() || createExcerptFromContent(formData.content),
         // 将标签转换为API需要的格式
         tags: formData.tags.map(tag => ({
           id: tag.id.startsWith('temp-') ? undefined : tag.id,

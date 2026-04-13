@@ -3,7 +3,7 @@ import { Navbar } from "@/components/layouts/blog/navbar"
 
 export default function BlogLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="h-[100vh] flex flex-col relative">
+    <div className="min-h-screen flex flex-col relative">
       <Navbar />
       <div className="flex-1">
         { children }
