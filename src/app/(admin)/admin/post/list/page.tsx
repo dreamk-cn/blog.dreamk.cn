@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
+import NextLink from 'next/link';
 import { request } from '@/libs/request';
 import type { Post, Category, Tag } from '@prisma/client';
-import { Button, Input, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Select, SelectItem, Chip, Alert } from '@heroui/react';
+import { Button, Input, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Select, SelectItem, Chip, Alert, Pagination, Link } from '@heroui/react';
 import { useDebounce } from '@/hooks/useDebounce';
 
 type PostItem = Post & { category: Category | null; tags: Tag[] };
@@ -73,8 +73,6 @@ export default function Posts() {
         showSuccessMessage: true,
       });
       if (res.code === 200) {
-        // 删除成功后刷新列表
-        // 如果当前页只有一条且被删除，翻到上一页
         const isLastItemOnPage = items.length === 1 && pageNo > 1;
         if (isLastItemOnPage) {
           setPageNo(pageNo - 1);
@@ -93,75 +91,119 @@ export default function Posts() {
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
 
-  return (
-    <div className="p-3 space-y-4">
+  const topContent = useMemo(() => (
+    <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">文章管理</h1>
-        <Link href="/admin/post/create">
-          <Button color="primary">新增文章</Button>
-        </Link>
+        <Button 
+          as={NextLink} 
+          href="/admin/post/create" 
+          color="primary"
+          variant="shadow"
+        >
+          新增文章
+        </Button>
       </div>
 
       <div className="flex flex-wrap gap-3 items-end">
-        <div className="w-64">
-          <Input
-            label="关键词"
-            placeholder="按标题或内容搜索"
-            value={keyword}
-            onChange={(e) => {
-              setPageNo(1);
-              setKeyword(e.target.value);
-            }}
-          />
-        </div>
+        <Input
+          isClearable
+          className="w-full sm:max-w-[30%]"
+          label="关键词"
+          placeholder="按标题或内容搜索"
+          value={keyword}
+          onValueChange={(v) => {
+            setPageNo(1);
+            setKeyword(v);
+          }}
+        />
 
-        <div className="w-40">
-          <Select
-            label="状态"
-            value={status}
-            onSelectionChange={(id) => {
-              setPageNo(1);
-              setStatus(id.currentKey as Status);
-            }}
-          >
-            <SelectItem key="DRAFT">草稿</SelectItem>
-            <SelectItem key="PUBLISHED">已发布</SelectItem>
-            <SelectItem key="ARCHIVED">已归档</SelectItem>
-          </Select>
-        </div>
+        <Select
+          className="max-w-xs w-40"
+          label="状态"
+          selectedKeys={[status]}
+          onSelectionChange={(keys) => {
+            setPageNo(1);
+            setStatus(Array.from(keys)[0] as Status);
+          }}
+        >
+          <SelectItem key="DRAFT">草稿</SelectItem>
+          <SelectItem key="PUBLISHED">已发布</SelectItem>
+          <SelectItem key="ARCHIVED">已归档</SelectItem>
+        </Select>
 
-        <div className="w-40">
-          <Select
-            label="排序字段"
-            value={sortBy}
-            onSelectionChange={(id) => {
-              setPageNo(1);
-              setSortBy(id.currentKey as SortBy);
-            }}
-          >
-            <SelectItem key="createdAt">创建时间</SelectItem>
-            <SelectItem key="updatedAt">更新时间</SelectItem>
-            <SelectItem key="title">标题</SelectItem>
-          </Select>
-        </div>
+        <Select
+          className="max-w-xs w-40"
+          label="排序字段"
+          selectedKeys={[sortBy]}
+          onSelectionChange={(keys) => {
+            setPageNo(1);
+            setSortBy(Array.from(keys)[0] as SortBy);
+          }}
+        >
+          <SelectItem key="createdAt">创建时间</SelectItem>
+          <SelectItem key="updatedAt">更新时间</SelectItem>
+          <SelectItem key="title">标题</SelectItem>
+        </Select>
 
-        <div className="w-40">
-          <Select
-            label="排序方式"
-            value={sortOrder}
-            onSelectionChange={(id) => {
-              setPageNo(1);
-              setSortOrder(id.currentKey as SortOrder);
-            }}
-          >
-            <SelectItem key="desc">倒序</SelectItem>
-            <SelectItem key="asc">正序</SelectItem>
-          </Select>
-        </div>
+        <Select
+          className="max-w-xs w-28"
+          label="方向"
+          selectedKeys={[sortOrder]}
+          onSelectionChange={(keys) => {
+            setPageNo(1);
+            setSortOrder(Array.from(keys)[0] as SortOrder);
+          }}
+        >
+          <SelectItem key="desc">倒序</SelectItem>
+          <SelectItem key="asc">正序</SelectItem>
+        </Select>
       </div>
+    </div>
+  ), [keyword, status, sortBy, sortOrder]);
+
+  const bottomContent = useMemo(() => (
+    <div className="flex items-center justify-between px-2 py-4">
+      <div className="flex items-center gap-4">
+        <span className="text-small text-default-400">共 {total} 条数据</span>
+        <Select
+          aria-label="每页条数"
+          className="w-32"
+          size="sm"
+          selectedKeys={[String(pageSize)]}
+          onSelectionChange={(keys) => {
+            setPageNo(1);
+            setPageSize(Number(Array.from(keys)[0]));
+          }}
+        >
+          <SelectItem key="10">10条/页</SelectItem>
+          <SelectItem key="20">20条/页</SelectItem>
+          <SelectItem key="50">50条/页</SelectItem>
+        </Select>
+      </div>
+      <Pagination
+        isCompact
+        showControls
+        showShadow
+        color="primary"
+        page={pageNo}
+        total={totalPages}
+        onChange={setPageNo}
+      />
+    </div>
+  ), [pageNo, totalPages, total, pageSize]);
+
+  return (
+    <div className="p-4 space-y-4">
+      {topContent}
 
       <div className="bg-content1 rounded-lg">
-        <Table aria-label="文章列表" isHeaderSticky>
+        <Table 
+          aria-label="文章列表" 
+          isHeaderSticky
+          bottomContent={bottomContent}
+          bottomContentPlacement="outside"
+        >
           <TableHeader>
             <TableColumn>标题</TableColumn>
             <TableColumn>分类</TableColumn>
@@ -170,7 +212,7 @@ export default function Posts() {
             <TableColumn>置顶</TableColumn>
             <TableColumn>创建时间</TableColumn>
             <TableColumn>更新时间</TableColumn>
-            <TableColumn>操作</TableColumn>
+            <TableColumn align="center">操作</TableColumn>
           </TableHeader>
           <TableBody
             emptyContent={loading ? '加载中...' : '暂无数据'}
@@ -187,7 +229,7 @@ export default function Posts() {
                 <TableCell>{item.category?.name || '-'}</TableCell>
                 <TableCell>
                   {item.tags?.length ? (
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-1 flex-wrap">
                       {item.tags.map((t) => (
                         <Chip color='primary' key={t.id} size="sm" variant="flat">
                           {t.name}
@@ -199,18 +241,35 @@ export default function Posts() {
                   )}
                 </TableCell>
                 <TableCell>
-                  <Chip size="sm" variant="flat">{item.status}</Chip>
+                  <Chip 
+                    size="sm" 
+                    variant="flat" 
+                    color={item.status === 'PUBLISHED' ? 'success' : item.status === 'ARCHIVED' ? 'warning' : 'default'}
+                  >
+                    {item.status === 'PUBLISHED' ? '已发布' : item.status === 'ARCHIVED' ? '已归档' : '草稿'}
+                  </Chip>
                 </TableCell>
                 <TableCell>
-                  <Chip size="sm" variant="flat">{item.featured ? '是' : '否'}</Chip>
+                  <Chip 
+                    size="sm" 
+                    variant="flat" 
+                    color={item.featured ? 'primary' : 'default'}
+                  >
+                    {item.featured ? '是' : '否'}
+                  </Chip>
                 </TableCell>
-                <TableCell>{new Date(item.createdAt).toLocaleString()}</TableCell>
-                <TableCell>{new Date(item.updatedAt).toLocaleString()}</TableCell>
+                <TableCell className="text-xs">{new Date(item.createdAt).toLocaleString()}</TableCell>
+                <TableCell className="text-xs">{new Date(item.updatedAt).toLocaleString()}</TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
-                    <Link href={`/admin/post/create?type=edit&id=${item.id}`}>
-                      <Button size="sm" variant="flat">编辑</Button>
-                    </Link>
+                  <div className="flex gap-2 justify-center">
+                    <Button 
+                      as={NextLink} 
+                      href={`/admin/post/create?type=edit&id=${item.id}`}
+                      size="sm" 
+                      variant="flat"
+                    >
+                      编辑
+                    </Button>
                     <Button
                       size="sm"
                       color="danger"
@@ -228,38 +287,8 @@ export default function Posts() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-default-500">共 {total} 条</div>
-        <div className="flex items-center gap-2">
-          <Select
-            aria-label="每页条数"
-            className="w-32"
-            value={String(pageSize)}
-            onSelectionChange={(id) => {
-              setPageNo(1);
-              setPageSize(Number(id.currentKey));
-            }}
-          >
-            <SelectItem key="10">10条/页</SelectItem>
-            <SelectItem key="20">20条/页</SelectItem>
-            <SelectItem key="50">50条/页</SelectItem>
-          </Select>
-          <Button
-            variant="flat"
-            isDisabled={pageNo <= 1 || loading}
-            onPress={() => setPageNo((n) => Math.max(1, n - 1))}
-          >上一页</Button>
-          <span className="min-w-[80px] text-center text-sm">{pageNo} / {totalPages}</span>
-          <Button
-            variant="flat"
-            isDisabled={pageNo >= totalPages || loading}
-            onPress={() => setPageNo((n) => Math.min(totalPages, n + 1))}
-          >下一页</Button>
-        </div>
-      </div>
-
       {error ? (
-        <Alert color="danger" title="错误" description={error} />
+        <Alert color="danger" title="错误" className="mt-4">{error}</Alert>
       ) : null}
     </div>
   );

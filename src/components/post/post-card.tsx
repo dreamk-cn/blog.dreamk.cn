@@ -1,4 +1,9 @@
-import Link from "next/link";
+"use client";
+
+import { ClientChip } from "@/components/ui/client-chip";
+import { getTagColor } from "@/lib/tag-color";
+import NextLink from "next/link";
+import { Card, CardBody, CardFooter, CardHeader, Link } from "@heroui/react";
 import type { Post, Tag } from "@prisma/client";
 
 type PostWithTags = Post & { tags: Tag[] };
@@ -14,31 +19,39 @@ function formatDate(date: Date | null) {
 
 export function PostCard({ post }: { post: PostWithTags }) {
   return (
-    <article className="rounded-md border border-default-200/70 bg-content1 p-4 hover:shadow-md transition-shadow">
-      <header className="pb-2">
-        <Link href={`/posts/${post.slug}`} className="text-xl font-semibold hover:text-primary transition-colors line-clamp-1">
+    <Card className="p-1" isHoverable shadow="sm">
+      <CardHeader className="flex-col items-start px-5 pb-0 pt-4">
+        <Link
+          as={NextLink}
+          href={`/posts/${post.slug}`}
+          className="line-clamp-1 text-2xl/normal font-semibold tracking-tight transition-colors hover:text-primary md:text-[30px]"
+          color="foreground"
+        >
           {post.title}
         </Link>
-      </header>
-      <div className="pt-1 pb-2">
-        <p className="text-default-600 text-sm leading-7 line-clamp-3 min-h-[84px]">
+      </CardHeader>
+      <CardBody className="px-5 py-3">
+        <p className="line-clamp-3 text-sm leading-7 text-default-600">
           {post.excerpt || post.content || "暂无摘要"}
         </p>
-      </div>
-      <footer className="flex items-center justify-between gap-2 pt-1">
-        <div className="flex items-center gap-2 text-xs text-default-500">
-          <span>{formatDate(post.publishedAt)}</span>
-          <span>·</span>
-          <span>{post.viewCount} 阅读</span>
+      </CardBody>
+      <CardFooter className="flex items-center justify-between gap-1 border-t border-default-100 px-5 py-3">
+        <div className="flex items-center gap-3 text-xs text-default-500">
+          <span className="inline-flex items-center gap-1.5">
+            浏览 {post.viewCount}
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            发布于 {formatDate(post.publishedAt)}
+          </span>
         </div>
         <div className="flex items-center gap-1">
           {post.tags.slice(0, 3).map((tag) => (
-            <span key={tag.id} className="text-xs px-2 py-1 rounded-full bg-default-100 text-default-600">
+            <ClientChip key={tag.id} color={getTagColor(tag.name)}>
               {tag.name}
-            </span>
+            </ClientChip>
           ))}
         </div>
-      </footer>
-    </article>
-  )
+      </CardFooter>
+    </Card>
+  );
 }
