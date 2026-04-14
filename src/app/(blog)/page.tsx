@@ -3,6 +3,7 @@ import { MobileSidebarDrawer } from "@/components/layouts/blog/mobile-sidebar-dr
 import { ProfileSidebar } from "@/components/layouts/blog/profile-sidebar";
 import { HotPosts } from "@/components/post/hot-posts";
 import { prisma } from "@/libs/prisma";
+import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 
 export default async function Home() {
   const [posts, hotPosts, tagCloud] = await Promise.all([
@@ -43,9 +44,9 @@ export default async function Home() {
   const profileSidebarEl = <ProfileSidebar tagCloud={tagCloud} />;
 
   return (
-    <div className="mx-auto max-w-7xl px-3 py-5 lg:py-8">
+    <div className="mx-auto max-w-7xl px-4 py-5 lg:py-8">
       <MobileSidebarDrawer>{profileSidebarEl}</MobileSidebarDrawer>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr_260px]">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_280px]">
         <aside className="hidden lg:block lg:space-y-4">
           {profileSidebarEl}
         </aside>
@@ -55,7 +56,11 @@ export default async function Home() {
             return <PostCard post={post} key={post.id} />
           })}
           {posts.length === 0 && (
-            <div className="text-center text-default-500">还没有发布文章</div>
+            <ClientCard shadow="sm">
+              <ClientCardBody className="py-10 text-center text-default-500">
+                还没有发布文章
+              </ClientCardBody>
+            </ClientCard>
           )}
         </main>
 

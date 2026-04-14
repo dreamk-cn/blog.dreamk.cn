@@ -14,7 +14,7 @@ export function HotPosts({ posts }: { posts: HotPost[] }) {
   return (
     <Card shadow="sm">
       <CardHeader className="px-4 py-3 border-b border-default-200/70">
-        <span className="font-semibold text-default-700">热门文章列表</span>
+        <span className="text-md text-default-700 font-bold">热门文章列表</span>
       </CardHeader>
       <CardBody className="p-4 flex flex-col gap-3">
         {posts.map((post, index) => (
@@ -23,7 +23,6 @@ export function HotPosts({ posts }: { posts: HotPost[] }) {
               as={NextLink} 
               href={`/posts/${post.slug}`} 
               className="line-clamp-2 text-sm"
-              color="foreground"
             >
               {post.title}
             </Link>

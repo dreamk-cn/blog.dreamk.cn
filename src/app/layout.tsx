@@ -5,7 +5,6 @@ import Head from "next/head";
 import { siteConfig } from "@/config/site";
 import { geistMono, notoSansSc } from "@/config/fonts";
 
-
 export const metadata: Metadata = {
   title: {
     default: siteConfig.name,

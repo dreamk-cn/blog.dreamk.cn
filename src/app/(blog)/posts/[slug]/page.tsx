@@ -131,19 +131,19 @@ export default async function PostDetail({ params }: PageProps) {
                 )}
               </div>
 
-              <div className="px-6 py-8 sm:px-10 sm:py-10">
+              <div className="px-6 py-8 pt-0! sm:px-10 sm:py-10">
                 <ArticleMarkdown content={content} />
               </div>
             </article>
 
-          <aside className="relative hidden min-h-0 xl:block">
-            <div className="sticky top-28 flex max-h-[calc(100vh-7.5rem)] flex-col rounded-2xl border border-default-200/70 bg-content1 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.06)] dark:border-default-100/20 dark:bg-content1/60 dark:shadow-none">
-              <h2 className="mb-3 shrink-0 text-sm font-semibold tracking-wide text-foreground">目录</h2>
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5">
-                <PostTableOfContents items={toc} />
+            <aside className="relative hidden min-h-0 xl:block">
+              <div className="sticky top-28 flex max-h-[calc(100vh-7.5rem)] flex-col rounded-2xl border border-default-200/70 bg-content1 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.06)] dark:border-default-100/20 dark:bg-content1/60 dark:shadow-none">
+                <h2 className="mb-3 shrink-0 text-sm font-semibold tracking-wide text-foreground">目录</h2>
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5">
+                  <PostTableOfContents items={toc} />
+                </div>
               </div>
-            </div>
-          </aside>
+            </aside>
           </div>
         </PostTocActiveProvider>
       </div>
