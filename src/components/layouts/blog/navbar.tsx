@@ -3,10 +3,6 @@
 import {
   Avatar,
   Dropdown,
-  DropdownItem,
-  DropdownMenu,
-  DropdownTrigger,
-  Link,
 } from "@heroui/react";
 import NextLink from "next/link";
 import clsx from "clsx";
@@ -15,53 +11,54 @@ import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switcher";
 import { SearchIcon, LogoIcon } from '@/components/icons';
 import { signOut, useSession } from "next-auth/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 
 export const NavBarUser = () => {
   const { data: session } = useSession()
-  
+  const router = useRouter();
+
   return (
     <Dropdown>
-      <DropdownTrigger>
-        <div className="flex gap-2 items-center justify-center">
-          <Avatar src={session?.user?.image || undefined} color="primary" />
-        </div>
-      </DropdownTrigger>
-      <DropdownMenu disabledKeys={["profile", ...(session?.user?.role === 'ADMIN' ? [] : ["dashboard"])]}>
-        <DropdownItem textValue="profile" key="profile">
-          <div className="flex flex-col items-center justify-center gap-2">
-            <div className="flex justify-between">
-              <p>用户名：</p>
-              <p>{session?.user?.name}</p>
-            </div>
-            <p>{session?.user?.email}</p>
-          </div>
-        </DropdownItem>
-        <DropdownItem
-          textValue="dashboard"
-          key="dashboard"
-          className={session?.user?.role === 'ADMIN' ? '' : 'hidden'}
+      <Dropdown.Trigger
+        className="h-auto min-w-0 border-0 bg-transparent p-0 shadow-none ring-0 hover:bg-default-100 data-[pressed]:bg-default-100"
+        aria-label="用户菜单"
+      >
+        <span className="flex items-center justify-center gap-2">
+          <Avatar color="accent" size="md">
+            {session?.user?.image ? (
+              <Avatar.Image src={session.user.image} alt="" />
+            ) : null}
+            <Avatar.Fallback>{session?.user?.name?.slice(0, 1) ?? "?"}</Avatar.Fallback>
+          </Avatar>
+        </span>
+      </Dropdown.Trigger>
+      <Dropdown.Popover>
+        <Dropdown.Menu
+          disabledKeys={["profile", ...(session?.user?.role === 'ADMIN' ? [] : ["dashboard"])]}
         >
-          <Link
-            color="primary"
-            href="/admin/dashboard"
-            size="lg"
-            className="flex gap-2"
+          <Dropdown.Item id="profile" textValue="profile">
+            <div className="flex flex-col items-center justify-center gap-2">
+              <div className="flex justify-between">
+                <p>用户名：</p>
+                <p>{session?.user?.name}</p>
+              </div>
+              <p>{session?.user?.email}</p>
+            </div>
+          </Dropdown.Item>
+          <Dropdown.Item
+            id="dashboard"
+            textValue="dashboard"
+            className={session?.user?.role === 'ADMIN' ? '' : 'hidden'}
+            onAction={() => router.push('/admin/dashboard')}
           >
             控制台
-          </Link>
-        </DropdownItem>
-        <DropdownItem textValue="signout" key="signout">
-          <button
-            type="button"
-            onClick={() => signOut()}
-            className="flex w-full gap-2 text-danger"
-          >
+          </Dropdown.Item>
+          <Dropdown.Item id="signout" textValue="signout" onAction={() => signOut()}>
             退出登录
-          </button>
-        </DropdownItem>
-      </DropdownMenu>
+          </Dropdown.Item>
+        </Dropdown.Menu>
+      </Dropdown.Popover>
     </Dropdown>
   )
 }
@@ -87,10 +84,10 @@ export const Navbar = () => {
   );
 
   const authButton = (
-    session ? 
+    session ?
     <NavBarUser /> :
     <NextLink
-      className="text-primary"
+      className="text-accent"
       href="/auth/signin"
     >
       登录
@@ -117,8 +114,8 @@ export const Navbar = () => {
                 <li key={item.href}>
                   <NextLink
                     className={clsx(
-                      "text-foreground transition-colors hover:text-primary",
-                      active && "font-medium text-primary",
+                      "text-foreground transition-colors hover:text-accent",
+                      active && "font-medium text-accent",
                     )}
                     href={item.href}
                   >
@@ -128,7 +125,7 @@ export const Navbar = () => {
               );
             })}
           </ul>
-          <div className="cursor-pointer text-primary">{authButton}</div>
+          <div className="cursor-pointer text-accent">{authButton}</div>
         </div>
 
         <div className="flex items-center gap-2 lg:hidden">
@@ -169,7 +166,7 @@ export const Navbar = () => {
                 <NextLink
                   className={clsx(
                     "block rounded-lg px-2 py-1.5 text-foreground",
-                    pathname === item.href && "bg-default-100 text-primary",
+                    pathname === item.href && "bg-default-100 text-accent",
                   )}
                   href={item.href}
                   onClick={() => setIsMenuOpen(false)}

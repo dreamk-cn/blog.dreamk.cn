@@ -5,7 +5,7 @@ import type { ThemeProviderProps } from "next-themes";
 import * as React from "react";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
-import { ToastProvider } from "@heroui/react";
+import { Toast } from "@heroui/react";
 import NextTopLoader from "nextjs-toploader";
 
 export interface ProvidersProps {
@@ -18,7 +18,7 @@ export function AppProviders({ children, themeProps }: ProvidersProps) {
     <SessionProvider>
       <NextTopLoader color="var(--color-primary)" showSpinner={false} height={3} />
       <NextThemesProvider {...themeProps}>
-        <ToastProvider placement="top-right" toastOffset={65} />
+          <Toast.Provider placement="top end" className="pt-16" />
         {children}
       </NextThemesProvider>
     </SessionProvider>

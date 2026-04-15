@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 
 import { getProviders } from "next-auth/react";
-import { Divider, Tab, Tabs } from '@heroui/react'
+import { Separator, Tabs } from '@heroui/react'
 import LoginForm from "@/components/auth/login-form";
 import LoginButton from '@/components/buttons/login-button';
 import RegisterForm from "@/components/auth/register-form";
@@ -22,7 +22,7 @@ const renderLoginButtons = (
 
 export default function SignIn() {
   const [providers, setProviders] = useState<Providers | null>(null);
-  const [selected, setSelected] = useState<string | number>('login');
+  const [selected, setSelected] = useState<string>('login');
 
   useEffect(() => {
     async function fetchProviders() {
@@ -34,23 +34,31 @@ export default function SignIn() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col items-center mx-auto p-20 max-w-[40rem]">
-      <Tabs
-        selectedKey={selected}
-        onSelectionChange={(key) => setSelected(key)}
-      >
-        <Tab key="login" title="登录">
+    <div className="mx-auto flex min-h-screen max-w-[40rem] flex-col items-center p-20">
+      <Tabs selectedKey={selected} onSelectionChange={(key) => setSelected(String(key))}>
+        <Tabs.ListContainer>
+          <Tabs.List>
+            <Tabs.Tab id="login">登录</Tabs.Tab>
+            <Tabs.Tab id="register" isDisabled>注册</Tabs.Tab>
+            <Tabs.Indicator />
+          </Tabs.List>
+        </Tabs.ListContainer>
+        <Tabs.Panel id="login" className="mt-4">
           <Suspense>
             <LoginForm />
           </Suspense>
-        </Tab>
-        <Tab key="register" title="注册" disabled={true}>
+        </Tabs.Panel>
+        <Tabs.Panel id="register" className="mt-4">
           <Suspense>
             <RegisterForm />
           </Suspense>
-        </Tab>
+        </Tabs.Panel>
       </Tabs>
-      <Divider content="Or" className="my-4" />
+      <div className="my-4 flex w-full items-center gap-3">
+        <Separator className="flex-1" />
+        <span className="text-small text-default-500">Or</span>
+        <Separator className="flex-1" />
+      </div>
       <div className="flex flex-col items-center gap-y-4">
         {renderLoginButtons(providers)}
       </div>

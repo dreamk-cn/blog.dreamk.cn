@@ -1,11 +1,21 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import NextLink from 'next/link';
+import { useRouter } from 'next/navigation';
 import { request } from '@/libs/request';
 import type { Post, Category, Tag } from '@prisma/client';
-import { Button, Input, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Select, SelectItem, Chip, Alert, Pagination } from '@heroui/react';
+import {
+  Alert,
+  Button,
+  Chip,
+  Input,
+  Label,
+  Pagination,
+  Table,
+  TextField,
+} from '@heroui/react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { StringSelect } from '@/components/admin/string-select';
 
 type PostItem = Post & { category: Category | null; tags: Tag[] };
 
@@ -16,6 +26,7 @@ type SortOrder = 'asc' | 'desc';
 type Status = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
 export default function Posts() {
+  const router = useRouter();
   const [items, setItems] = useState<PostItem[]>([]);
   const [total, setTotal] = useState(0);
   const [pageNo, setPageNo] = useState(1);
@@ -95,200 +106,244 @@ export default function Posts() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">文章管理</h1>
-        <Button 
-          as={NextLink} 
-          href="/admin/post/create" 
-          color="primary"
-          variant="shadow"
+        <Button
+          variant="primary"
+          onPress={() => router.push('/admin/post/create')}
         >
           新增文章
         </Button>
       </div>
 
-      <div className="flex flex-wrap gap-3 items-end">
-        <Input
-          isClearable
-          className="w-full sm:max-w-[30%]"
-          label="关键词"
-          placeholder="按标题或内容搜索"
-          value={keyword}
-          onValueChange={(v) => {
+      <div className="flex flex-wrap items-end gap-3">
+        <TextField className="w-full sm:max-w-[30%]">
+          <Label>关键词</Label>
+          <Input
+            placeholder="按标题或内容搜索"
+            value={keyword}
+            onChange={(e) => {
+              setPageNo(1);
+              setKeyword(e.target.value);
+            }}
+          />
+        </TextField>
+
+        <StringSelect
+          className="w-40"
+          label="状态"
+          selectedId={status}
+          onSelectionChange={(id) => {
             setPageNo(1);
-            setKeyword(v);
+            setStatus(id as Status);
           }}
+          options={[
+            { id: 'DRAFT', label: '草稿' },
+            { id: 'PUBLISHED', label: '已发布' },
+            { id: 'ARCHIVED', label: '已归档' },
+          ]}
         />
 
-        <Select
-          className="max-w-xs w-40"
-          label="状态"
-          selectedKeys={[status]}
-          onSelectionChange={(keys) => {
-            setPageNo(1);
-            setStatus(Array.from(keys)[0] as Status);
-          }}
-        >
-          <SelectItem key="DRAFT">草稿</SelectItem>
-          <SelectItem key="PUBLISHED">已发布</SelectItem>
-          <SelectItem key="ARCHIVED">已归档</SelectItem>
-        </Select>
-
-        <Select
-          className="max-w-xs w-40"
+        <StringSelect
+          className="w-40"
           label="排序字段"
-          selectedKeys={[sortBy]}
-          onSelectionChange={(keys) => {
+          selectedId={sortBy}
+          onSelectionChange={(id) => {
             setPageNo(1);
-            setSortBy(Array.from(keys)[0] as SortBy);
+            setSortBy(id as SortBy);
           }}
-        >
-          <SelectItem key="createdAt">创建时间</SelectItem>
-          <SelectItem key="updatedAt">更新时间</SelectItem>
-          <SelectItem key="title">标题</SelectItem>
-        </Select>
+          options={[
+            { id: 'createdAt', label: '创建时间' },
+            { id: 'updatedAt', label: '更新时间' },
+            { id: 'title', label: '标题' },
+          ]}
+        />
 
-        <Select
-          className="max-w-xs w-28"
+        <StringSelect
+          className="w-28"
           label="方向"
-          selectedKeys={[sortOrder]}
-          onSelectionChange={(keys) => {
+          selectedId={sortOrder}
+          onSelectionChange={(id) => {
             setPageNo(1);
-            setSortOrder(Array.from(keys)[0] as SortOrder);
+            setSortOrder(id as SortOrder);
           }}
-        >
-          <SelectItem key="desc">倒序</SelectItem>
-          <SelectItem key="asc">正序</SelectItem>
-        </Select>
+          options={[
+            { id: 'desc', label: '倒序' },
+            { id: 'asc', label: '正序' },
+          ]}
+        />
       </div>
     </div>
-  ), [keyword, status, sortBy, sortOrder]);
+  ), [keyword, status, sortBy, sortOrder, router]);
 
   const bottomContent = useMemo(() => (
     <div className="flex items-center justify-between px-2 py-4">
       <div className="flex items-center gap-4">
         <span className="text-small text-default-400">共 {total} 条数据</span>
-        <Select
+        <StringSelect
           aria-label="每页条数"
           className="w-32"
-          size="sm"
-          selectedKeys={[String(pageSize)]}
-          onSelectionChange={(keys) => {
+          selectedId={String(pageSize)}
+          onSelectionChange={(id) => {
             setPageNo(1);
-            setPageSize(Number(Array.from(keys)[0]));
+            setPageSize(Number(id));
           }}
-        >
-          <SelectItem key="10">10条/页</SelectItem>
-          <SelectItem key="20">20条/页</SelectItem>
-          <SelectItem key="50">50条/页</SelectItem>
-        </Select>
+          options={[
+            { id: '10', label: '10条/页' },
+            { id: '20', label: '20条/页' },
+            { id: '50', label: '50条/页' },
+          ]}
+        />
       </div>
-      <Pagination
-        isCompact
-        showControls
-        showShadow
-        color="primary"
-        page={pageNo}
-        total={totalPages}
-        onChange={setPageNo}
-      />
+      <Pagination>
+        <Pagination.Content className="gap-1">
+          <Pagination.Item>
+            <Pagination.Previous
+              isDisabled={pageNo <= 1}
+              onPress={() => setPageNo((p) => Math.max(1, p - 1))}
+            >
+              <Pagination.PreviousIcon />
+            </Pagination.Previous>
+          </Pagination.Item>
+          <Pagination.Item>
+            <span className="px-2 text-small text-default-600">
+              {pageNo} / {totalPages}
+            </span>
+          </Pagination.Item>
+          <Pagination.Item>
+            <Pagination.Next
+              isDisabled={pageNo >= totalPages}
+              onPress={() => setPageNo((p) => Math.min(totalPages, p + 1))}
+            >
+              <Pagination.NextIcon />
+            </Pagination.Next>
+          </Pagination.Item>
+        </Pagination.Content>
+      </Pagination>
     </div>
   ), [pageNo, totalPages, total, pageSize]);
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4">
       {topContent}
 
-      <div className="bg-content1 rounded-lg">
-        <Table 
-          aria-label="文章列表" 
-          isHeaderSticky
-          bottomContent={bottomContent}
-          bottomContentPlacement="outside"
-        >
-          <TableHeader>
-            <TableColumn>标题</TableColumn>
-            <TableColumn>分类</TableColumn>
-            <TableColumn>标签</TableColumn>
-            <TableColumn>状态</TableColumn>
-            <TableColumn>置顶</TableColumn>
-            <TableColumn>创建时间</TableColumn>
-            <TableColumn>更新时间</TableColumn>
-            <TableColumn align="center">操作</TableColumn>
-          </TableHeader>
-          <TableBody
-            emptyContent={loading ? '加载中...' : '暂无数据'}
-            isLoading={loading}
-          >
-            {items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-medium line-clamp-1">{item.title}</span>
-                    <span className="text-xs text-default-500">{item.slug}</span>
-                  </div>
-                </TableCell>
-                <TableCell>{item.category?.name || '-'}</TableCell>
-                <TableCell>
-                  {item.tags?.length ? (
-                    <div className="flex gap-1 flex-wrap">
-                      {item.tags.map((t) => (
-                        <Chip color='primary' key={t.id} size="sm" variant="flat">
-                          {t.name}
+      <div className="rounded-lg bg-content1">
+        <Table>
+          <Table.ScrollContainer className="max-h-[calc(100vh-280px)]">
+            <Table.Content aria-label="文章列表">
+              <Table.Header>
+                <Table.Column isRowHeader>标题</Table.Column>
+                <Table.Column>分类</Table.Column>
+                <Table.Column>标签</Table.Column>
+                <Table.Column>状态</Table.Column>
+                <Table.Column>置顶</Table.Column>
+                <Table.Column>创建时间</Table.Column>
+                <Table.Column>更新时间</Table.Column>
+                <Table.Column className="text-center">操作</Table.Column>
+              </Table.Header>
+              <Table.Body>
+                {loading ? (
+                  <Table.Row>
+                    <Table.Cell colSpan={8}>
+                      <span className="text-default-400">加载中...</span>
+                    </Table.Cell>
+                  </Table.Row>
+                ) : items.length === 0 ? (
+                  <Table.Row>
+                    <Table.Cell colSpan={8}>
+                      <span className="text-default-400">暂无数据</span>
+                    </Table.Cell>
+                  </Table.Row>
+                ) : (
+                  items.map((item) => (
+                    <Table.Row key={item.id}>
+                      <Table.Cell>
+                        <div className="flex flex-col">
+                          <span className="line-clamp-1 font-medium">{item.title}</span>
+                          <span className="text-xs text-default-500">{item.slug}</span>
+                        </div>
+                      </Table.Cell>
+                      <Table.Cell>{item.category?.name || '-'}</Table.Cell>
+                      <Table.Cell>
+                        {item.tags?.length ? (
+                          <div className="flex flex-wrap gap-1">
+                            {item.tags.map((t) => (
+                              <Chip key={t.id} size="sm" variant="soft" color="accent">
+                                <Chip.Label>{t.name}</Chip.Label>
+                              </Chip>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-default-400">-</span>
+                        )}
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Chip
+                          size="sm"
+                          variant="soft"
+                          color={
+                            item.status === 'PUBLISHED'
+                              ? 'success'
+                              : item.status === 'ARCHIVED'
+                                ? 'warning'
+                                : 'default'
+                          }
+                        >
+                          <Chip.Label>
+                            {item.status === 'PUBLISHED'
+                              ? '已发布'
+                              : item.status === 'ARCHIVED'
+                                ? '已归档'
+                                : '草稿'}
+                          </Chip.Label>
                         </Chip>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-default-400">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    size="sm" 
-                    variant="flat" 
-                    color={item.status === 'PUBLISHED' ? 'success' : item.status === 'ARCHIVED' ? 'warning' : 'default'}
-                  >
-                    {item.status === 'PUBLISHED' ? '已发布' : item.status === 'ARCHIVED' ? '已归档' : '草稿'}
-                  </Chip>
-                </TableCell>
-                <TableCell>
-                  <Chip 
-                    size="sm" 
-                    variant="flat" 
-                    color={item.featured ? 'primary' : 'default'}
-                  >
-                    {item.featured ? '是' : '否'}
-                  </Chip>
-                </TableCell>
-                <TableCell className="text-xs">{new Date(item.createdAt).toLocaleString()}</TableCell>
-                <TableCell className="text-xs">{new Date(item.updatedAt).toLocaleString()}</TableCell>
-                <TableCell>
-                  <div className="flex gap-2 justify-center">
-                    <Button 
-                      as={NextLink} 
-                      href={`/admin/post/create?type=edit&id=${item.id}`}
-                      size="sm" 
-                      variant="flat"
-                    >
-                      编辑
-                    </Button>
-                    <Button
-                      size="sm"
-                      color="danger"
-                      variant="flat"
-                      isLoading={deletingId === item.id}
-                      onPress={() => handleDelete(item.id)}
-                    >
-                      删除
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+                      </Table.Cell>
+                      <Table.Cell>
+                        <Chip
+                          size="sm"
+                          variant="soft"
+                          color={item.featured ? 'accent' : 'default'}
+                        >
+                          <Chip.Label>{item.featured ? '是' : '否'}</Chip.Label>
+                        </Chip>
+                      </Table.Cell>
+                      <Table.Cell className="text-xs">{new Date(item.createdAt).toLocaleString()}</Table.Cell>
+                      <Table.Cell className="text-xs">{new Date(item.updatedAt).toLocaleString()}</Table.Cell>
+                      <Table.Cell>
+                        <div className="flex justify-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onPress={() =>
+                              router.push(`/admin/post/create?type=edit&id=${item.id}`)
+                            }
+                          >
+                            编辑
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            isPending={deletingId === item.id}
+                            onPress={() => handleDelete(item.id)}
+                          >
+                            删除
+                          </Button>
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))
+                )}
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
         </Table>
       </div>
 
+      {bottomContent}
+
       {error ? (
-        <Alert color="danger" title="错误" className="mt-4">{error}</Alert>
+        <Alert status="danger">
+          <Alert.Title>错误</Alert.Title>
+          <Alert.Description>{error}</Alert.Description>
+        </Alert>
       ) : null}
     </div>
   );

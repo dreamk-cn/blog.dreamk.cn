@@ -1,4 +1,3 @@
-import { Navbar, NavbarContent } from "@heroui/react";
 import React from "react";
 import { BurguerButton } from "./burguer-button";
 import { UserDropdown } from "./user-dropdown";
@@ -10,31 +9,18 @@ interface Props {
 
 export const NavbarWrapper = ({ children }: Props) => {
   return (
-    <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
-      <Navbar
-        isBordered
-        className="w-full"
-        classNames={{
-          wrapper: "w-full max-w-full",
-        }}
-      >
-        <NavbarContent className="md:hidden">
+    <div className="relative flex flex-1 flex-col overflow-x-hidden overflow-y-auto">
+      <header className="flex w-full flex-wrap items-center justify-between gap-3 border-b border-default-200 bg-background px-4 py-3">
+        <div className="flex md:hidden">
           <BurguerButton />
-        </NavbarContent>
-        <NavbarContent className="w-full max-md:hidden">
-          <div className="w-full flex justify-end">
-            <ThemeSwitch />
-          </div>
-        </NavbarContent>
-        <NavbarContent
-          justify="end"
-          className="w-fit data-[justify=end]:flex-grow-0"
-        >
-          <NavbarContent>
-            <UserDropdown />
-          </NavbarContent>
-        </NavbarContent>
-      </Navbar>
+        </div>
+        <div className="hidden w-full max-md:hidden md:flex md:justify-end">
+          <ThemeSwitch />
+        </div>
+        <div className="flex w-fit shrink-0 items-center justify-end gap-2 md:ml-auto">
+          <UserDropdown />
+        </div>
+      </header>
       {children}
     </div>
   );

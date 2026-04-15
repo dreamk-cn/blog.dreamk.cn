@@ -12,11 +12,14 @@ export default function Error({
   }, [error])
 
   return (
-    <div className="h-screen w-screen flex flex-col gap-4 items-center justify-center">
+    <div className="flex h-screen w-screen flex-col items-center justify-center gap-4">
       <div className="px-2">
-        <Alert title="Error" description={error.message} color="danger"></Alert>
+        <Alert status="danger">
+          <Alert.Title>Error</Alert.Title>
+          <Alert.Description>{error.message}</Alert.Description>
+        </Alert>
       </div>
-      <Button onPress={() => reset()} color="danger">
+      <Button onPress={() => reset()} variant="danger">
         Try again
       </Button>
     </div>

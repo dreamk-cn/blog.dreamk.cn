@@ -56,7 +56,7 @@ export default async function Home() {
             return <PostCard post={post} key={post.id} />
           })}
           {posts.length === 0 && (
-            <ClientCard shadow="sm">
+            <ClientCard className="shadow-sm">
               <ClientCardBody className="py-10 text-center text-default-500">
                 还没有发布文章
               </ClientCardBody>

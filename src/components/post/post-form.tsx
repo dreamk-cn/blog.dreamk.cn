@@ -1,10 +1,11 @@
 'use client';
 
-import { addToast, Button, Card, CardBody, CardHeader, Chip, Form, Input, Select, SelectItem, Switch, Textarea } from "@heroui/react";
+import { toast, Button, Card, Chip, Description, FieldError, Form, Input, Label, Switch, TextArea, TextField } from "@heroui/react";
 import { Category, Post, PostStatus, Tag } from "@prisma/client";
 import { useState } from "react";
 import { request } from '@/libs/request';
 import { useRouter } from 'next/navigation';
+import { StringSelect } from '@/components/admin/string-select';
 
 interface PostDetail extends Post {
   tags: Tag[],
@@ -56,235 +57,45 @@ export function PostForm({
 
   const [newTag, setNewTag] = useState('')
 
-  // 处理标签选择
   function handleTagSelect(tag: Tag) {
     setFormData(prev => {
       const tagExists = prev.tags.some(t => t.id === tag.id);
       if (tagExists) {
-        // 如果标签已存在，则移除
         return {
           ...prev,
           tags: prev.tags.filter(t => t.id !== tag.id)
         };
-      } else {
-        // 如果标签不存在，则添加
-        return {
-          ...prev,
-          tags: [...prev.tags, tag]
-        };
       }
+      return {
+        ...prev,
+        tags: [...prev.tags, tag]
+      };
     });
   }
 
-  // 处理添加新标签
   function handleAddNewTag() {
     if (newTag.trim() && !tags.some(tag => tag.name?.toLowerCase() === newTag.trim().toLowerCase())) {
-      // 创建一个临时的新标签对象
       const newTagObject: Tag = {
-        id: `temp-${Date.now()}`, // 临时ID，提交时会被实际ID替代
+        id: `temp-${Date.now()}`,
         name: newTag.trim(),
         slug: newTag.trim().toLowerCase().replace(/ /g, '-'),
         createdAt: new Date(),
         updatedAt: new Date()
       };
-      
-      // 添加到表单数据中
+
       setFormData(prev => ({
         ...prev,
         tags: [...prev.tags, newTagObject]
       }));
-      
-      // 清空输入框
+
       setNewTag('');
     }
   }
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
-  return (
-    <Card className="w-full mx-auto" shadow="none">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <h2 className="text-xl font-bold">
-          #{ article?.id ? '编辑文章' : '发布文章' }
-        </h2>
-        <div className="flex gap-2">
-          { article && (
-            <Button color="default" variant="flat">
-              预览
-            </Button>
-          )}
-        </div>
-      </CardHeader>
 
-      <Form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void handleSubmit();
-        }}
-      >
-        <CardBody className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="文章标题"
-              description="文章标题"
-              isRequired
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              isInvalid={!!errors.title}
-              errorMessage={errors.title}
-            />
-            <Input
-              label="Slug"
-              description="将用于生成文章URL"
-              isRequired
-              value={formData.slug}
-              onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-              isInvalid={!!errors.slug}
-              errorMessage={errors.slug}
-            />
-
-            <Select
-              label="文章分类"
-              placeholder="选择文章分类"
-              selectedKeys={formData.categoryId ? [formData.categoryId] : []}
-              onSelectionChange={(k) => setFormData(prev => ({ ...prev, categoryId: k.currentKey }))}
-            >
-              {categories.map(category => (
-                <SelectItem key={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </Select>
-            <Select
-              label="文章状态"
-              placeholder="选择状态"
-              defaultSelectedKeys={[formData.status]}
-              value={formData.status}
-              onSelectionChange={(id) => setFormData(prev => ({ ...prev, status: id.currentKey as PostStatus }))}
-            >
-              <SelectItem key='DRAFT'>
-                草稿
-              </SelectItem>
-              <SelectItem key='PUBLISHED'>
-                已发布
-              </SelectItem>
-              <SelectItem key='ARCHIVED'>
-                已归档
-              </SelectItem>
-            </Select>
-
-            {/* 摘要 */}
-            <Textarea
-              label="文章摘要"
-              description="文章摘要"
-              minRows={2}
-              value={formData.excerpt}
-              onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
-              isInvalid={!!errors.excerpt}
-              errorMessage={errors.excerpt}
-            />
-
-            {/* 封面图片 */}
-            <Input
-              label="封面图片URL"
-              description="文章封面图片URL"
-              value={formData.coverUrl}
-              onChange={(e) => setFormData(prev => ({ ...prev, coverUrl: e.target.value }))}
-            />
-
-            {/* 内容 */}
-            <Textarea
-              label="文章内容"
-              description="文章内容"
-              minRows={10}
-              isRequired
-              value={formData.content}
-              onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-              isInvalid={!!errors.content}
-              errorMessage={errors.content}
-            />
-          </div>
-          <Switch 
-            isSelected={formData.featured}
-            onValueChange={(v) => setFormData(prev => ({ ...prev, featured: v }))}
-          >置顶文章</Switch>
-          {/* 标签选择 */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium">文章标签</label>
-            
-            {/* 现有标签选择 */}
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag) => (
-                <Chip
-                  key={tag.id}
-                  variant={formData.tags.find(t => t.id === tag.id) ? "solid" : "bordered"}
-                  color={formData.tags.find(t => t.id === tag.id) ? "primary" : "default"}
-                  className="cursor-pointer"
-                  onClick={() => handleTagSelect(tag as Tag)}
-                >
-                  {tag.name}
-                </Chip>
-              ))}
-            </div>
-
-            {/* 添加新标签 */}
-            <div className="flex gap-2">
-              <Input
-                placeholder="输入新标签"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                size="sm"
-              />
-              <Button 
-                size="sm" 
-                variant="flat" 
-                onPress={handleAddNewTag}
-              >
-                添加
-              </Button>
-            </div>
-
-            {/* 已选标签显示 */}
-            {formData.tags.length > 0 && (
-              <div className="mt-2">
-                <span className="text-sm text-default-600">已选择标签: </span>
-                {formData.tags.map(tag => (
-                  <Chip 
-                    key={tag.id} 
-                    variant="flat" 
-                    color="primary" 
-                    size="sm" 
-                    className="ml-1"
-                  >
-                    {tag.name}
-                  </Chip>
-                ))}
-              </div>
-            )}
-          </div>
-        </CardBody>
-        
-        {/* 表单操作按钮 */}
-        <div className="flex justify-end gap-3 p-4 border-t">
-          {onCancel && (
-            <Button variant="ghost" onPress={onCancel} disabled={loading}>
-              取消
-            </Button>
-          )}
-          <Button 
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? '提交中...' : (article?.id ? '更新文章' : '发布文章')}
-          </Button>
-        </div>
-      </Form>
-    </Card>
-  )
-  
-  // 表单提交处理
   async function handleSubmit() {
-    // 简单验证
     const validationErrors: FormErrors = {};
     if (!formData.title.trim()) {
       validationErrors.title = '标题不能为空';
@@ -297,64 +108,238 @@ export function PostForm({
     }
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      addToast({
-        title: `表单校验未通过：${Object.values(validationErrors).join("、")}`,
-      });
+      toast(`表单校验未通过：${Object.values(validationErrors).join("、")}`);
       return;
     }
-    
+
     setErrors({});
     setLoading(true);
-    
+
     try {
-      // 准备提交数据
       const submitData = {
         ...formData,
         excerpt: formData.excerpt.trim() || createExcerptFromContent(formData.content),
-        // 将标签转换为API需要的格式
         tags: formData.tags.map(tag => ({
           id: tag.id.startsWith('temp-') ? undefined : tag.id,
           name: tag.name,
           slug: tag.slug
         }))
       };
-      
-      // 如果有自定义提交回调，则调用
+
       if (onSubmit) {
         onSubmit(submitData);
         return;
       }
-      
-      // 调用API
+
       let response;
       if (article?.id) {
-        // 更新文章
         response = await request.put(`/post`, {
           ...submitData,
           id: article.id
         });
       } else {
-        // 创建文章
         response = await request.post('/post', submitData);
       }
-      
+
       if (response.code === 200) {
-        addToast({
-          title: article?.id ? '文章更新成功' : '文章发布成功',
-        })
+        toast(article?.id ? '文章更新成功' : '文章发布成功');
         router.back();
       } else {
-        addToast({
-          title: response.message || '操作失败'
-        })
+        toast(response.message || '操作失败');
       }
     } catch (error) {
       console.error('提交表单时出错:', error);
-      addToast({
-        title: '网络错误，请稍后再试'
-      })
+      toast('网络错误，请稍后再试');
     } finally {
       setLoading(false);
     }
   }
+
+  const categoryOptions = [
+    { id: '', label: '选择文章分类' },
+    ...categories
+      .filter((c): c is Category & { id: string } => Boolean(c.id))
+      .map((c) => ({ id: c.id, label: c.name ?? '' })),
+  ];
+
+  return (
+    <Card className="mx-auto w-full shadow-none">
+      <Card.Header className="flex flex-row items-center justify-between">
+        <h2 className="text-xl font-bold">
+          #{article?.id ? '编辑文章' : '发布文章'}
+        </h2>
+        <div className="flex gap-2">
+          {article && (
+            <Button variant="secondary">
+              预览
+            </Button>
+          )}
+        </div>
+      </Card.Header>
+
+      <Form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void handleSubmit();
+        }}
+      >
+        <Card.Content className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <TextField isRequired isInvalid={!!errors.title}>
+              <Label>文章标题</Label>
+              <Description>文章标题</Description>
+              <Input
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+              />
+              {errors.title ? <FieldError>{errors.title}</FieldError> : null}
+            </TextField>
+            <TextField isRequired isInvalid={!!errors.slug}>
+              <Label>Slug</Label>
+              <Description>将用于生成文章URL</Description>
+              <Input
+                value={formData.slug}
+                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+              />
+              {errors.slug ? <FieldError>{errors.slug}</FieldError> : null}
+            </TextField>
+
+            <StringSelect
+              className="w-full"
+              label="文章分类"
+              selectedId={formData.categoryId ?? ''}
+              onSelectionChange={(id) =>
+                setFormData((prev) => ({ ...prev, categoryId: id || undefined }))
+              }
+              options={categoryOptions}
+            />
+
+            <StringSelect
+              className="w-full"
+              label="文章状态"
+              selectedId={formData.status}
+              onSelectionChange={(id) =>
+                setFormData((prev) => ({ ...prev, status: id as PostStatus }))
+              }
+              options={[
+                { id: 'DRAFT', label: '草稿' },
+                { id: 'PUBLISHED', label: '已发布' },
+                { id: 'ARCHIVED', label: '已归档' },
+              ]}
+            />
+
+            <TextField isInvalid={!!errors.excerpt} className="md:col-span-2">
+              <Label>文章摘要</Label>
+              <Description>文章摘要</Description>
+              <TextArea
+                rows={2}
+                value={formData.excerpt}
+                onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
+              />
+              {errors.excerpt ? <FieldError>{errors.excerpt}</FieldError> : null}
+            </TextField>
+
+            <TextField className="md:col-span-2">
+              <Label>封面图片URL</Label>
+              <Description>文章封面图片URL</Description>
+              <Input
+                value={formData.coverUrl}
+                onChange={(e) => setFormData(prev => ({ ...prev, coverUrl: e.target.value }))}
+              />
+            </TextField>
+
+            <TextField isRequired isInvalid={!!errors.content} className="md:col-span-2">
+              <Label>文章内容</Label>
+              <Description>文章内容</Description>
+              <TextArea
+                rows={10}
+                value={formData.content}
+                onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+              />
+              {errors.content ? <FieldError>{errors.content}</FieldError> : null}
+            </TextField>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Switch
+              isSelected={formData.featured}
+              onChange={(v) => setFormData(prev => ({ ...prev, featured: v }))}
+            >
+              <Switch.Control>
+                <Switch.Thumb />
+              </Switch.Control>
+            </Switch>
+            <span className="text-sm">置顶文章</span>
+          </div>
+
+          <div className="space-y-3">
+            <label className="text-sm font-medium">文章标签</label>
+
+            <div className="flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <Chip
+                  key={tag.id}
+                  variant={formData.tags.find(t => t.id === tag.id) ? "primary" : "secondary"}
+                  color={formData.tags.find(t => t.id === tag.id) ? "accent" : "default"}
+                  className="cursor-pointer"
+                  onClick={() => handleTagSelect(tag as Tag)}
+                >
+                  <Chip.Label>{tag.name}</Chip.Label>
+                </Chip>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <Input
+                placeholder="输入新标签"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                className="max-w-xs"
+              />
+              <Button
+                size="sm"
+                variant="ghost"
+                onPress={handleAddNewTag}
+              >
+                添加
+              </Button>
+            </div>
+
+            {formData.tags.length > 0 && (
+              <div className="mt-2">
+                <span className="text-sm text-default-600">已选择标签: </span>
+                {formData.tags.map(tag => (
+                  <Chip
+                    key={tag.id}
+                    variant="soft"
+                    color="accent"
+                    size="sm"
+                    className="ml-1"
+                  >
+                    <Chip.Label>{tag.name}</Chip.Label>
+                  </Chip>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card.Content>
+
+        <div className="flex justify-end gap-3 border-t p-4">
+          {onCancel && (
+            <Button variant="ghost" onPress={onCancel} isDisabled={loading}>
+              取消
+            </Button>
+          )}
+          <Button
+            type="submit"
+            variant="primary"
+            isDisabled={loading}
+            isPending={loading}
+          >
+            {loading ? '提交中...' : (article?.id ? '更新文章' : '发布文章')}
+          </Button>
+        </div>
+      </Form>
+    </Card>
+  )
 }

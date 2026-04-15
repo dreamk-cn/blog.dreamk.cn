@@ -3,7 +3,7 @@
 import { ClientChip } from "../ui/heroui-client";
 import { getTagColor } from "@/lib/tag-color";
 import NextLink from "next/link";
-import { Card, CardBody, CardFooter, CardHeader, Link } from "@heroui/react";
+import { Card } from "@heroui/react";
 import type { Post, Tag } from "@prisma/client";
 
 type PostWithTags = Post & { tags: Tag[] };
@@ -19,23 +19,21 @@ function formatDate(date: Date | null) {
 
 export function PostCard({ post }: { post: PostWithTags }) {
   return (
-    <Card className="p-1" isHoverable shadow="sm">
-      <CardHeader className="flex-col items-start px-5 pb-0 pt-4">
-        <Link
-          as={NextLink}
+    <Card className="p-1 shadow-sm transition-shadow hover:shadow-md">
+      <Card.Header className="flex-col items-start px-5 pb-0 pt-4">
+        <NextLink
           href={`/posts/${post.slug}`}
-          className="line-clamp-1 text-2xl/normal font-semibold tracking-tight transition-colors hover:text-primary md:text-[30px]"
-          color="foreground"
+          className="line-clamp-1 text-2xl/normal font-semibold tracking-tight text-foreground transition-colors hover:text-accent md:text-[30px]"
         >
           {post.title}
-        </Link>
-      </CardHeader>
-      <CardBody className="px-5 py-3">
+        </NextLink>
+      </Card.Header>
+      <Card.Content className="px-5 py-3">
         <p className="line-clamp-3 text-sm leading-7 text-default-600">
           {post.excerpt || post.content || "暂无摘要"}
         </p>
-      </CardBody>
-      <CardFooter className="flex items-center justify-between gap-1 border-t border-default-100 px-5 py-3">
+      </Card.Content>
+      <Card.Footer className="flex items-center justify-between gap-1 border-t border-default-100 px-5 py-3">
         <div className="flex items-center gap-3 text-xs text-default-500">
           <span className="inline-flex items-center gap-1.5">
             浏览 {post.viewCount}
@@ -46,12 +44,12 @@ export function PostCard({ post }: { post: PostWithTags }) {
         </div>
         <div className="flex items-center gap-1">
           {post.tags.slice(0, 3).map((tag) => (
-            <ClientChip key={tag.id} color={getTagColor(tag.name)}>
-              {tag.name}
+            <ClientChip key={tag.id} color={getTagColor(tag.name)} variant="soft" size="sm">
+              <ClientChip.Label>{tag.name}</ClientChip.Label>
             </ClientChip>
           ))}
         </div>
-      </CardFooter>
+      </Card.Footer>
     </Card>
   );
 }

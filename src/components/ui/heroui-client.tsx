@@ -1,12 +1,11 @@
 "use client";
 
-import { Card, CardBody, CardHeader, Link, Avatar, Divider, Chip } from "@heroui/react";
+import { Card, Link, Avatar, Separator, Chip } from "@heroui/react";
 
-// Re-exporting HeroUI components as client components to allow their use in Server Components
 export const ClientCard = Card;
-export const ClientCardBody = CardBody;
-export const ClientCardHeader = CardHeader;
+export const ClientCardBody = Card.Content;
+export const ClientCardHeader = Card.Header;
 export const ClientLink = Link;
 export const ClientAvatar = Avatar;
-export const ClientDivider = Divider;
+export const ClientDivider = Separator;
 export const ClientChip = Chip;

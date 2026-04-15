@@ -1,6 +1,6 @@
 export const TAG_COLOR_PALETTE = [
-  "primary",
-  "secondary",
+  "accent",
+  "default",
   "success",
   "warning",
   "danger",

@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, Card, CardBody, Divider, Link } from "@heroui/react";
+import { Avatar, Card, Separator } from "@heroui/react";
 import NextLink from "next/link";
 import { siteConfig } from "@/config/site";
 import { ClientChip } from "@/components/ui/heroui-client";
@@ -18,62 +18,59 @@ export function ProfileSidebar({ tagCloud }: { tagCloud: Tag[] }) {
   ];
 
   return (
-    <Card className="overflow-hidden" shadow="sm">
-      <CardBody className="p-6 text-center">
+    <Card className="overflow-hidden shadow-sm">
+      <Card.Content className="p-6 text-center">
         <div className="mx-auto mb-4">
-          <Avatar
-            src={siteConfig.avatar}
-            className="w-24 h-24 text-large mx-auto shadow-sm border border-default-200"
-            isBordered
-            color="primary"
-          />
+          <Avatar color="accent" className="mx-auto h-24 w-24 border border-default-200 text-large shadow-sm">
+            <Avatar.Image src={siteConfig.avatar} alt="" />
+            <Avatar.Fallback>{siteConfig.name.slice(0, 1)}</Avatar.Fallback>
+          </Avatar>
         </div>
         <h2 className="text-[28px] font-semibold leading-none">{siteConfig.name}&apos;s Blog</h2>
         <p className="mt-3 text-sm text-default-500">Web Developer & Designer</p>
         <div className="mt-4 flex justify-center gap-3 text-sm text-default-600">
-          <Link
-            as={NextLink}
+          <NextLink
             href={siteConfig.links.github}
             target="_blank"
-            className="inline-flex items-center gap-1.5"
-            showAnchorIcon
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 hover:text-accent"
           >
-            github
-          </Link>
+            github ↗
+          </NextLink>
         </div>
-      </CardBody>
+      </Card.Content>
 
-      <Divider />
+      <Separator />
 
-      <CardBody className="px-4 py-4">
+      <Card.Content className="px-4 py-4">
         <div className="mb-3 text-md font-semibold text-default-700">标签</div>
         <div className="flex flex-wrap gap-2">
           {tagCloud.map((tag) => (
-            <ClientChip key={tag.id} color={getTagColor(tag.name)}>
-              {tag.name}
+            <ClientChip key={tag.id} color={getTagColor(tag.name)} variant="soft" size="sm">
+              <ClientChip.Label>{tag.name}</ClientChip.Label>
             </ClientChip>
           ))}
         </div>
-      </CardBody>
+      </Card.Content>
 
-      <Divider />
+      <Separator />
 
-      <CardBody className="p-4">
+      <Card.Content className="p-4">
         <div className="mb-3 text-md font-semibold text-default-700">友链</div>
-        <div className="flex flex-wrap gap-x-3 gap-y-2 text-sm px-1">
+        <div className="flex flex-wrap gap-x-3 gap-y-2 px-1 text-sm">
           {friendLinks.map((item) => (
-            <Link
-              as={NextLink}
+            <NextLink
               href={item.url}
               target="_blank"
-              className="text-sm text-default-500 hover:text-primary transition-colors"
+              rel="noreferrer"
+              className="text-sm text-default-500 transition-colors hover:text-accent"
               key={item.name}
             >
               {item.name}
-            </Link>
+            </NextLink>
           ))}
         </div>
-      </CardBody>
+      </Card.Content>
     </Card>
   );
 }

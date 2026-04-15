@@ -1,5 +1,5 @@
 import { isDev } from '@/utils/env';
-import { addToast } from '@heroui/react';
+import { toast } from '@heroui/react';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { ApiResponse } from '@/types/request';
 import { isClient } from '@/utils';
@@ -185,11 +185,7 @@ class HttpClient {
    */
   private handleUnauthorized(): void {
     if (isClient()) {
-      addToast({
-        title: '未授权',
-        description: '请重新登录',
-        color: 'danger',
-      });
+      toast.danger('未授权', { description: '请重新登录' });
       
       // 重定向到登录页的逻辑
     }
@@ -210,11 +206,7 @@ class HttpClient {
     // 显示错误提示
     if (config?.showErrorMessage !== false) {
       if (isClient()) {
-        addToast({
-          title: '请求错误',
-          description: error.message,
-          color: 'danger',
-        });
+        toast.danger('请求错误', { description: error.message });
       }
     }
     

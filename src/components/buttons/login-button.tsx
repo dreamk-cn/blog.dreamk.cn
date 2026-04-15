@@ -27,7 +27,7 @@ export default function LoginButton({
   auth: ClientSafeProvider | null;
 }) {
   return (
-    <Button color="default" onPress={() => signIn(auth?.id as string)}>
+    <Button variant="secondary" onPress={() => signIn(auth?.id as string)}>
       {auth ? (
         <div className="flex items-center gap-2">
           <Icon provider={auth.name as string} />

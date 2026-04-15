@@ -1,7 +1,16 @@
-'use client'
+'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Button, Input, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from '@heroui/react';
+import {
+  Button,
+  Input,
+  InputGroup,
+  Label,
+  Modal,
+  Table,
+  TextField,
+  useOverlayState,
+} from '@heroui/react';
 import { SearchIcon } from '@/components/icons';
 import type { Category } from '@prisma/client';
 import { request } from '@/libs/request';
@@ -12,25 +21,25 @@ export default function AdminCategoryListPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const createModal = useOverlayState();
+  const editModal = useOverlayState();
+  const deleteModal = useOverlayState();
+
   const [newName, setNewName] = useState('');
   const [newSlug, setNewSlug] = useState('');
   const [creating, setCreating] = useState(false);
-  const [isEditOpen, setIsEditOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
   const [editName, setEditName] = useState('');
   const [editSlug, setEditSlug] = useState('');
   const [updating, setUpdating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
-  // 自动根据名称生成 slug
   useEffect(() => {
     if (!newSlug) {
-      setNewSlug(newName.trim().toLowerCase().replace(/\s+/g, '-'))
+      setNewSlug(newName.trim().toLowerCase().replace(/\s+/g, '-'));
     }
-  }, [newName, newSlug])
+  }, [newName, newSlug]);
 
   const fetchCategories = async (kw = '') => {
     try {
@@ -54,7 +63,6 @@ export default function AdminCategoryListPage() {
     fetchCategories();
   }, []);
 
-  // 搜索输入防抖
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchCategories(keyword.trim());
@@ -72,7 +80,7 @@ export default function AdminCategoryListPage() {
         { showSuccessMessage: true }
       );
       if (res.code === 200) {
-        setIsCreateOpen(false);
+        createModal.close();
         setNewName('');
         setNewSlug('');
         fetchCategories(keyword);
@@ -88,7 +96,7 @@ export default function AdminCategoryListPage() {
     setEditing(cat);
     setEditName(cat.name);
     setEditSlug(cat.slug || '');
-    setIsEditOpen(true);
+    editModal.open();
   };
 
   const handleUpdate = async () => {
@@ -102,7 +110,7 @@ export default function AdminCategoryListPage() {
         { showSuccessMessage: true }
       );
       if (res.code === 200) {
-        setIsEditOpen(false);
+        editModal.close();
         setEditing(null);
         setEditName('');
         setEditSlug('');
@@ -117,7 +125,7 @@ export default function AdminCategoryListPage() {
 
   const openDelete = (category: Category) => {
     setCategoryToDelete(category);
-    setIsDeleteOpen(true);
+    deleteModal.open();
   };
 
   const handleDelete = async () => {
@@ -126,7 +134,7 @@ export default function AdminCategoryListPage() {
       setDeletingId(categoryToDelete.id);
       const res = await request.delete('/categories', { id: categoryToDelete.id }, { showSuccessMessage: true });
       if (res.code === 200) {
-        setIsDeleteOpen(false);
+        deleteModal.close();
         setCategoryToDelete(null);
         fetchCategories(keyword);
       }
@@ -139,126 +147,179 @@ export default function AdminCategoryListPage() {
 
   const tableItems = useMemo(() => categories, [categories]);
 
+  const emptyMessage = loading ? '加载中...' : (error || '暂无数据');
+
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4">
       <div className="flex items-center justify-between gap-3">
-        <Input
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          placeholder="搜索分类名称或slug"
-          startContent={<SearchIcon className="text-base text-default-400" />}
-          className="max-w-sm"
-        />
-        <Button color="primary" onPress={() => setIsCreateOpen(true)}>新增分类</Button>
+        <InputGroup className="max-w-sm">
+          <InputGroup.Prefix>
+            <SearchIcon className="text-base text-default-400" />
+          </InputGroup.Prefix>
+          <InputGroup.Input
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="搜索分类名称或slug"
+          />
+        </InputGroup>
+        <Button variant="primary" onPress={() => createModal.open()}>
+          新增分类
+        </Button>
       </div>
 
-      <Table aria-label="分类列表">
-        <TableHeader>
-          <TableColumn>名称</TableColumn>
-          <TableColumn>Slug</TableColumn>
-          <TableColumn>创建时间</TableColumn>
-          <TableColumn>更新时间</TableColumn>
-          <TableColumn>操作</TableColumn>
-        </TableHeader>
-        <TableBody emptyContent={loading ? '加载中...' : (error || '暂无数据')} items={tableItems}>
-          {tableItems.map(cat => (
-            <TableRow key={cat.id}>
-              <TableCell>{cat.name}</TableCell>
-              <TableCell>{cat.slug}</TableCell>
-              <TableCell>{new Date(cat.createdAt).toLocaleString()}</TableCell>
-              <TableCell>{new Date(cat.updatedAt).toLocaleString()}</TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" onPress={() => openEdit(cat)}>编辑</Button>
-                  <Button size="sm" color="danger" isDisabled={deletingId === cat.id} onPress={() => openDelete(cat)}>
-                    {deletingId === cat.id ? '删除中...' : '删除'}
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
+      <Table>
+        <Table.ScrollContainer>
+          <Table.Content aria-label="分类列表">
+            <Table.Header>
+              <Table.Column isRowHeader>名称</Table.Column>
+              <Table.Column>Slug</Table.Column>
+              <Table.Column>创建时间</Table.Column>
+              <Table.Column>更新时间</Table.Column>
+              <Table.Column>操作</Table.Column>
+            </Table.Header>
+            <Table.Body>
+              {tableItems.length === 0 ? (
+                <Table.Row>
+                  <Table.Cell colSpan={5}>
+                    <span className="text-default-400">{emptyMessage}</span>
+                  </Table.Cell>
+                </Table.Row>
+              ) : (
+                tableItems.map((cat) => (
+                  <Table.Row key={cat.id}>
+                    <Table.Cell>{cat.name}</Table.Cell>
+                    <Table.Cell>{cat.slug}</Table.Cell>
+                    <Table.Cell>{new Date(cat.createdAt).toLocaleString()}</Table.Cell>
+                    <Table.Cell>{new Date(cat.updatedAt).toLocaleString()}</Table.Cell>
+                    <Table.Cell>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="ghost" onPress={() => openEdit(cat)}>
+                          编辑
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          isDisabled={deletingId === cat.id}
+                          onPress={() => openDelete(cat)}
+                        >
+                          {deletingId === cat.id ? '删除中...' : '删除'}
+                        </Button>
+                      </div>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              )}
+            </Table.Body>
+          </Table.Content>
+        </Table.ScrollContainer>
       </Table>
 
-      <Modal isOpen={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader>新增分类</ModalHeader>
-              <ModalBody>
+      <Modal state={createModal}>
+        <Modal.Backdrop />
+        <Modal.Container>
+          <Modal.Dialog>
+            <Modal.Header>
+              <Modal.Heading>新增分类</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body className="flex flex-col gap-3">
+              <TextField isRequired>
+                <Label>分类名称</Label>
                 <Input
-                  label="分类名称"
                   placeholder="例如：技术"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  isRequired
                 />
+              </TextField>
+              <TextField>
+                <Label>Slug</Label>
                 <Input
-                  label="Slug"
                   placeholder="例如：tech"
                   value={newSlug}
                   onChange={(e) => setNewSlug(e.target.value)}
                 />
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="ghost" onPress={onClose}>取消</Button>
-                <Button color="primary" isDisabled={creating || !newName.trim()} onPress={handleCreate}>
-                  {creating ? '提交中...' : '提交'}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
+              </TextField>
+            </Modal.Body>
+            <Modal.Footer className="flex justify-end gap-2">
+              <Button variant="ghost" onPress={createModal.close}>
+                取消
+              </Button>
+              <Button
+                variant="primary"
+                isDisabled={creating || !newName.trim()}
+                onPress={handleCreate}
+              >
+                {creating ? '提交中...' : '提交'}
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
       </Modal>
 
-      <Modal isOpen={isEditOpen} onOpenChange={setIsEditOpen}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader>编辑分类</ModalHeader>
-              <ModalBody>
+      <Modal state={editModal}>
+        <Modal.Backdrop />
+        <Modal.Container>
+          <Modal.Dialog>
+            <Modal.Header>
+              <Modal.Heading>编辑分类</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body className="flex flex-col gap-3">
+              <TextField isRequired>
+                <Label>分类名称</Label>
                 <Input
-                  label="分类名称"
                   placeholder="例如：技术"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  isRequired
                 />
+              </TextField>
+              <TextField>
+                <Label>Slug</Label>
                 <Input
-                  label="Slug"
                   placeholder="例如：tech"
                   value={editSlug}
                   onChange={(e) => setEditSlug(e.target.value)}
                 />
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="ghost" onPress={onClose}>取消</Button>
-                <Button color="primary" isDisabled={updating || !editName.trim()} onPress={handleUpdate}>
-                  {updating ? '保存中...' : '保存'}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
+              </TextField>
+            </Modal.Body>
+            <Modal.Footer className="flex justify-end gap-2">
+              <Button variant="ghost" onPress={editModal.close}>
+                取消
+              </Button>
+              <Button
+                variant="primary"
+                isDisabled={updating || !editName.trim()}
+                onPress={handleUpdate}
+              >
+                {updating ? '保存中...' : '保存'}
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
       </Modal>
 
-      <Modal isOpen={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader>删除分类</ModalHeader>
-              <ModalBody>
-                <p>确认要删除分类 &quot;{categoryToDelete?.name}&quot; 吗？此操作不可撤销。</p>
-              </ModalBody>
-              <ModalFooter>
-                <Button variant="ghost" onPress={onClose}>取消</Button>
-                <Button color="danger" isDisabled={deletingId !== null} onPress={handleDelete}>
-                  {deletingId ? '删除中...' : '确认删除'}
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
+      <Modal state={deleteModal}>
+        <Modal.Backdrop />
+        <Modal.Container>
+          <Modal.Dialog>
+            <Modal.Header>
+              <Modal.Heading>删除分类</Modal.Heading>
+            </Modal.Header>
+            <Modal.Body>
+              <p>确认要删除分类 &quot;{categoryToDelete?.name}&quot; 吗？此操作不可撤销。</p>
+            </Modal.Body>
+            <Modal.Footer className="flex justify-end gap-2">
+              <Button variant="ghost" onPress={deleteModal.close}>
+                取消
+              </Button>
+              <Button
+                variant="danger"
+                isDisabled={deletingId !== null}
+                onPress={handleDelete}
+              >
+                {deletingId ? '删除中...' : '确认删除'}
+              </Button>
+            </Modal.Footer>
+          </Modal.Dialog>
+        </Modal.Container>
       </Modal>
     </div>
   );

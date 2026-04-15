@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, Input, Select, SelectItem, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react";
+import { Button, InputGroup, Table, TextField, Label } from "@heroui/react";
 import { SearchIcon } from "@/components/icons";
 import type { User } from "@prisma/client";
 import { request } from "@/libs/request";
+import { StringSelect } from "@/components/admin/string-select";
 
 export default function AdminUserListPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -36,7 +37,6 @@ export default function AdminUserListPage() {
     fetchUsers();
   }, []);
 
-  // 搜索输入防抖
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchUsers(keyword.trim(), statusFilter);
@@ -53,7 +53,6 @@ export default function AdminUserListPage() {
         { showSuccessMessage: true }
       );
       if (res.code === 200) {
-        // 刷新列表并保持当前筛选
         fetchUsers(keyword, statusFilter);
       }
     } catch (err) {
@@ -65,75 +64,99 @@ export default function AdminUserListPage() {
 
   const tableItems = useMemo(() => users, [users]);
 
+  const statusSelectId = statusFilter ?? "all";
+
+  const emptyMessage = loading ? "加载中..." : (error || "暂无数据");
+
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4">
       <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Input
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            placeholder="搜索姓名或邮箱"
-            startContent={<SearchIcon className="text-base text-default-400" />}
-            className="max-w-sm"
-          />
-          <Select
+        <div className="flex flex-wrap items-end gap-3">
+          <TextField className="max-w-sm">
+            <Label>搜索</Label>
+            <InputGroup>
+              <InputGroup.Prefix>
+                <SearchIcon className="text-base text-default-400" />
+              </InputGroup.Prefix>
+              <InputGroup.Input
+                value={keyword}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setKeyword(e.target.value)}
+                placeholder="搜索姓名或邮箱"
+              />
+            </InputGroup>
+          </TextField>
+          <StringSelect
             className="w-40"
             label="状态筛选"
-            selectedKeys={statusFilter ? [statusFilter] : []}
-            onChange={(e) => setStatusFilter(e.target.value || undefined)}
-          >
-            <SelectItem key="">全部</SelectItem>
-            <SelectItem key="VALID">正常</SelectItem>
-            <SelectItem key="BAN">封禁</SelectItem>
-            <SelectItem key="DELETED">已删除</SelectItem>
-          </Select>
+            selectedId={statusSelectId}
+            onSelectionChange={(id) => {
+              setStatusFilter(id === "all" ? undefined : id);
+            }}
+            options={[
+              { id: "all", label: "全部" },
+              { id: "VALID", label: "正常" },
+              { id: "BAN", label: "封禁" },
+              { id: "DELETED", label: "已删除" },
+            ]}
+          />
         </div>
       </div>
 
-      <Table aria-label="用户列表">
-        <TableHeader>
-          <TableColumn>姓名</TableColumn>
-          <TableColumn>邮箱</TableColumn>
-          <TableColumn>角色</TableColumn>
-          <TableColumn>状态</TableColumn>
-          <TableColumn>创建时间</TableColumn>
-          <TableColumn>操作</TableColumn>
-        </TableHeader>
-        <TableBody emptyContent={loading ? "加载中..." : (error || "暂无数据")} items={tableItems}>
-          {tableItems.map((u) => (
-            <TableRow key={u.id}>
-              <TableCell>{u.name || "-"}</TableCell>
-              <TableCell>{u.email}</TableCell>
-              <TableCell>{u.role}</TableCell>
-              <TableCell>{u.status}</TableCell>
-              <TableCell>{new Date(u.createdAt).toLocaleString()}</TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  {u.status !== "BAN" ? (
-                    <Button
-                      size="sm"
-                      color="danger"
-                      isDisabled={updatingId === u.id}
-                      onPress={() => handleBanToggle(u, "BAN")}
-                    >
-                      {updatingId === u.id ? "封禁中..." : "封禁"}
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      color="primary"
-                      variant="ghost"
-                      isDisabled={updatingId === u.id}
-                      onPress={() => handleBanToggle(u, "VALID")}
-                    >
-                      {updatingId === u.id ? "解禁中..." : "解禁"}
-                    </Button>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
+      <Table>
+        <Table.ScrollContainer>
+          <Table.Content aria-label="用户列表">
+            <Table.Header>
+              <Table.Column isRowHeader>姓名</Table.Column>
+              <Table.Column>邮箱</Table.Column>
+              <Table.Column>角色</Table.Column>
+              <Table.Column>状态</Table.Column>
+              <Table.Column>创建时间</Table.Column>
+              <Table.Column>操作</Table.Column>
+            </Table.Header>
+            <Table.Body>
+              {tableItems.length === 0 ? (
+                <Table.Row>
+                  <Table.Cell colSpan={6}>
+                    <span className="text-default-400">{emptyMessage}</span>
+                  </Table.Cell>
+                </Table.Row>
+              ) : (
+                tableItems.map((u) => (
+                  <Table.Row key={u.id}>
+                    <Table.Cell>{u.name || "-"}</Table.Cell>
+                    <Table.Cell>{u.email}</Table.Cell>
+                    <Table.Cell>{u.role}</Table.Cell>
+                    <Table.Cell>{u.status}</Table.Cell>
+                    <Table.Cell>{new Date(u.createdAt).toLocaleString()}</Table.Cell>
+                    <Table.Cell>
+                      <div className="flex gap-2">
+                        {u.status !== "BAN" ? (
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            isDisabled={updatingId === u.id}
+                            onPress={() => handleBanToggle(u, "BAN")}
+                          >
+                            {updatingId === u.id ? "封禁中..." : "封禁"}
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            isDisabled={updatingId === u.id}
+                            onPress={() => handleBanToggle(u, "VALID")}
+                          >
+                            {updatingId === u.id ? "解禁中..." : "解禁"}
+                          </Button>
+                        )}
+                      </div>
+                    </Table.Cell>
+                  </Table.Row>
+                ))
+              )}
+            </Table.Body>
+          </Table.Content>
+        </Table.ScrollContainer>
       </Table>
     </div>
   );
