@@ -3,7 +3,7 @@
 import { Avatar, Card, CardBody, Divider, Link } from "@heroui/react";
 import NextLink from "next/link";
 import { siteConfig } from "@/config/site";
-import { ClientChip } from "@/components/ui/client-chip";
+import { ClientChip } from "@/components/ui/heroui-client";
 import { getTagColor } from "@/lib/tag-color";
 import type { Tag } from "@prisma/client";
 

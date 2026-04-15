@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import NextLink from 'next/link';
 import { request } from '@/libs/request';
 import type { Post, Category, Tag } from '@prisma/client';
-import { Button, Input, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Select, SelectItem, Chip, Alert, Pagination, Link } from '@heroui/react';
+import { Button, Input, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, Select, SelectItem, Chip, Alert, Pagination } from '@heroui/react';
 import { useDebounce } from '@/hooks/useDebounce';
 
 type PostItem = Post & { category: Category | null; tags: Tag[] };

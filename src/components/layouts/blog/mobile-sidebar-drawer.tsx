@@ -32,7 +32,7 @@ export function MobileSidebarDrawer({ children }: { children: ReactNode }) {
         }}
       >
         <DrawerContent>
-          {(onClose) => (
+          {() => (
             <>
               <DrawerBody>
                 {children}

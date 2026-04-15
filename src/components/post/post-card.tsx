@@ -1,6 +1,6 @@
 "use client";
 
-import { ClientChip } from "@/components/ui/client-chip";
+import { ClientChip } from "../ui/heroui-client";
 import { getTagColor } from "@/lib/tag-color";
 import NextLink from "next/link";
 import { Card, CardBody, CardFooter, CardHeader, Link } from "@heroui/react";
