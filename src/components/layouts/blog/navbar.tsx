@@ -1,18 +1,13 @@
 'use client'
 
 import {
-  Navbar as HeroUINavbar,
-  NavbarContent,
-  NavbarMenu,
-  NavbarMenuToggle,
-  NavbarBrand,
-  NavbarItem,
-  NavbarMenuItem,
-} from "@heroui/navbar";
-import { Kbd } from "@heroui/kbd";
-import { Link } from "@heroui/link";
-import { Input } from "@heroui/input";
-import { link as linkStyles } from "@heroui/theme";
+  Avatar,
+  Dropdown,
+  DropdownItem,
+  DropdownMenu,
+  DropdownTrigger,
+  Link,
+} from "@heroui/react";
 import NextLink from "next/link";
 import clsx from "clsx";
 
@@ -20,7 +15,6 @@ import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switcher";
 import { SearchIcon, LogoIcon } from '@/components/icons';
 import { signOut, useSession } from "next-auth/react";
-import { Avatar, Divider, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
@@ -59,15 +53,13 @@ export const NavBarUser = () => {
           </Link>
         </DropdownItem>
         <DropdownItem textValue="signout" key="signout">
-          <Link
-            color="danger"
-            onPress={() => signOut()}
-            href="void(0)"
-            size="lg"
-            className="flex gap-2"
+          <button
+            type="button"
+            onClick={() => signOut()}
+            className="flex w-full gap-2 text-danger"
           >
             退出登录
-          </Link>
+          </button>
         </DropdownItem>
       </DropdownMenu>
     </Dropdown>
@@ -80,107 +72,117 @@ export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const searchInput = (
-    <Input
-      aria-label="Search"
-      classNames={{
-        inputWrapper: "bg-default-100",
-        input: "text-sm",
-      }}
-      endContent={
-        <Kbd className="hidden lg:inline-block" keys={['shift']}>
-          K
-        </Kbd>
-      }
-      labelPlacement="outside"
-      placeholder="Search..."
-      startContent={
-        <SearchIcon className="text-base text-default-400 pointer-events-none flex-shrink-0" />
-      }
-      type="search"
-    />
+    <label className="flex items-center gap-2 rounded-xl border border-default-200 bg-default-100 px-3 py-2 text-sm">
+      <SearchIcon className="pointer-events-none flex-shrink-0 text-base text-default-400" />
+      <input
+        aria-label="Search"
+        placeholder="Search..."
+        type="search"
+        className="w-full bg-transparent text-sm outline-none placeholder:text-default-400"
+      />
+      <kbd className="hidden rounded border border-default-300 px-1.5 py-0.5 text-xs text-default-500 lg:inline-block">
+        Shift + K
+      </kbd>
+    </label>
   );
 
   const authButton = (
     session ? 
     <NavBarUser /> :
-    <Link
-      color="primary"
+    <NextLink
+      className="text-primary"
       href="/auth/signin"
-      size="lg"
     >
       登录
-    </Link>
+    </NextLink>
   )
 
   return (
-    <HeroUINavbar className="shadow" maxWidth="xl" position="sticky" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
-      {/* Logo */}
-      <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
-        <NavbarBrand as="li" className="gap-3 max-w-fit">
-          <NextLink className="flex justify-start items-center gap-1" href="/">
+    <header className="sticky top-0 z-50 border-b border-default-200 bg-background shadow">
+      <nav className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
+          <NextLink className="flex items-center justify-start gap-1" href="/">
             <LogoIcon className="dark:invert-90" height={34} width={34} />
-            <p className="font-bold text-inherit text-xl">{ siteConfig.name}</p>
+            <p className="text-xl font-bold text-inherit">{siteConfig.name}</p>
           </NextLink>
-        </NavbarBrand>
-      </NavbarContent>
-
-      {/* 桌面端菜单 */}
-      <NavbarContent
-        className="hidden lg:flex basis-1/5 lg:basis-full" justify="end"
-      >
-        <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
-        <NavbarItem className="hidden lg:flex gap-2">
-          <ThemeSwitch />
-        </NavbarItem>
-        <ul className="hidden lg:flex gap-4 justify-start ml-2">
-          {siteConfig.navItems.map((item) => (
-            <NavbarItem key={item.href}>
-              <NextLink
-                className={clsx(
-                  linkStyles({ color: "foreground" }),
-                  "data-[active=true]:text-primary data-[active=true]:font-medium",
-                )}
-                color="foreground"
-                href={item.href}
-              >
-                {item.label}
-              </NextLink>
-            </NavbarItem>
-          ))}
-        </ul>
-        <NavbarItem className="hidden lg:flex text-primary cursor-pointer">
-          { authButton }
-        </NavbarItem>
-      </NavbarContent>
-      
-      {/* 手机端菜单toggle */}
-      <NavbarContent className="lg:hidden basis-1 pl-4" justify="end">
-        <ThemeSwitch />
-        <NavbarMenuToggle  />
-      </NavbarContent>
-
-      {/* 手机端菜单 */}
-      <NavbarMenu>
-        <div className="mx-4 mt-2 flex flex-col gap-2">
-          {searchInput}
-          {siteConfig.navItems.map((item, index) => (
-            <NavbarMenuItem key={`${item}-${index}`}>
-              <Link
-                color={ item.href === pathname ? "primary" :  "foreground" }
-                href={item.href}
-                size="lg"
-                onPress={() => setIsMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            </NavbarMenuItem>
-          ))}
-          <Divider />
-          <NavbarMenuItem>
-            {authButton}
-          </NavbarMenuItem>
+          <div className="hidden min-w-[280px] lg:block">{searchInput}</div>
         </div>
-      </NavbarMenu>
-    </HeroUINavbar>
+
+        <div className="hidden items-center gap-4 lg:flex">
+          <ThemeSwitch />
+          <ul className="ml-2 flex items-center gap-4">
+            {siteConfig.navItems.map((item) => {
+              const active = pathname === item.href;
+              return (
+                <li key={item.href}>
+                  <NextLink
+                    className={clsx(
+                      "text-foreground transition-colors hover:text-primary",
+                      active && "font-medium text-primary",
+                    )}
+                    href={item.href}
+                  >
+                    {item.label}
+                  </NextLink>
+                </li>
+              );
+            })}
+          </ul>
+          <div className="cursor-pointer text-primary">{authButton}</div>
+        </div>
+
+        <div className="flex items-center gap-2 lg:hidden">
+          <ThemeSwitch />
+          <button
+            type="button"
+            aria-label={isMenuOpen ? "收起菜单" : "展开菜单"}
+            onClick={() => setIsMenuOpen((prev) => !prev)}
+            className="rounded-lg border border-default-200 px-2 py-1 text-sm"
+          >
+            {isMenuOpen ? "关闭" : "菜单"}
+          </button>
+        </div>
+      </nav>
+
+      <>
+        <button
+          type="button"
+          aria-label="关闭菜单遮罩"
+          className={clsx(
+            "fixed inset-0 z-40 bg-black/30 transition-opacity duration-200 lg:hidden",
+            isMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+          )}
+          onClick={() => setIsMenuOpen(false)}
+        />
+        <div
+          className={clsx(
+            "absolute left-4 right-4 top-full z-50 mt-2 rounded-2xl border border-default-200 bg-background p-4 shadow-xl transition-all duration-200 lg:hidden",
+            isMenuOpen
+              ? "pointer-events-auto translate-y-0 opacity-100"
+              : "pointer-events-none -translate-y-2 opacity-0",
+          )}
+        >
+          <div className="mb-3">{searchInput}</div>
+          <ul className="flex flex-col gap-2">
+            {siteConfig.navItems.map((item) => (
+              <li key={item.href}>
+                <NextLink
+                  className={clsx(
+                    "block rounded-lg px-2 py-1.5 text-foreground",
+                    pathname === item.href && "bg-default-100 text-primary",
+                  )}
+                  href={item.href}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </NextLink>
+              </li>
+            ))}
+          </ul>
+          <hr className="my-3 border-default-200" />
+          <div>{authButton}</div>
+        </div>
+      </>
+    </header>
   );
 };
