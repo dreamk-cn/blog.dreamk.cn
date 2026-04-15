@@ -3,13 +3,14 @@
 import {
   Avatar,
   Dropdown,
+  SearchField,
 } from "@heroui/react";
 import NextLink from "next/link";
 import clsx from "clsx";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switcher";
-import { SearchIcon, LogoIcon } from '@/components/icons';
+import { LogoIcon } from '@/components/icons';
 import { signOut, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,20 +22,19 @@ export const NavBarUser = () => {
   return (
     <Dropdown>
       <Dropdown.Trigger
-        className="h-auto min-w-0 border-0 bg-transparent p-0 shadow-none ring-0 hover:bg-default-100 data-[pressed]:bg-default-100"
         aria-label="用户菜单"
+        className="inline-flex h-auto min-w-0 items-center border-0 bg-transparent p-0 shadow-none ring-0 hover:bg-default-100 data-[pressed]:bg-default-100"
       >
-        <span className="flex items-center justify-center gap-2">
-          <Avatar color="accent" size="md">
-            {session?.user?.image ? (
-              <Avatar.Image src={session.user.image} alt="" />
-            ) : null}
-            <Avatar.Fallback>{session?.user?.name?.slice(0, 1) ?? "?"}</Avatar.Fallback>
-          </Avatar>
-        </span>
+        <Avatar color="accent" size="md">
+          {session?.user?.image ? (
+            <Avatar.Image src={session.user.image} alt="" />
+          ) : null}
+          <Avatar.Fallback>{session?.user?.name?.slice(0, 1) ?? "?"}</Avatar.Fallback>
+        </Avatar>
       </Dropdown.Trigger>
       <Dropdown.Popover>
         <Dropdown.Menu
+          aria-label="用户菜单操作"
           disabledKeys={["profile", ...(session?.user?.role === 'ADMIN' ? [] : ["dashboard"])]}
         >
           <Dropdown.Item id="profile" textValue="profile">
@@ -69,18 +69,13 @@ export const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const searchInput = (
-    <label className="flex items-center gap-2 rounded-xl border border-default-200 bg-default-100 px-3 py-2 text-sm">
-      <SearchIcon className="pointer-events-none flex-shrink-0 text-base text-default-400" />
-      <input
-        aria-label="Search"
-        placeholder="Search..."
-        type="search"
-        className="w-full bg-transparent text-sm outline-none placeholder:text-default-400"
-      />
-      <kbd className="hidden rounded border border-default-300 px-1.5 py-0.5 text-xs text-default-500 lg:inline-block">
-        Shift + K
-      </kbd>
-    </label>
+    <SearchField aria-label="站内搜索">
+      <SearchField.Group>
+        <SearchField.SearchIcon />
+        <SearchField.Input aria-label="站内搜索" placeholder="Search..." />
+        <SearchField.ClearButton />
+      </SearchField.Group>
+    </SearchField>
   );
 
   const authButton = (
@@ -102,8 +97,9 @@ export const Navbar = () => {
             <LogoIcon className="dark:invert-90" height={34} width={34} />
             <p className="text-xl font-bold text-inherit">{siteConfig.name}</p>
           </NextLink>
-          <div className="hidden min-w-[280px] lg:block">{searchInput}</div>
         </div>
+
+        <div className="hidden min-w-[280px] lg:block">{searchInput}</div>
 
         <div className="hidden items-center gap-4 lg:flex">
           <ThemeSwitch />
@@ -114,8 +110,8 @@ export const Navbar = () => {
                 <li key={item.href}>
                   <NextLink
                     className={clsx(
-                      "text-foreground transition-colors hover:text-accent",
-                      active && "font-medium text-accent",
+                      "text-text-muted transition-colors hover:text-accent",
+                      active && "font-medium text-primary!",
                     )}
                     href={item.href}
                   >
@@ -125,7 +121,7 @@ export const Navbar = () => {
               );
             })}
           </ul>
-          <div className="cursor-pointer text-accent">{authButton}</div>
+          <div className="text-accent">{authButton}</div>
         </div>
 
         <div className="flex items-center gap-2 lg:hidden">
@@ -165,8 +161,8 @@ export const Navbar = () => {
               <li key={item.href}>
                 <NextLink
                   className={clsx(
-                    "block rounded-lg px-2 py-1.5 text-foreground",
-                    pathname === item.href && "bg-default-100 text-accent",
+                    "block rounded-lg px-2 py-1.5 text-text-muted",
+                    pathname === item.href && "bg-default-100 text-primary!",
                   )}
                   href={item.href}
                   onClick={() => setIsMenuOpen(false)}

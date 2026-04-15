@@ -11,7 +11,8 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
-    "@heroui/react": "^2.8.4",
+    "@heroui/react": "^3.0.2",
+    "@heroui/styles": "^3.0.2",
     "@prisma/client": "^6.13.0",
     "@react-aria/ssr": "^3.9.10",
     "@react-aria/visually-hidden": "^3.8.27",
@@ -31,6 +32,9 @@
     "rehype-slug": "^6.0.0",
     "remark-gfm": "^4.0.1",
     "zod": "^4.1.11"
+  },
+  "overrides": {
+    "@auth/core": "0.40.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

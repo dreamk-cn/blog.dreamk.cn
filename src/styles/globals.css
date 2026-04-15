@@ -17,10 +17,13 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
 
-  --color-back-text: var(--color-gray-500);
-  --color-fore-text: var(--color-red-500);
+  /* 文字颜色定义 */
+  --color-text-base: var(--color-slate-700); /* 基本文字颜色 */
+  --color-text-muted: var(--color-slate-500); /* 灰色文字颜色 */
+  --color-text-placeholder: var(--color-slate-400); /* 占位符颜色 */
 
-  --color-primary: var(--color-blue-600);
+  /* 颜色定义 */
+  --color-primary: var(--color-blue-500);
   --color-success: var(--color-green-600);
   --color-error: var(--color-red-600);
   --color-warning: var(--color-yellow-600);
