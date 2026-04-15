@@ -1,10 +1,10 @@
 "use client";
 
-import { Drawer, DrawerContent, DrawerBody, Button, useDisclosure } from "@heroui/react";
-import { type ReactNode } from "react";
+import { Drawer, DrawerContent, DrawerBody, Button } from "@heroui/react";
+import { type ReactNode, useState } from "react";
 
 export function MobileSidebarDrawer({ children }: { children: ReactNode }) {
-  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
@@ -15,29 +15,22 @@ export function MobileSidebarDrawer({ children }: { children: ReactNode }) {
         style={{
           left: isOpen ? "calc(min(82vw, 320px) - 20px)" : "-20px",
         }}
-        onPress={onOpen}
+        onPress={() => setIsOpen((prev) => !prev)}
         variant="flat"
       >
         <span className="text-xl leading-none">›</span>
       </Button>
 
-      <Drawer 
-        isOpen={isOpen} 
-        onOpenChange={onOpenChange}
+      <Drawer
+        isOpen={isOpen}
+        onOpenChange={setIsOpen}
         placement="left"
         size="xs"
-        classNames={{
-          base: "max-w-[320px] w-[82vw]",
-          body: "p-4",
-        }}
+        className="max-w-[320px] w-[82vw]"
       >
         <DrawerContent>
           {() => (
-            <>
-              <DrawerBody>
-                {children}
-              </DrawerBody>
-            </>
+            <DrawerBody className="p-4">{children}</DrawerBody>
           )}
         </DrawerContent>
       </Drawer>
