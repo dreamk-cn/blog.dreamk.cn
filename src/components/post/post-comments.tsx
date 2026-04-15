@@ -1,0 +1,151 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
+import { Avatar, Button, TextArea, toast } from "@heroui/react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+type CommentItem = {
+  id: string;
+  content: string;
+  createdAt: string;
+  user: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  } | null;
+};
+
+type ApiResponse<T> = {
+  code: number;
+  message: string;
+  data: T;
+};
+
+function formatDateTime(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
+function getAvatarFallback(name?: string | null) {
+  const normalized = name?.trim();
+  if (!normalized) return "匿";
+  return normalized.slice(0, 1).toUpperCase();
+}
+
+export function PostComments({ slug, initialComments }: { slug: string; initialComments: CommentItem[] }) {
+  const { data: session } = useSession();
+  const [comments, setComments] = useState<CommentItem[]>(initialComments);
+  const [content, setContent] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const commentCountText = useMemo(() => `${comments.length} 条评论`, [comments.length]);
+
+  const handleSubmit = async () => {
+    const text = content.trim();
+    if (text.length < 2) {
+      toast.warning("请至少输入2个字符");
+      return;
+    }
+    if (text.length > 2000) {
+      toast.warning("评论内容不能超过2000字符");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/post/comment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          slug,
+          content: text,
+        }),
+      });
+      const result = (await response.json()) as ApiResponse<{ comment: CommentItem; status: "APPROVED" | "PENDING" }>;
+      if (result.code !== 200) {
+        toast.danger("留言失败", { description: result.message || "请稍后再试" });
+        return;
+      }
+
+      if (result.data.status === "APPROVED") {
+        setComments((prev) => [
+          {
+            ...result.data.comment,
+            user: result.data.comment.user || {
+              id: "anonymous",
+              name: session?.user?.name || "匿名访客",
+              image: session?.user?.image || null,
+            },
+          },
+          ...prev,
+        ]);
+        toast.success("评论发布成功");
+      } else {
+        toast.success("留言已提交，等待审核");
+      }
+      setContent("");
+    } catch {
+      toast.danger("留言失败", { description: "网络异常，请稍后重试" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <section className="mt-8 rounded-2xl border border-default-200/70 bg-content1 p-6 shadow-[0_1px_2px_rgba(15,23,42,0.06)] dark:border-default-100/20 dark:bg-content1/60 dark:shadow-none sm:p-8">
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-foreground">评论区</h2>
+        <span className="text-sm text-default-500">{commentCountText}</span>
+      </div>
+
+      <div className="space-y-3">
+        <TextArea
+          className="w-full"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          rows={4}
+          placeholder={session?.user ? "说点什么吧..." : "欢迎留言（未登录留言需要审核）"}
+        />
+        <div className="flex justify-end">
+          <Button variant="primary" onPress={handleSubmit} isDisabled={submitting}>
+            {submitting ? "提交中..." : "提交留言"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-8 space-y-4">
+        {comments.length === 0 ? (
+          <p className="rounded-xl bg-default-100/70 px-4 py-6 text-center text-sm text-default-500 dark:bg-default-100/10">
+            还没有评论，欢迎成为第一个留言的人。
+          </p>
+        ) : (
+          comments.map((comment) => (
+            <article key={comment.id} className="rounded-xl border border-default-200/70 bg-default-50/50 px-4 py-4 dark:border-default-100/20 dark:bg-default-100/5">
+              <div className="mb-2 flex items-start justify-between gap-3 text-sm">
+                <div className="flex min-w-0 items-center gap-3">
+                  <Avatar color="default" size="sm">
+                    {comment.user?.image ? <Avatar.Image src={comment.user.image} alt="" /> : null}
+                    <Avatar.Fallback>{getAvatarFallback(comment.user?.name)}</Avatar.Fallback>
+                  </Avatar>
+                  <span className="truncate font-medium text-default-700 dark:text-default-300">
+                    {comment.user?.name?.trim() || "匿名访客"}
+                  </span>
+                </div>
+                <span className="shrink-0 text-default-400">{formatDateTime(comment.createdAt)}</span>
+              </div>
+              <div className="prose prose-sm mt-2 max-w-none break-words prose-p:my-2 prose-pre:my-2 prose-code:text-xs dark:prose-invert">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.content}</ReactMarkdown>
+              </div>
+            </article>
+          ))
+        )}
+      </div>
+    </section>
+  );
+}

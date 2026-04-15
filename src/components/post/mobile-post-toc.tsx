@@ -55,12 +55,12 @@ export function MobilePostToc({ items }: { items: MarkdownTocItem[] }) {
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className={`absolute inset-0 bg-black/35 transition-opacity ${open ? "opacity-100" : "opacity-0"}`}
+          className={`absolute inset-0 bg-black/45 transition-opacity ${open ? "opacity-100" : "opacity-0"}`}
           aria-label="关闭目录"
         />
 
         <aside
-          className={`absolute right-0 top-0 h-full w-[78vw] max-w-[320px] transform border-l border-default-200/70 bg-content1 p-4 shadow-xl transition-transform duration-300 ease-out dark:border-default-100/20 ${
+          className={`absolute right-0 top-0 h-full w-[78vw] max-w-[320px] transform border-l border-default-200/70 bg-background/95 p-4 shadow-xl backdrop-blur-md transition-transform duration-300 ease-out dark:border-default-100/20 dark:bg-content1/95 ${
             open ? "translate-x-0" : "translate-x-full"
           }`}
         >
