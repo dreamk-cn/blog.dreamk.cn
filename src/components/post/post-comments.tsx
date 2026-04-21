@@ -9,12 +9,19 @@ import remarkGfm from "remark-gfm";
 type CommentItem = {
   id: string;
   content: string;
+  parentId: string | null;
   createdAt: string;
   user: {
     id: string;
     name: string | null;
     image: string | null;
   } | null;
+  replyTo: {
+    id: string;
+    name: string | null;
+    image: string | null;
+  } | null;
+  replies: CommentItem[];
 };
 
 type ApiResponse<T> = {
@@ -40,9 +47,101 @@ export function PostComments({ slug, initialComments }: { slug: string; initialC
   const { data: session } = useSession();
   const [comments, setComments] = useState<CommentItem[]>(initialComments);
   const [content, setContent] = useState("");
+  const [replyContent, setReplyContent] = useState("");
+  const [replyingTo, setReplyingTo] = useState<{
+    id: string;
+    name: string;
+    rootId: string;
+  } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const commentCountText = useMemo(() => `${comments.length} 条评论`, [comments.length]);
+  const totalComments = useMemo(
+    () => comments.reduce((acc, item) => acc + 1 + item.replies.length, 0),
+    [comments],
+  );
+  const commentCountText = useMemo(() => `${totalComments} 条评论`, [totalComments]);
+
+  const createDisplayComment = (comment: CommentItem): CommentItem => ({
+    ...comment,
+    replies: comment.replies || [],
+    replyTo: comment.replyTo || null,
+    user: comment.user || {
+      id: "anonymous",
+      name: session?.user?.name || "匿名访客",
+      image: session?.user?.image || null,
+    },
+  });
+
+  const findComment = (id: string) => {
+    for (const item of comments) {
+      if (item.id === id) return { comment: item, rootId: item.id };
+      const reply = item.replies.find((r) => r.id === id);
+      if (reply) return { comment: reply, rootId: item.id };
+    }
+    return null;
+  };
+
+  const submitComment = async (text: string, parentId?: string) => {
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/post/comment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          slug,
+          content: text,
+          parentId,
+        }),
+      });
+      const result = (await response.json()) as ApiResponse<{ comment: CommentItem; status: "APPROVED" | "PENDING" }>;
+      if (result.code !== 200) {
+        toast.danger("留言失败", { description: result.message || "请稍后再试" });
+        return false;
+      }
+
+      if (result.data.status === "APPROVED") {
+        const incoming = createDisplayComment(result.data.comment);
+        if (parentId && replyingTo) {
+          setComments((prev) =>
+            prev.map((item) =>
+              item.id === replyingTo.rootId
+                ? {
+                    ...item,
+                    replies: [
+                      ...item.replies,
+                      {
+                        ...incoming,
+                        replyTo: {
+                          id: replyingTo.id,
+                          name: replyingTo.name,
+                          image: null,
+                        },
+                      },
+                    ],
+                  }
+                : item,
+            ),
+          );
+          toast.success("回复发布成功");
+        } else {
+          setComments((prev) => [incoming, ...prev]);
+          toast.success("评论发布成功");
+        }
+      } else if (parentId) {
+        toast.success("回复已提交，等待审核");
+      } else {
+        toast.success("留言已提交，等待审核");
+      }
+      return true;
+    } catch {
+      toast.danger("留言失败", { description: "网络异常，请稍后重试" });
+      return false;
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const handleSubmit = async () => {
     const text = content.trim();
@@ -54,48 +153,108 @@ export function PostComments({ slug, initialComments }: { slug: string; initialC
       toast.warning("评论内容不能超过2000字符");
       return;
     }
-
-    setSubmitting(true);
-    try {
-      const response = await fetch("/api/post/comment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          slug,
-          content: text,
-        }),
-      });
-      const result = (await response.json()) as ApiResponse<{ comment: CommentItem; status: "APPROVED" | "PENDING" }>;
-      if (result.code !== 200) {
-        toast.danger("留言失败", { description: result.message || "请稍后再试" });
-        return;
-      }
-
-      if (result.data.status === "APPROVED") {
-        setComments((prev) => [
-          {
-            ...result.data.comment,
-            user: result.data.comment.user || {
-              id: "anonymous",
-              name: session?.user?.name || "匿名访客",
-              image: session?.user?.image || null,
-            },
-          },
-          ...prev,
-        ]);
-        toast.success("评论发布成功");
-      } else {
-        toast.success("留言已提交，等待审核");
-      }
+    const success = await submitComment(text);
+    if (success) {
       setContent("");
-    } catch {
-      toast.danger("留言失败", { description: "网络异常，请稍后重试" });
-    } finally {
-      setSubmitting(false);
     }
   };
+
+  const handleReplySubmit = async () => {
+    if (!replyingTo) return;
+    const text = replyContent.trim();
+    if (text.length < 2) {
+      toast.warning("请至少输入2个字符");
+      return;
+    }
+    if (text.length > 2000) {
+      toast.warning("回复内容不能超过2000字符");
+      return;
+    }
+    const success = await submitComment(text, replyingTo.id);
+    if (success) {
+      setReplyContent("");
+      setReplyingTo(null);
+    }
+  };
+
+  const renderComment = (comment: CommentItem, isReply = false) => (
+    <article
+      key={comment.id}
+      className={`rounded-xl border border-default-200/70 bg-default-50/50 px-4 py-4 dark:border-default-100/20 dark:bg-default-100/5 ${isReply ? "ml-6 mt-3" : ""}`}
+    >
+      <div className="mb-2 flex items-start justify-between gap-3 text-sm">
+        <div className="flex min-w-0 items-center gap-3">
+          <Avatar color="default" size="sm">
+            {comment.user?.image ? <Avatar.Image src={comment.user.image} alt="" /> : null}
+            <Avatar.Fallback>{getAvatarFallback(comment.user?.name)}</Avatar.Fallback>
+          </Avatar>
+          <span className="truncate font-medium text-default-700 dark:text-default-300">
+            {comment.user?.name?.trim() || "匿名访客"}
+          </span>
+        </div>
+        <span className="shrink-0 text-default-400">{formatDateTime(comment.createdAt)}</span>
+      </div>
+
+      <div className="prose prose-sm mt-2 max-w-none break-words prose-p:my-2 prose-pre:my-2 prose-code:text-xs dark:prose-invert">
+        {isReply && comment.replyTo?.name ? (
+          <p className="mb-2 text-xs text-primary">
+            @{comment.replyTo.name}
+          </p>
+        ) : null}
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.content}</ReactMarkdown>
+      </div>
+
+      <div className="mt-3 flex justify-end">
+        <Button
+          size="sm"
+          variant="ghost"
+          onPress={() => {
+            const found = findComment(comment.id);
+            if (!found) return;
+            setReplyingTo({
+              id: found.comment.id,
+              name: found.comment.user?.name?.trim() || "匿名访客",
+              rootId: found.rootId,
+            });
+            setReplyContent("");
+          }}
+        >
+          回复
+        </Button>
+      </div>
+
+      {replyingTo?.id === comment.id ? (
+        <div className="mt-3 space-y-2 rounded-lg border border-default-200/70 bg-content1 p-3 dark:border-default-100/20 dark:bg-content1/60">
+          <TextArea
+            className="w-full"
+            value={replyContent}
+            onChange={(e) => setReplyContent(e.target.value)}
+            rows={3}
+            placeholder={`回复 ${replyingTo.name}...`}
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="ghost"
+              onPress={() => {
+                setReplyingTo(null);
+                setReplyContent("");
+              }}
+            >
+              取消
+            </Button>
+            <Button size="sm" variant="primary" isDisabled={submitting} onPress={handleReplySubmit}>
+              {submitting ? "提交中..." : "提交回复"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      {!isReply && comment.replies.length > 0 ? (
+        <div className="mt-2">{comment.replies.map((reply) => renderComment(reply, true))}</div>
+      ) : null}
+    </article>
+  );
 
   return (
     <section className="mt-8 rounded-2xl border border-default-200/70 bg-content1 p-6 shadow-[0_1px_2px_rgba(15,23,42,0.06)] dark:border-default-100/20 dark:bg-content1/60 dark:shadow-none sm:p-8">
@@ -125,25 +284,7 @@ export function PostComments({ slug, initialComments }: { slug: string; initialC
             还没有评论，欢迎成为第一个留言的人。
           </p>
         ) : (
-          comments.map((comment) => (
-            <article key={comment.id} className="rounded-xl border border-default-200/70 bg-default-50/50 px-4 py-4 dark:border-default-100/20 dark:bg-default-100/5">
-              <div className="mb-2 flex items-start justify-between gap-3 text-sm">
-                <div className="flex min-w-0 items-center gap-3">
-                  <Avatar color="default" size="sm">
-                    {comment.user?.image ? <Avatar.Image src={comment.user.image} alt="" /> : null}
-                    <Avatar.Fallback>{getAvatarFallback(comment.user?.name)}</Avatar.Fallback>
-                  </Avatar>
-                  <span className="truncate font-medium text-default-700 dark:text-default-300">
-                    {comment.user?.name?.trim() || "匿名访客"}
-                  </span>
-                </div>
-                <span className="shrink-0 text-default-400">{formatDateTime(comment.createdAt)}</span>
-              </div>
-              <div className="prose prose-sm mt-2 max-w-none break-words prose-p:my-2 prose-pre:my-2 prose-code:text-xs dark:prose-invert">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.content}</ReactMarkdown>
-              </div>
-            </article>
-          ))
+          comments.map((comment) => renderComment(comment))
         )}
       </div>
     </section>

@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     const { comments, total } = await listComments({
       pageNo,
       pageSize,
-      keyword,
+      keyword: keyword || undefined,
       sortOrder,
       status,
     });

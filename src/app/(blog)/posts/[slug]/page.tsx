@@ -130,8 +130,19 @@ export default async function PostDetail({ params }: PageProps) {
                 initialComments={comments.map((comment) => ({
                   id: comment.id,
                   content: comment.content,
+                  parentId: comment.parentId,
                   createdAt: comment.createdAt.toISOString(),
                   user: comment.user,
+                  replyTo: comment.replyTo,
+                  replies: comment.replies.map((reply) => ({
+                    id: reply.id,
+                    content: reply.content,
+                    parentId: reply.parentId,
+                    createdAt: reply.createdAt.toISOString(),
+                    user: reply.user,
+                    replyTo: reply.replyTo,
+                    replies: [],
+                  })),
                 }))}
               />
             </div>

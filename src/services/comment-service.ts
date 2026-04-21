@@ -4,17 +4,16 @@ import { prisma } from "@/libs/prisma";
 type CommentStatus = $Enums.CommentStatus;
 
 export async function listApprovedCommentsBySlug(slug: string) {
-  return prisma.comment.findMany({
+  const comments = await prisma.comment.findMany({
     where: {
       post: {
         slug,
         status: "PUBLISHED",
       },
       status: "APPROVED",
-      parentId: null,
     },
     orderBy: {
-      createdAt: "desc",
+      createdAt: "asc",
     },
     include: {
       user: {
@@ -26,6 +25,50 @@ export async function listApprovedCommentsBySlug(slug: string) {
       },
     },
   });
+
+  const commentMap = new Map(comments.map((item) => [item.id, item]));
+  const parentItems = comments
+    .filter((item) => item.parentId === null)
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  return parentItems.map((parent) => {
+    const replies = comments
+      .filter((item) => item.parentId !== null && isDescendantOf(item, parent.id, commentMap))
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+      .map((reply) => {
+        const replyTo = reply.parentId ? commentMap.get(reply.parentId)?.user ?? null : null;
+        return {
+          ...reply,
+          replyTo,
+          replies: [],
+        };
+      });
+
+    return {
+      ...parent,
+      replyTo: null,
+      replies,
+    };
+  });
+}
+
+function isDescendantOf(
+  comment: { id: string; parentId: string | null },
+  rootId: string,
+  commentMap: Map<string, { id: string; parentId: string | null }>,
+) {
+  let currentParentId = comment.parentId;
+  while (currentParentId) {
+    if (currentParentId === rootId) {
+      return true;
+    }
+    const parent = commentMap.get(currentParentId);
+    if (!parent) {
+      return false;
+    }
+    currentParentId = parent.parentId;
+  }
+  return false;
 }
 
 export async function createComment(input: {
@@ -50,6 +93,20 @@ export async function createComment(input: {
 
   if (!post) {
     return null;
+  }
+
+  if (parentId) {
+    const parent = await prisma.comment.findFirst({
+      where: {
+        id: parentId,
+        postId: post.id,
+        status: "APPROVED",
+      },
+      select: { id: true },
+    });
+    if (!parent) {
+      return null;
+    }
   }
 
   const created = await prisma.comment.create({
