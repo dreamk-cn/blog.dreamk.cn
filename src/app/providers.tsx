@@ -1,26 +1,20 @@
 'use client'
 
-import type { ThemeProviderProps } from "next-themes";
-
 import * as React from "react";
 import { SessionProvider } from "next-auth/react";
-import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { Toast } from "@heroui/react";
 import NextTopLoader from "nextjs-toploader";
 
 export interface ProvidersProps {
   children: React.ReactNode;
-  themeProps?: ThemeProviderProps;
 }
 
-export function AppProviders({ children, themeProps }: ProvidersProps) {
+export function AppProviders({ children }: ProvidersProps) {
   return (
     <SessionProvider>
       <NextTopLoader color="var(--color-primary)" showSpinner={false} height={3} />
-      <NextThemesProvider {...themeProps}>
-          <Toast.Provider placement="top" className="pt-16" />
+      <Toast.Provider placement="top" className="pt-16" />
         {children}
-      </NextThemesProvider>
     </SessionProvider>
   )
 }

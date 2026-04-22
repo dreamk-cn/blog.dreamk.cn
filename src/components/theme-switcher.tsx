@@ -1,7 +1,6 @@
 "use client";
 
-import { FC } from "react";
-import { useTheme } from "next-themes";
+import { FC, useEffect, useState } from "react";
 import clsx from "clsx";
 
 import { SunFilledIcon, MoonFilledIcon } from "@/components/icons";
@@ -20,17 +19,39 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
   className,
   classNames,
 }) => {
-  const { setTheme, resolvedTheme } = useTheme();
-  const isLight = resolvedTheme !== "dark";
+  const [mounted, setMounted] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("dark");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const savedTheme = localStorage.getItem("theme");
+    const preferredTheme =
+      savedTheme === "light" || savedTheme === "dark"
+        ? savedTheme
+        : window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
+
+    root.classList.toggle("dark", preferredTheme === "dark");
+    setTheme(preferredTheme);
+    setMounted(true);
+  }, []);
+
+  const isLight = theme !== "dark";
 
   const onToggleTheme = () => {
-    setTheme(isLight ? "dark" : "light");
+    const nextTheme: "light" | "dark" = isLight ? "dark" : "light";
+    const root = document.documentElement;
+
+    root.classList.toggle("dark", nextTheme === "dark");
+    localStorage.setItem("theme", nextTheme);
+    setTheme(nextTheme);
   };
 
   return (
     <button
       type="button"
-      aria-label={`Switch to ${isLight ? "dark" : "light"} mode`}
+      aria-label={mounted ? `Switch to ${isLight ? "dark" : "light"} mode` : "Toggle theme"}
       onClick={onToggleTheme}
       className={clsx(
         "cursor-pointer px-px transition-opacity hover:opacity-80",
@@ -46,7 +67,9 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
           classNames?.wrapper,
         )}
       >
-        {isLight ? (
+        {!mounted ? (
+          <MoonFilledIcon size={22} />
+        ) : isLight ? (
           <SunFilledIcon size={22} />
         ) : (
           <MoonFilledIcon size={22} />

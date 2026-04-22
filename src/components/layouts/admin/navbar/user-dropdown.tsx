@@ -7,19 +7,22 @@ export const UserDropdown = () => {
 
   return (
     <Dropdown>
-      <Dropdown.Trigger
-        aria-label="用户菜单"
-        className="inline-flex h-auto min-w-0 items-center gap-2 border-0 bg-transparent px-2 py-1 shadow-none ring-0 hover:bg-default-100 data-[pressed]:bg-default-100"
-      >
-        <span className="hidden text-sm sm:inline">
-          欢迎回来，<span className="text-accent">{session.data?.user.name}</span>
-        </span>
-        <Avatar color="accent" size="md">
-          {session.data?.user?.image ? (
-            <Avatar.Image src={session.data.user.image} alt="" />
-          ) : null}
-          <Avatar.Fallback>{session.data?.user?.name?.slice(0, 1) ?? "?"}</Avatar.Fallback>
-        </Avatar>
+      <Dropdown.Trigger>
+        <button
+          type="button"
+          aria-label="用户菜单"
+          className="inline-flex h-auto min-w-0 items-center gap-2 border-0 bg-transparent px-2 py-1 shadow-none ring-0 hover:bg-default-100 data-[pressed]:bg-default-100"
+        >
+          <span className="hidden text-sm sm:inline">
+            欢迎回来，<span className="text-accent">{session.data?.user.name}</span>
+          </span>
+          <Avatar color="accent" size="md">
+            {session.data?.user?.image ? (
+              <Avatar.Image src={session.data.user.image} alt="" />
+            ) : null}
+            <Avatar.Fallback>{session.data?.user?.name?.slice(0, 1) ?? "?"}</Avatar.Fallback>
+          </Avatar>
+        </button>
       </Dropdown.Trigger>
       <Dropdown.Popover>
         <Dropdown.Menu aria-label="User menu actions">

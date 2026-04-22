@@ -21,16 +21,19 @@ export const NavBarUser = () => {
 
   return (
     <Dropdown>
-      <Dropdown.Trigger
-        aria-label="用户菜单"
-        className="inline-flex h-auto min-w-0 items-center border-0 bg-transparent p-0 shadow-none ring-0 hover:bg-default-100 data-[pressed]:bg-default-100"
-      >
-        <Avatar color="accent" size="md">
-          {session?.user?.image ? (
-            <Avatar.Image src={session.user.image} alt="" />
-          ) : null}
-          <Avatar.Fallback>{session?.user?.name?.slice(0, 1) ?? "?"}</Avatar.Fallback>
-        </Avatar>
+      <Dropdown.Trigger>
+        <button
+          type="button"
+          aria-label="用户菜单"
+          className="inline-flex h-auto min-w-0 items-center border-0 bg-transparent p-0 shadow-none ring-0 hover:bg-default-100 data-[pressed]:bg-default-100"
+        >
+          <Avatar color="accent" size="md">
+            {session?.user?.image ? (
+              <Avatar.Image src={session.user.image} alt="" />
+            ) : null}
+            <Avatar.Fallback>{session?.user?.name?.slice(0, 1) ?? "?"}</Avatar.Fallback>
+          </Avatar>
+        </button>
       </Dropdown.Trigger>
       <Dropdown.Popover>
         <Dropdown.Menu

@@ -23,15 +23,21 @@ const renderLoginButtons = (
 export default function SignIn() {
   const [providers, setProviders] = useState<Providers | null>(null);
   const [selected, setSelected] = useState<string>('login');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+
     async function fetchProviders() {
       const response = await getProviders();
-      console.warn('response:', response)
       setProviders(response);
     }
     fetchProviders();
   }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <div className="mx-auto flex min-h-screen max-w-[40rem] flex-col items-center p-20">

@@ -1,7 +1,6 @@
 import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { AppProviders } from "./providers";
-import Head from "next/head";
 import { siteConfig } from "@/config/site";
 import { geistMono, notoSansSc } from "@/config/fonts";
 
@@ -22,14 +21,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html suppressHydrationWarning lang="zh">
-      <Head>
+    <html suppressHydrationWarning lang="zh" className="dark">
+      <head>
         <meta content="width=device-width, initial-scale=1" name="viewport" />
-      </Head>
+      </head>
       <body
         className={`${notoSansSc.variable} ${geistMono.variable} antialiased duration-200`}
       >
-        <AppProviders themeProps={{attribute: 'class', defaultTheme: 'dark'}}>
+        <AppProviders>
           { children }
         </AppProviders>
       </body>
