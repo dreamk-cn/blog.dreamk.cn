@@ -177,7 +177,7 @@ export default function Posts() {
   const bottomContent = useMemo(() => (
     <div className="flex items-center justify-between px-2 py-4">
       <div className="flex items-center gap-4">
-        <span className="text-small text-default-400">共 {total} 条数据</span>
+        <span className="text-sm text-text-muted shrink-0">共 {total} 条数据</span>
         <StringSelect
           aria-label="每页条数"
           className="w-32"
@@ -222,7 +222,7 @@ export default function Posts() {
   ), [pageNo, totalPages, total, pageSize]);
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-4 bg-foreground h-full">
       {topContent}
 
       <div className="rounded-lg bg-content1">

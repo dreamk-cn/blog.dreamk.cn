@@ -85,7 +85,7 @@ export default function Post() {
   }
 
   return (
-    <div className="p-3">
+    <div className="p-3 bg-foreground min-h-full">
       <PostForm 
         article={article}
         categories={categories}

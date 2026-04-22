@@ -163,7 +163,7 @@ export function PostForm({
   ];
 
   return (
-    <Card className="mx-auto w-full shadow-none">
+    <Card className="mx-auto w-full bg-foreground">
       <Card.Header className="flex flex-row items-center justify-between">
         <h2 className="text-xl font-bold text-text-base">
           #{article?.id ? '编辑文章' : '发布文章'}

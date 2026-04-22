@@ -7,7 +7,7 @@ export default function Dashboard() {
   const session = useSession();
 
   return (
-    <div className="p-4">
+    <div className="p-4 min-h-full bg-foreground">
       Dashboard Page
       <h2>欢迎回来：{ session.data?.user?.name }</h2>
       {

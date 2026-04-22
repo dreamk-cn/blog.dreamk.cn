@@ -121,12 +121,12 @@ export default function AdminCommentListPage() {
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
 
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold">评论管理</h1>
+        <h1 className="text-2xl font-bold text-text-base">评论管理</h1>
         <div className="flex flex-wrap items-end gap-3">
           <TextField className="w-full sm:max-w-[30%]">
-            <Label>关键词</Label>
+            <Label className="text-text-muted">关键词</Label>
             <Input
               placeholder="按评论、文章、用户搜索"
               value={keyword}
@@ -170,7 +170,7 @@ export default function AdminCommentListPage() {
         </div>
       </div>
 
-      <div className="rounded-lg bg-content1">
+      <div className="rounded-lg">
         <Table>
           <Table.ScrollContainer className="max-h-[calc(100vh-280px)]">
             <Table.Content aria-label="评论列表">
@@ -186,13 +186,13 @@ export default function AdminCommentListPage() {
                 {loading ? (
                   <Table.Row>
                     <Table.Cell colSpan={6}>
-                      <span className="text-default-400">加载中...</span>
+                      <span className="text-text-muted">加载中...</span>
                     </Table.Cell>
                   </Table.Row>
                 ) : items.length === 0 ? (
                   <Table.Row>
                     <Table.Cell colSpan={6}>
-                      <span className="text-default-400">暂无数据</span>
+                      <span className="text-text-muted">暂无数据</span>
                     </Table.Cell>
                   </Table.Row>
                 ) : (
@@ -200,19 +200,19 @@ export default function AdminCommentListPage() {
                     <Table.Row key={item.id}>
                       <Table.Cell>
                         <div className="max-w-[360px]">
-                          <p className="line-clamp-3 break-all text-sm">{shortText(item.content, 120)}</p>
+                          <p className="line-clamp-3 break-all text-sm text-text-base">{shortText(item.content, 120)}</p>
                         </div>
                       </Table.Cell>
                       <Table.Cell>
                         <div className="flex max-w-[260px] flex-col">
-                          <span className="line-clamp-1 font-medium">{item.post?.title || "-"}</span>
-                          <span className="line-clamp-1 text-xs text-default-500">{item.post?.slug || "-"}</span>
+                          <span className="line-clamp-1 font-medium text-text-base">{item.post?.title || "-"}</span>
+                          <span className="line-clamp-1 text-xs text-text-muted">{item.post?.slug || "-"}</span>
                         </div>
                       </Table.Cell>
                       <Table.Cell>
                         <div className="flex max-w-[220px] flex-col">
-                          <span className="line-clamp-1">{item.user?.name || "匿名访客"}</span>
-                          <span className="line-clamp-1 text-xs text-default-500">
+                          <span className="line-clamp-1 text-primary">{item.user?.name || "匿名访客"}</span>
+                          <span className="line-clamp-1 text-xs text-text-muted">
                             {item.user?.email || item.userIp || "-"}
                           </span>
                         </div>
@@ -222,7 +222,7 @@ export default function AdminCommentListPage() {
                           <Chip.Label>{statusMap[item.status].label}</Chip.Label>
                         </Chip>
                       </Table.Cell>
-                      <Table.Cell className="text-xs">{new Date(item.createdAt).toLocaleString()}</Table.Cell>
+                      <Table.Cell className="text-xs text-text-muted">{new Date(item.createdAt).toLocaleString()}</Table.Cell>
                       <Table.Cell>
                         <div className="flex flex-wrap justify-center gap-2">
                           {item.status !== "APPROVED" ? (
@@ -278,7 +278,7 @@ export default function AdminCommentListPage() {
 
       <div className="flex items-center justify-between px-2 py-4">
         <div className="flex items-center gap-4">
-          <span className="text-default-400">共 {total} 条数据</span>
+          <span className="text-text-muted text-sm shrink-0">共 {total} 条数据</span>
           <StringSelect
             aria-label="每页条数"
             className="w-32"
@@ -305,7 +305,7 @@ export default function AdminCommentListPage() {
               </Pagination.Previous>
             </Pagination.Item>
             <Pagination.Item>
-              <span className="px-2 text-small text-default-600">
+              <span className="px-2 text-small text-text-muted">
                 {pageNo} / {totalPages}
               </span>
             </Pagination.Item>

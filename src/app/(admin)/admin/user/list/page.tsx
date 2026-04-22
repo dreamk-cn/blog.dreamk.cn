@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, InputGroup, Table, TextField, Label } from "@heroui/react";
+import { Button, InputGroup, Table, TextField, Label, Modal, useOverlayState } from "@heroui/react";
 import { SearchIcon } from "@/components/icons";
 import type { User } from "@prisma/client";
 import { request } from "@/libs/request";
@@ -14,6 +14,8 @@ export default function AdminUserListPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [userToBan, setUserToBan] = useState<User | null>(null);
+  const banConfirmModal = useOverlayState();
 
   const fetchUsers = async (kw = "", status?: string) => {
     try {
@@ -68,15 +70,27 @@ export default function AdminUserListPage() {
 
   const emptyMessage = loading ? "加载中..." : (error || "暂无数据");
 
+  const openBanConfirm = (user: User) => {
+    setUserToBan(user);
+    banConfirmModal.open();
+  };
+
+  const handleConfirmBan = async () => {
+    if (!userToBan) return;
+    await handleBanToggle(userToBan, "BAN");
+    banConfirmModal.close();
+    setUserToBan(null);
+  };
+
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-wrap items-end gap-3">
           <TextField className="max-w-sm">
-            <Label>搜索</Label>
+            <Label className="text-text-muted">搜索</Label>
             <InputGroup>
               <InputGroup.Prefix>
-                <SearchIcon className="text-base text-default-400" />
+                <SearchIcon className="text-base text-text-muted" />
               </InputGroup.Prefix>
               <InputGroup.Input
                 value={keyword}
@@ -117,17 +131,27 @@ export default function AdminUserListPage() {
               {tableItems.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan={6}>
-                    <span className="text-default-400">{emptyMessage}</span>
+                    <span className="text-text-muted">{emptyMessage}</span>
                   </Table.Cell>
                 </Table.Row>
               ) : (
                 tableItems.map((u) => (
                   <Table.Row key={u.id}>
-                    <Table.Cell>{u.name || "-"}</Table.Cell>
-                    <Table.Cell>{u.email}</Table.Cell>
-                    <Table.Cell>{u.role}</Table.Cell>
-                    <Table.Cell>{u.status}</Table.Cell>
-                    <Table.Cell>{new Date(u.createdAt).toLocaleString()}</Table.Cell>
+                    <Table.Cell>
+                      <span className="text-text-base">{u.name || "-"}</span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-text-muted">{u.email}</span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-text-base">{u.role}</span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className={u.status === "BAN" ? "text-red-500" : "text-text-muted"}>{u.status}</span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span className="text-xs text-text-muted">{new Date(u.createdAt).toLocaleString()}</span>
+                    </Table.Cell>
                     <Table.Cell>
                       <div className="flex gap-2">
                         {u.status !== "BAN" ? (
@@ -135,14 +159,14 @@ export default function AdminUserListPage() {
                             size="sm"
                             variant="danger"
                             isDisabled={updatingId === u.id}
-                            onPress={() => handleBanToggle(u, "BAN")}
+                            onPress={() => openBanConfirm(u)}
                           >
                             {updatingId === u.id ? "封禁中..." : "封禁"}
                           </Button>
                         ) : (
                           <Button
                             size="sm"
-                            variant="ghost"
+                            variant="secondary"
                             isDisabled={updatingId === u.id}
                             onPress={() => handleBanToggle(u, "VALID")}
                           >
@@ -158,6 +182,41 @@ export default function AdminUserListPage() {
           </Table.Content>
         </Table.ScrollContainer>
       </Table>
+
+      <Modal state={banConfirmModal}>
+        <Modal.Backdrop>
+          <Modal.Container>
+            <Modal.Dialog className="bg-foreground inset-ring-error inset-ring-2">
+              <Modal.Header>
+                <Modal.Heading className="text-text-base">确认封禁用户</Modal.Heading>
+              </Modal.Header>
+              <Modal.Body>
+                <p className="text-text-base">
+                  确认要封禁用户 &quot;{userToBan?.name || userToBan?.email || "该用户"}&quot; 吗？
+                </p>
+              </Modal.Body>
+              <Modal.Footer className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onPress={() => {
+                    banConfirmModal.close();
+                    setUserToBan(null);
+                  }}
+                >
+                  取消
+                </Button>
+                <Button
+                  variant="danger"
+                  isDisabled={!userToBan || updatingId === userToBan.id}
+                  onPress={handleConfirmBan}
+                >
+                  {userToBan && updatingId === userToBan.id ? "封禁中..." : "确认封禁"}
+                </Button>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
+      </Modal>
     </div>
   );
 }
