@@ -10,7 +10,7 @@ const mdLink = "text-primary font-medium hover:underline underline-offset-2";
 
 const mdBase: Components = {
   h1: ({ children, className, ...props }) => (
-    <h1 className={`mt-10 text-3xl font-bold tracking-tight text-foreground first:mt-0 ${className ?? ""}`} {...props}>
+    <h1 className={`mt-10 text-3xl font-bold tracking-tight text-text-base first:mt-0 ${className ?? ""}`} {...props}>
       {children}
     </h1>
   ),
@@ -92,7 +92,7 @@ const mdBase: Components = {
     </td>
   ),
   strong: ({ children, className, ...props }) => (
-    <strong className={`font-semibold text-foreground ${className ?? ""}`} {...props}>
+    <strong className={`font-semibold text-text-base ${className ?? ""}`} {...props}>
       {children}
     </strong>
   ),
@@ -129,11 +129,11 @@ export function ArticleMarkdown({ content }: { content: string }) {
 
   const merged: Components = {
     ...mdBase,
-    h2: attach("h2", "mt-12 scroll-mt-28 border-b border-default-200/80 pb-2 text-2xl font-bold tracking-tight text-foreground"),
-    h3: attach("h3", "mt-10 scroll-mt-28 text-xl font-semibold tracking-tight text-foreground"),
-    h4: attach("h4", "mt-8 scroll-mt-28 text-lg font-semibold text-foreground"),
-    h5: attach("h5", "mt-6 scroll-mt-28 text-base font-semibold text-foreground"),
-    h6: attach("h6", "mt-6 scroll-mt-28 text-sm font-semibold text-default-700"),
+    h2: attach("h2", "mt-12 scroll-mt-28 border-b border-default-200/80 pb-2 text-2xl font-bold tracking-tight text-text-base"),
+    h3: attach("h3", "mt-10 scroll-mt-28 text-xl font-semibold tracking-tight text-text-base"),
+    h4: attach("h4", "mt-8 scroll-mt-28 text-lg font-semibold text-text-base"),
+    h5: attach("h5", "mt-6 scroll-mt-28 text-base font-semibold text-text-base"),
+    h6: attach("h6", "mt-6 scroll-mt-28 text-sm font-semibold text-text-muted"),
   };
 
   return (

@@ -28,7 +28,7 @@ export function ProfileSidebar({ tagCloud }: { tagCloud: Tag[] }) {
         </div>
         <h2 className="text-[28px] font-semibold leading-none text-text-base">{siteConfig.name}&apos;s Blog</h2>
         <p className="mt-3 text-sm text-text-muted">Web Developer & Designer</p>
-        <div className="mt-4 flex justify-center gap-3 text-sm text-default-600">
+        <div className="mt-4 flex justify-center gap-3 text-sm text-text-base">
           <NextLink
             href={siteConfig.links.github}
             target="_blank"

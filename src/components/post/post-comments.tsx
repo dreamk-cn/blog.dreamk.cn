@@ -188,11 +188,11 @@ export function PostComments({ slug, initialComments }: { slug: string; initialC
             {comment.user?.image ? <Avatar.Image src={comment.user.image} alt="" /> : null}
             <Avatar.Fallback>{getAvatarFallback(comment.user?.name)}</Avatar.Fallback>
           </Avatar>
-          <span className="truncate font-medium text-default-700 dark:text-default-300">
+          <span className="truncate font-medium text-text-base">
             {comment.user?.name?.trim() || "匿名访客"}
           </span>
         </div>
-        <span className="shrink-0 text-default-400">{formatDateTime(comment.createdAt)}</span>
+        <span className="shrink-0 text-text-muted">{formatDateTime(comment.createdAt)}</span>
       </div>
 
       <div className="prose prose-sm mt-2 max-w-none break-words prose-p:my-2 prose-pre:my-2 prose-code:text-xs dark:prose-invert">
@@ -259,8 +259,8 @@ export function PostComments({ slug, initialComments }: { slug: string; initialC
   return (
     <section className="mt-8 rounded-2xl border border-default-200/70 bg-content1 p-6 shadow-[0_1px_2px_rgba(15,23,42,0.06)] dark:border-default-100/20 dark:bg-content1/60 dark:shadow-none sm:p-8">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-foreground">评论区</h2>
-        <span className="text-sm text-default-500">{commentCountText}</span>
+        <h2 className="text-xl font-semibold text-text-base">评论区</h2>
+        <span className="text-sm text-text-muted">{commentCountText}</span>
       </div>
 
       <div className="space-y-3">
@@ -280,7 +280,7 @@ export function PostComments({ slug, initialComments }: { slug: string; initialC
 
       <div className="mt-8 space-y-4">
         {comments.length === 0 ? (
-          <p className="rounded-xl bg-default-100/70 px-4 py-6 text-center text-sm text-default-500 dark:bg-default-100/10">
+          <p className="rounded-xl bg-default-100/70 px-4 py-6 text-center text-sm text-text-muted dark:bg-default-100/10">
             还没有评论，欢迎成为第一个留言的人。
           </p>
         ) : (

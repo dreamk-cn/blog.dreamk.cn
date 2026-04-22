@@ -12,26 +12,32 @@ type HotPost = {
 
 export function HotPosts({ posts }: { posts: HotPost[] }) {
   return (
-    <Card className="shadow-sm bg-background">
-      <Card.Header className="border-b border-default-200/70 px-4 py-3">
+    <Card className="border border-border bg-background shadow-sm">
+      <Card.Header className="border-b border-border px-4 py-3">
         <span className="text-md font-bold text-text-base">热门文章列表</span>
       </Card.Header>
-      <Card.Content className="flex flex-col gap-3 p-4">
+      <Card.Content className="flex flex-col p-2">
         {posts.map((post, index) => (
-          <div key={post.id} className="flex items-start justify-between gap-3">
+          <div
+            key={post.id}
+            className="group flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-foreground"
+          >
+            <span className="w-8 shrink-0 text-center text-2xl leading-none font-light text-text-sub">
+              {String(index + 1).padStart(2, "0")}
+            </span>
             <NextLink
               href={`/posts/${post.slug}`}
-              className="line-clamp-2 text-sm text-text-muted hover:text-accent"
+              className="line-clamp-1 flex-1 text-sm text-text-base transition-colors group-hover:text-primary"
             >
               {post.title}
             </NextLink>
-            <span className="inline-flex whitespace-nowrap rounded-full bg-default-100 px-2 py-0.5 text-xs text-default-500">
-              {index + 1}
+            <span className="shrink-0 whitespace-nowrap text-xs text-text-muted">
+              浏览 {post.viewCount}
             </span>
           </div>
         ))}
         {posts.length === 0 && (
-          <p className="text-sm text-default-500">暂无热门文章</p>
+          <p className="text-sm text-text-muted">暂无热门文章</p>
         )}
       </Card.Content>
     </Card>

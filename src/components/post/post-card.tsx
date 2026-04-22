@@ -28,12 +28,12 @@ export function PostCard({ post }: { post: PostWithTags }) {
           {post.title}
         </NextLink>
       </Card.Header>
-      <Card.Content className="px-5 py-3">
+      <Card.Content className="px-5">
         <p className="line-clamp-3 text-sm leading-7 text-text-muted">
           {post.excerpt || post.content || "暂无摘要"}
         </p>
       </Card.Content>
-      <Card.Footer className="flex items-center justify-between gap-1 border-t border-default-100 px-5 py-3">
+      <Card.Footer className="flex items-center justify-between gap-1 border-t border-border px-5 py-3">
         <div className="flex items-center gap-3 text-xs text-text-muted">
           <span className="inline-flex items-center gap-1.5">
             浏览 {post.viewCount}

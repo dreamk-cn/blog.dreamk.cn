@@ -75,31 +75,31 @@ export default async function PostDetail({ params }: PageProps) {
   const authorName = post.user?.name?.trim() || siteConfig.name;
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-default-100/50 via-background to-background dark:from-default-50/5">
+    <div className="min-h-full bg-gradient-to-b from-foreground/60 via-background to-background text-text-base">
       <div className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 lg:px-8 lg:pt-10">
         <PostTocActiveProvider items={toc}>
           <PostViewTracker slug={slug} />
           <MobilePostToc items={toc} />
           <div className="mx-auto max-w-3xl">
             <div>
-              <article className="rounded-2xl border border-default-200/70 bg-content1 shadow-[0_1px_2px_rgba(15,23,42,0.06)] dark:border-default-100/20 dark:bg-content1/60 dark:shadow-none">
-                <div className="border-b border-default-200/60 px-6 py-8 sm:px-10 sm:py-10 dark:border-default-100/15">
-                  <h1 className="text-3xl font-bold leading-tight tracking-tight text-foreground sm:text-4xl">{post.title}</h1>
+              <article className="rounded-2xl border border-border bg-background shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+                <div className="border-b border-border px-6 py-8 sm:px-10 sm:py-10">
+                  <h1 className="text-3xl font-bold leading-tight tracking-tight text-text-base sm:text-4xl">{post.title}</h1>
 
-                  <div className="mt-6 flex flex-wrap items-center gap-x-1 gap-y-2 text-sm text-default-500">
+                  <div className="mt-6 flex flex-wrap items-center gap-x-1 gap-y-2 text-sm text-text-muted">
                     <span className="whitespace-nowrap">{formatDateTime(published)}</span>
-                    <span className="mx-2 hidden text-default-300 sm:inline">·</span>
+                    <span className="mx-2 hidden text-text-sub sm:inline">·</span>
                     <span className="whitespace-nowrap">{post.viewCount} 浏览</span>
-                    <span className="mx-2 hidden text-default-300 sm:inline">·</span>
+                    <span className="mx-2 hidden text-text-sub sm:inline">·</span>
                     <span className="whitespace-nowrap">{charCount} 字</span>
-                    <span className="mx-2 hidden text-default-300 sm:inline">·</span>
+                    <span className="mx-2 hidden text-text-sub sm:inline">·</span>
                     <span className="whitespace-nowrap">
-                      作者：<span className="text-default-700">{authorName}</span>
+                      作者：<span className="text-text-base">{authorName}</span>
                     </span>
                     {post.category && (
                       <>
-                        <span className="mx-2 hidden text-default-300 sm:inline">·</span>
-                        <span className="rounded-full bg-default-100 px-2.5 py-0.5 text-xs font-medium text-default-700 dark:bg-default-100/15">
+                        <span className="mx-2 hidden text-text-sub sm:inline">·</span>
+                        <span className="rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium text-text-base">
                           {post.category.name}
                         </span>
                       </>
@@ -108,11 +108,11 @@ export default async function PostDetail({ params }: PageProps) {
 
                   {post.tags.length > 0 && (
                     <div className="mt-6 flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-medium uppercase tracking-wide text-default-400">标签</span>
+                      <span className="text-xs font-medium uppercase tracking-wide text-text-sub">标签</span>
                       {post.tags.map((tag) => (
                         <span
                           key={tag.id}
-                          className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary dark:bg-primary/20"
+                          className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
                         >
                           {tag.name}
                         </span>
@@ -149,8 +149,8 @@ export default async function PostDetail({ params }: PageProps) {
           </div>
 
           <aside className="fixed left-1/2 top-28 z-20 hidden h-[calc(100vh-7.5rem)] w-[280px] min-h-0 -translate-x-0 ml-[27rem] 2xl:block">
-            <div className="flex max-h-full flex-col rounded-2xl border border-default-200/70 bg-content1 p-5 shadow-[0_1px_2px_rgba(15,23,42,0.06)] dark:border-default-100/20 dark:bg-content1/60 dark:shadow-none">
-              <h2 className="mb-3 shrink-0 text-sm font-semibold tracking-wide text-foreground">目录</h2>
+            <div className="flex max-h-full flex-col rounded-2xl border border-border bg-background p-5 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+              <h2 className="mb-3 shrink-0 text-sm font-semibold tracking-wide text-text-base">目录</h2>
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5">
                 <PostTableOfContents items={toc} />
               </div>

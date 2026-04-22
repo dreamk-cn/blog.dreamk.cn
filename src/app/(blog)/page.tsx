@@ -55,7 +55,7 @@ export default async function Home() {
           })}
           {posts.length === 0 && (
             <ClientCard className="shadow-sm">
-              <ClientCardBody className="py-10 text-center text-default-500">
+              <ClientCardBody className="py-10 text-center text-text-muted">
                 还没有发布文章
               </ClientCardBody>
             </ClientCard>

@@ -308,7 +308,7 @@ export function PostForm({
 
             {formData.tags.length > 0 && (
               <div className="mt-2">
-                <span className="text-sm text-default-600">已选择标签: </span>
+                <span className="text-sm text-text-base">已选择标签: </span>
                 {formData.tags.map(tag => (
                   <Chip
                     key={tag.id}

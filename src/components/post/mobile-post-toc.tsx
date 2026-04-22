@@ -65,8 +65,8 @@ export function MobilePostToc({ items }: { items: MarkdownTocItem[] }) {
           }`}
         >
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold tracking-wide text-foreground">目录</h2>
-            <button type="button" onClick={() => setOpen(false)} className="text-sm text-default-500">
+            <h2 className="text-sm font-semibold tracking-wide text-text-base">目录</h2>
+            <button type="button" onClick={() => setOpen(false)} className="text-sm text-text-muted">
               关闭
             </button>
           </div>

@@ -14,7 +14,7 @@ export function PostTableOfContents({ items, className = "" }: { items: Markdown
   if (items.length === 0) {
     return (
       <div className={className}>
-        <p className="text-sm leading-6 text-default-500">本文暂无二级以上标题，目录将在你使用 ##、### 等标题后出现。</p>
+        <p className="text-sm leading-6 text-text-muted">本文暂无二级以上标题，目录将在你使用 ##、### 等标题后出现。</p>
       </div>
     );
   }
@@ -31,7 +31,7 @@ export function PostTableOfContents({ items, className = "" }: { items: Markdown
                 className={`line-clamp-2 block rounded-md py-1.5 pl-2 pr-1 transition-colors ${
                   isActive
                     ? "bg-primary/12 font-medium text-primary dark:bg-primary/20"
-                    : "text-default-600 hover:bg-default-100 hover:text-primary dark:hover:bg-default-100/10"
+                    : "text-text-base hover:bg-default-100 hover:text-primary dark:hover:bg-default-100/10"
                 }`}
                 onClick={(e) => {
                   if (!itemSet.has(item.id)) return;
