@@ -23,18 +23,18 @@ export function PostCard({ post }: { post: PostWithTags }) {
       <Card.Header className="flex-col items-start px-5 pb-0 pt-4">
         <NextLink
           href={`/posts/${post.slug}`}
-          className="line-clamp-1 text-2xl/normal font-semibold tracking-tight text-foreground transition-colors hover:text-accent md:text-[30px]"
+          className="line-clamp-1 text-2xl/normal font-semibold tracking-tight text-text-base transition-colors hover:text-primary"
         >
           {post.title}
         </NextLink>
       </Card.Header>
       <Card.Content className="px-5 py-3">
-        <p className="line-clamp-3 text-sm leading-7 text-default-600">
+        <p className="line-clamp-3 text-sm leading-7 text-text-muted">
           {post.excerpt || post.content || "暂无摘要"}
         </p>
       </Card.Content>
       <Card.Footer className="flex items-center justify-between gap-1 border-t border-default-100 px-5 py-3">
-        <div className="flex items-center gap-3 text-xs text-default-500">
+        <div className="flex items-center gap-3 text-xs text-text-muted">
           <span className="inline-flex items-center gap-1.5">
             浏览 {post.viewCount}
           </span>

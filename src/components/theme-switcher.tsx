@@ -62,7 +62,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
       <div
         className={clsx(
           [
-            "mx-0 flex h-auto w-auto items-center justify-center rounded-lg bg-transparent px-0 pt-px text-default-500",
+            "mx-0 flex h-auto w-auto items-center justify-center rounded-lg bg-transparent px-0 pt-px text-text-muted",
           ],
           classNames?.wrapper,
         )}

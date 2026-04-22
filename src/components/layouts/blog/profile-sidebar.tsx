@@ -18,7 +18,7 @@ export function ProfileSidebar({ tagCloud }: { tagCloud: Tag[] }) {
   ];
 
   return (
-    <Card className="overflow-hidden shadow-sm">
+    <Card className="overflow-hidden shadow-sm bg-background">
       <Card.Content className="p-6 text-center">
         <div className="mx-auto mb-4">
           <Avatar color="accent" className="mx-auto h-24 w-24 border border-default-200 text-large shadow-sm">
@@ -26,14 +26,14 @@ export function ProfileSidebar({ tagCloud }: { tagCloud: Tag[] }) {
             <Avatar.Fallback>{siteConfig.name.slice(0, 1)}</Avatar.Fallback>
           </Avatar>
         </div>
-        <h2 className="text-[28px] font-semibold leading-none">{siteConfig.name}&apos;s Blog</h2>
-        <p className="mt-3 text-sm text-default-500">Web Developer & Designer</p>
+        <h2 className="text-[28px] font-semibold leading-none text-text-base">{siteConfig.name}&apos;s Blog</h2>
+        <p className="mt-3 text-sm text-text-muted">Web Developer & Designer</p>
         <div className="mt-4 flex justify-center gap-3 text-sm text-default-600">
           <NextLink
             href={siteConfig.links.github}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 hover:text-accent"
+            className="inline-flex items-center gap-1.5 text-text-muted hover:text-accent"
           >
             github ↗
           </NextLink>
@@ -43,7 +43,7 @@ export function ProfileSidebar({ tagCloud }: { tagCloud: Tag[] }) {
       <Separator />
 
       <Card.Content className="px-4 py-4">
-        <div className="mb-3 text-md font-semibold text-default-700">标签</div>
+        <div className="mb-3 text-md font-semibold text-text-base">标签</div>
         <div className="flex flex-wrap gap-2">
           {tagCloud.map((tag) => (
             <ClientChip key={tag.id} color={getTagColor(tag.name)} variant="soft" size="sm">
@@ -56,14 +56,14 @@ export function ProfileSidebar({ tagCloud }: { tagCloud: Tag[] }) {
       <Separator />
 
       <Card.Content className="p-4">
-        <div className="mb-3 text-md font-semibold text-default-700">友链</div>
+        <div className="mb-3 text-md font-semibold text-text-base">友链</div>
         <div className="flex flex-wrap gap-x-3 gap-y-2 px-1 text-sm">
           {friendLinks.map((item) => (
             <NextLink
               href={item.url}
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-default-500 transition-colors hover:text-accent"
+              className="text-sm text-text-muted transition-colors hover:text-accent"
               key={item.name}
             >
               {item.name}

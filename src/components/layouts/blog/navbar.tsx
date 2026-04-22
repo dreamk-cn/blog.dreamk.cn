@@ -23,18 +23,16 @@ export const NavBarUser = () => {
   return (
     <Dropdown>
       <Dropdown.Trigger>
-        <button
-          type="button"
-          aria-label="用户菜单"
-          className="inline-flex h-auto min-w-0 items-center border-0 bg-transparent p-0 shadow-none ring-0 hover:bg-default-100 data-[pressed]:bg-default-100"
+        <Avatar
+          color="accent"
+          size="md"
+          className="cursor-pointer hover:bg-default-100 data-[pressed]:bg-default-100"
         >
-          <Avatar color="accent" size="md">
-            {session?.user?.image ? (
-              <Avatar.Image src={session.user.image} alt="" />
-            ) : null}
-            <Avatar.Fallback>{session?.user?.name?.slice(0, 1) ?? "?"}</Avatar.Fallback>
-          </Avatar>
-        </button>
+          {session?.user?.image ? (
+            <Avatar.Image src={session.user.image} alt="" />
+          ) : null}
+          <Avatar.Fallback>{session?.user?.name?.slice(0, 1) ?? "?"}</Avatar.Fallback>
+        </Avatar>
       </Dropdown.Trigger>
       <Dropdown.Popover>
         <Dropdown.Menu
@@ -42,7 +40,7 @@ export const NavBarUser = () => {
           disabledKeys={["profile", ...(session?.user?.role === 'ADMIN' ? [] : ["dashboard"])]}
         >
           <Dropdown.Item id="profile" textValue="profile">
-            <div className="flex flex-col items-center justify-center gap-2">
+            <div className="flex flex-col items-center justify-center gap-2 text-text-base">
               <div className="flex justify-between">
                 <p>用户名：</p>
                 <p>{session?.user?.name}</p>
@@ -53,12 +51,12 @@ export const NavBarUser = () => {
           <Dropdown.Item
             id="dashboard"
             textValue="dashboard"
-            className={session?.user?.role === 'ADMIN' ? '' : 'hidden'}
+            className={clsx("text-text-muted", session?.user?.role === 'ADMIN' ? '' : 'hidden')}
             onAction={() => router.push('/admin/dashboard')}
           >
             控制台
           </Dropdown.Item>
-          <Dropdown.Item id="signout" textValue="signout" onAction={() => signOut()}>
+          <Dropdown.Item id="signout" textValue="signout" className="text-text-muted" onAction={() => signOut()}>
             退出登录
           </Dropdown.Item>
         </Dropdown.Menu>
@@ -76,7 +74,7 @@ export const Navbar = () => {
     <SearchField aria-label="站内搜索">
       <SearchField.Group>
         <SearchField.SearchIcon />
-        <SearchField.Input aria-label="站内搜索" placeholder="Search..." />
+        <SearchField.Input aria-label="站内搜索" placeholder="Search..." className="placeholder:text-text-muted" />
         <SearchField.ClearButton />
       </SearchField.Group>
     </SearchField>
@@ -95,11 +93,11 @@ export const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 border-b border-default-200 bg-background shadow">
-      <nav className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
+      <nav className="h-16 mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <NextLink className="flex items-center justify-start gap-1" href="/">
             <LogoIcon className="dark:invert-90" height={34} width={34} />
-            <p className="text-xl font-bold text-inherit">{siteConfig.name}</p>
+            <p className="text-xl font-bold text-text-base">{siteConfig.name}</p>
           </NextLink>
         </div>
 
@@ -134,7 +132,7 @@ export const Navbar = () => {
             type="button"
             aria-label={isMenuOpen ? "收起菜单" : "展开菜单"}
             onClick={() => setIsMenuOpen((prev) => !prev)}
-            className="rounded-lg border border-default-200 px-2 py-1 text-sm"
+            className="rounded-lg cursor-pointer border border-default-200 px-2 py-1 text-sm text-text-base"
           >
             {isMenuOpen ? "关闭" : "菜单"}
           </button>

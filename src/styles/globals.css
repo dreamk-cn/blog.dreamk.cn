@@ -3,14 +3,33 @@
 @config "../../tailwind.config.ts";
 
 :root {
-  box-sizing: border-box;
+  /* 背景颜色 */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #f5f5f5;
+
+  /* 文字颜色 */
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+  --text-tertiary: #94A3B8;
+
+  /* 阴影于圆角 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --radius-base: 12px;
+  --radius-lg: 16px;
 }
 
 .dark {
-  --background: #171717;
-  --foreground: #cccccc;
+  --background: #18181b;
+  --foreground: #141d2a;
+
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --text-tertiary: #64748B;
+  
+  --border-color: #334155;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);
 }
 
 @theme inline {
@@ -18,9 +37,13 @@
   --color-foreground: var(--foreground);
 
   /* 文字颜色定义 */
-  --color-text-base: var(--color-slate-700); /* 基本文字颜色 */
-  --color-text-muted: var(--color-slate-500); /* 灰色文字颜色 */
-  --color-text-placeholder: var(--color-slate-400); /* 占位符颜色 */
+  --color-text-base: var(--text-primary);
+  --color-text-muted: var(--text-secondary);
+  --color-text-sub: var(--text-tertiary);
+
+  /* 边框与阴影 */
+  --color-border: var(--border-color);
+  --radius-xl: var(--radius-lg);
 
   /* 颜色定义 */
   --color-primary: var(--color-blue-500);

@@ -12,16 +12,16 @@ type HotPost = {
 
 export function HotPosts({ posts }: { posts: HotPost[] }) {
   return (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm bg-background">
       <Card.Header className="border-b border-default-200/70 px-4 py-3">
-        <span className="text-md font-bold text-default-700">热门文章列表</span>
+        <span className="text-md font-bold text-text-base">热门文章列表</span>
       </Card.Header>
       <Card.Content className="flex flex-col gap-3 p-4">
         {posts.map((post, index) => (
           <div key={post.id} className="flex items-start justify-between gap-3">
             <NextLink
               href={`/posts/${post.slug}`}
-              className="line-clamp-2 text-sm hover:text-accent"
+              className="line-clamp-2 text-sm text-text-muted hover:text-accent"
             >
               {post.title}
             </NextLink>

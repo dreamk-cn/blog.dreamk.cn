@@ -1,5 +1,4 @@
 import { PostCard } from "@/components/post/post-card";
-import { MobileSidebarDrawer } from "@/components/layouts/blog/mobile-sidebar-drawer";
 import { ProfileSidebar } from "@/components/layouts/blog/profile-sidebar";
 import { HotPosts } from "@/components/post/hot-posts";
 import { prisma } from "@/libs/prisma";
@@ -44,10 +43,9 @@ export default async function Home() {
   const profileSidebarEl = <ProfileSidebar tagCloud={tagCloud} />;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-5 lg:py-8">
-      <MobileSidebarDrawer>{profileSidebarEl}</MobileSidebarDrawer>
+    <div className="mx-auto max-w-7xl px-4 py-4">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_280px]">
-        <aside className="hidden lg:block lg:space-y-4">
+        <aside className="hidden lg:block lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-auto lg:space-y-4">
           {profileSidebarEl}
         </aside>
 
