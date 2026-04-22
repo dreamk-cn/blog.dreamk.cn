@@ -45,8 +45,7 @@ export default function SignIn() {
         <Tabs.ListContainer>
           <Tabs.List>
             <Tabs.Tab id="login">登录</Tabs.Tab>
-            <Tabs.Tab id="register" isDisabled>注册</Tabs.Tab>
-            <Tabs.Indicator />
+            {/* <Tabs.Tab id="register" isDisabled>注册</Tabs.Tab> */}
           </Tabs.List>
         </Tabs.ListContainer>
         <Tabs.Panel id="login" className="mt-4">

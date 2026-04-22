@@ -2,6 +2,7 @@
 
 import {
   Avatar,
+  Button,
   Dropdown,
   SearchField,
 } from "@heroui/react";
@@ -88,7 +89,7 @@ export const Navbar = () => {
       className="text-accent"
       href="/auth/signin"
     >
-      登录
+      <Button>登录</Button>
     </NextLink>
   )
 
