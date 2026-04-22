@@ -24,25 +24,25 @@ export function StringSelect({
   return (
     <div className={className}>
       {label ? (
-        <span className="mb-1 block text-small text-default-500">{label}</span>
+        <span className="mb-1 block text-small font-bold text-text-muted">{label}</span>
       ) : null}
       <Select
         aria-label={ariaLabel ?? label}
-        className="w-full"
-        selectedKey={selectedId}
-        onSelectionChange={(key) => {
-          if (key == null) return;
+        className="w-full text-text-base"
+        value={selectedId}
+        onChange={(key) => {
+          if (key === null) return;
           onSelectionChange(String(key));
         }}
       >
-        <Select.Trigger>
+        <Select.Trigger className="text-text-muted">
           <Select.Value />
           <Select.Indicator />
         </Select.Trigger>
         <Select.Popover>
           <ListBox>
             {options.map((o) => (
-              <ListBox.Item key={o.id} id={o.id} textValue={o.label}>
+              <ListBox.Item className="text-text-base" key={o.id} id={o.id} textValue={o.label}>
                 {o.label}
               </ListBox.Item>
             ))}

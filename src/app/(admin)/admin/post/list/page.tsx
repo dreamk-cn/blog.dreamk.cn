@@ -103,7 +103,7 @@ export default function Posts() {
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
 
   const topContent = useMemo(() => (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 text-text-base">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">文章管理</h1>
         <Button
@@ -116,7 +116,7 @@ export default function Posts() {
 
       <div className="flex flex-wrap items-end gap-3">
         <TextField className="w-full sm:max-w-[30%]">
-          <Label>关键词</Label>
+          <Label className="text-text-muted">关键词</Label>
           <Input
             placeholder="按标题或内容搜索"
             value={keyword}
@@ -128,7 +128,7 @@ export default function Posts() {
         </TextField>
 
         <StringSelect
-          className="w-40"
+          className="w-40 text-text-muted"
           label="状态"
           selectedId={status}
           onSelectionChange={(id) => {
@@ -143,7 +143,7 @@ export default function Posts() {
         />
 
         <StringSelect
-          className="w-40"
+          className="w-40 text-text-muted"
           label="排序字段"
           selectedId={sortBy}
           onSelectionChange={(id) => {
@@ -158,7 +158,7 @@ export default function Posts() {
         />
 
         <StringSelect
-          className="w-28"
+          className="w-28 text-text-muted"
           label="方向"
           selectedId={sortOrder}
           onSelectionChange={(id) => {
@@ -243,7 +243,7 @@ export default function Posts() {
                 {loading ? (
                   <Table.Row>
                     <Table.Cell colSpan={8}>
-                      <span className="text-default-400">加载中...</span>
+                      <span className="text-text-muted">加载中...</span>
                     </Table.Cell>
                   </Table.Row>
                 ) : items.length === 0 ? (
@@ -257,22 +257,22 @@ export default function Posts() {
                     <Table.Row key={item.id}>
                       <Table.Cell>
                         <div className="flex flex-col">
-                          <span className="line-clamp-1 font-medium">{item.title}</span>
-                          <span className="text-xs text-default-500">{item.slug}</span>
+                          <span className="line-clamp-1 font-medium text-text-base">{item.title}</span>
+                          <span className="text-xs text-text-muted">{item.slug}</span>
                         </div>
                       </Table.Cell>
-                      <Table.Cell>{item.category?.name || '-'}</Table.Cell>
+                      <Table.Cell className="text-text-muted">{item.category?.name || '-'}</Table.Cell>
                       <Table.Cell>
                         {item.tags?.length ? (
                           <div className="flex flex-wrap gap-1">
                             {item.tags.map((t) => (
                               <Chip key={t.id} size="sm" variant="soft" color="accent">
-                                <Chip.Label>{t.name}</Chip.Label>
+                                <Chip.Label className="text-text-base">{t.name}</Chip.Label>
                               </Chip>
                             ))}
                           </div>
                         ) : (
-                          <span className="text-default-400">-</span>
+                          <span className="text-default-400 text-text-muted">-</span>
                         )}
                       </Table.Cell>
                       <Table.Cell>
@@ -305,8 +305,8 @@ export default function Posts() {
                           <Chip.Label>{item.featured ? '是' : '否'}</Chip.Label>
                         </Chip>
                       </Table.Cell>
-                      <Table.Cell className="text-xs">{new Date(item.createdAt).toLocaleString()}</Table.Cell>
-                      <Table.Cell className="text-xs">{new Date(item.updatedAt).toLocaleString()}</Table.Cell>
+                      <Table.Cell className="text-xs text-text-base">{new Date(item.createdAt).toLocaleString()}</Table.Cell>
+                      <Table.Cell className="text-xs text-text-base">{new Date(item.updatedAt).toLocaleString()}</Table.Cell>
                       <Table.Cell>
                         <div className="flex justify-center gap-2">
                           <Button

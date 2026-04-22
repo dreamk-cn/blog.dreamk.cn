@@ -4,7 +4,7 @@ import { tv } from "@heroui/react";
 // NEEDS TO BE REFACTORED
 
 export const StyledBurgerButton = tv({
-  base: "absolute flex flex-col justify-around w-6 h-6 bg-transparent border-none cursor-pointer padding-0 z-[202] focus:outline-none [&_div]:w-6 [&_div]:h-px [&_div]:bg-default-900 [&_div]:rounded-xl  [&_div]:transition-all  [&_div]:relative  [&_div]:origin-[1px] ",
+  base: "absolute flex h-6 w-6 cursor-pointer flex-col justify-around border-none bg-transparent p-0 text-text-base z-[202] focus:outline-none [&_div]:relative [&_div]:h-px [&_div]:w-6 [&_div]:origin-[1px] [&_div]:rounded-xl [&_div]:bg-current [&_div]:transition-all",
 
   variants: {
     open: {

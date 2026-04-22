@@ -79,7 +79,7 @@ export default function Post() {
   if (error && type === 'edit') {
     return (
       <div className="p-3">
-        <div className="text-red-500 mb-4">{error}</div>
+        <div className="text-error mb-4">{error}</div>
       </div>
     );
   }

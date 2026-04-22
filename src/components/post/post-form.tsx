@@ -165,7 +165,7 @@ export function PostForm({
   return (
     <Card className="mx-auto w-full shadow-none">
       <Card.Header className="flex flex-row items-center justify-between">
-        <h2 className="text-xl font-bold">
+        <h2 className="text-xl font-bold text-text-base">
           #{article?.id ? '编辑文章' : '发布文章'}
         </h2>
         <div className="flex gap-2">
@@ -186,16 +186,17 @@ export function PostForm({
         <Card.Content className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <TextField isRequired isInvalid={!!errors.title}>
-              <Label>文章标题</Label>
+              <Label className="text-text-muted">文章标题</Label>
               <Description>文章标题</Description>
               <Input
+                className="text-text-base"
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               />
               {errors.title ? <FieldError>{errors.title}</FieldError> : null}
             </TextField>
             <TextField isRequired isInvalid={!!errors.slug}>
-              <Label>Slug</Label>
+              <Label className="text-text-muted">Slug</Label>
               <Description>将用于生成文章URL</Description>
               <Input
                 value={formData.slug}
@@ -229,7 +230,7 @@ export function PostForm({
             />
 
             <TextField isInvalid={!!errors.excerpt} className="md:col-span-2">
-              <Label>文章摘要</Label>
+              <Label className="text-text-muted">文章摘要</Label>
               <Description>文章摘要</Description>
               <TextArea
                 rows={2}
@@ -240,7 +241,7 @@ export function PostForm({
             </TextField>
 
             <TextField className="md:col-span-2">
-              <Label>封面图片URL</Label>
+              <Label className="text-text-muted">封面图片URL</Label>
               <Description>文章封面图片URL</Description>
               <Input
                 value={formData.coverUrl}
@@ -249,7 +250,7 @@ export function PostForm({
             </TextField>
 
             <TextField isRequired isInvalid={!!errors.content} className="md:col-span-2">
-              <Label>文章内容</Label>
+              <Label className="text-text-muted">文章内容</Label>
               <Description>文章内容</Description>
               <TextArea
                 rows={10}

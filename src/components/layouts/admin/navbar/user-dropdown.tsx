@@ -8,13 +8,12 @@ export const UserDropdown = () => {
   return (
     <Dropdown>
       <Dropdown.Trigger>
-        <button
-          type="button"
+        <div
           aria-label="用户菜单"
-          className="inline-flex h-auto min-w-0 items-center gap-2 border-0 bg-transparent px-2 py-1 shadow-none ring-0 hover:bg-default-100 data-[pressed]:bg-default-100"
+          className="inline-flex h-auto min-w-0 items-center gap-2 border-0 bg-transparent px-2 py-1 text-text-base shadow-none ring-0 hover:bg-foreground data-[pressed]:bg-foreground"
         >
           <span className="hidden text-sm sm:inline">
-            欢迎回来，<span className="text-accent">{session.data?.user.name}</span>
+            欢迎回来，<span className="text-primary">{session.data?.user.name}</span>
           </span>
           <Avatar color="accent" size="md">
             {session.data?.user?.image ? (
@@ -22,13 +21,13 @@ export const UserDropdown = () => {
             ) : null}
             <Avatar.Fallback>{session.data?.user?.name?.slice(0, 1) ?? "?"}</Avatar.Fallback>
           </Avatar>
-        </button>
+        </div>
       </Dropdown.Trigger>
       <Dropdown.Popover>
         <Dropdown.Menu aria-label="User menu actions">
-          <Dropdown.Item id="profile" textValue="profile" className="flex flex-col items-start justify-start">
+          <Dropdown.Item id="profile" textValue="profile" className="flex flex-col items-start justify-start text-text-muted">
             <p>{session.data?.user.name}</p>
-            <p className="text-small text-default-500">{session.data?.user.email}</p>
+            <p className="text-small">{session.data?.user.email}</p>
           </Dropdown.Item>
           <Dropdown.Item
             id="logout"
