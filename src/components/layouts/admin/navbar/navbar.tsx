@@ -14,10 +14,8 @@ export const NavbarWrapper = ({ children }: Props) => {
         <div className="flex items-center md:hidden">
           <BurguerButton />
         </div>
-        <div className="hidden w-full max-md:hidden md:flex md:justify-end">
-          <ThemeSwitch />
-        </div>
         <div className="flex w-fit shrink-0 items-center justify-end gap-2 md:ml-auto">
+          <ThemeSwitch />
           <UserDropdown />
         </div>
       </header>
