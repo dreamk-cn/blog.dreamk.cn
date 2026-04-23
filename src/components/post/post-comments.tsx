@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Avatar, Button, TextArea, toast } from "@heroui/react";
+import { Avatar, Button, Spinner, TextArea, toast } from "@heroui/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -43,9 +43,54 @@ function getAvatarFallback(name?: string | null) {
   return normalized.slice(0, 1).toUpperCase();
 }
 
-export function PostComments({ slug, initialComments }: { slug: string; initialComments: CommentItem[] }) {
+type ServerCommentPayload = {
+  id: string;
+  content: string;
+  parentId: string | null;
+  createdAt: string;
+  user: CommentItem["user"];
+  replyTo: CommentItem["replyTo"];
+  replies: ServerCommentPayload[];
+};
+
+function mapServerCommentToItem(comment: ServerCommentPayload): CommentItem {
+  return {
+    id: comment.id,
+    content: comment.content,
+    parentId: comment.parentId,
+    createdAt: comment.createdAt,
+    user: comment.user,
+    replyTo: comment.replyTo,
+    replies: (comment.replies ?? []).map((reply) => ({
+      id: reply.id,
+      content: reply.content,
+      parentId: reply.parentId,
+      createdAt: reply.createdAt,
+      user: reply.user,
+      replyTo: reply.replyTo,
+      replies: [],
+    })),
+  };
+}
+
+export function PostComments({
+  slug,
+  initialComments,
+  rootPageSize,
+  initialTotalRootCount,
+  totalApprovedCommentCount,
+}: {
+  slug: string;
+  initialComments: CommentItem[];
+  rootPageSize: number;
+  initialTotalRootCount: number;
+  totalApprovedCommentCount: number;
+}) {
   const { data: session } = useSession();
   const [comments, setComments] = useState<CommentItem[]>(initialComments);
+  const [totalRootCount, setTotalRootCount] = useState(initialTotalRootCount);
+  const [approvedCommentTotal, setApprovedCommentTotal] = useState(totalApprovedCommentCount);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [content, setContent] = useState("");
   const [replyContent, setReplyContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<{
@@ -55,11 +100,37 @@ export function PostComments({ slug, initialComments }: { slug: string; initialC
   } | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const totalComments = useMemo(
-    () => comments.reduce((acc, item) => acc + 1 + item.replies.length, 0),
-    [comments],
-  );
-  const commentCountText = useMemo(() => `${totalComments} 条评论`, [totalComments]);
+  const commentCountText = useMemo(() => `${approvedCommentTotal} 条评论`, [approvedCommentTotal]);
+  const hasMoreRoots = comments.length < totalRootCount;
+
+  const loadMoreComments = async () => {
+    if (!hasMoreRoots || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const skip = comments.length;
+      const params = new URLSearchParams({
+        slug,
+        skip: String(skip),
+        take: String(rootPageSize),
+      });
+      const response = await fetch(`/api/post/comment?${params.toString()}`);
+      const result = (await response.json()) as ApiResponse<{
+        comments: ServerCommentPayload[];
+        totalRootCount: number;
+      }>;
+      if (result.code !== 200) {
+        toast.danger("加载失败", { description: result.message || "请稍后再试" });
+        return;
+      }
+      setTotalRootCount(result.data.totalRootCount);
+      const mapped = result.data.comments.map(mapServerCommentToItem);
+      setComments((prev) => [...prev, ...mapped]);
+    } catch {
+      toast.danger("加载失败", { description: "网络异常，请稍后重试" });
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const createDisplayComment = (comment: CommentItem): CommentItem => ({
     ...comment,
@@ -103,6 +174,7 @@ export function PostComments({ slug, initialComments }: { slug: string; initialC
 
       if (result.data.status === "APPROVED") {
         const incoming = createDisplayComment(result.data.comment);
+        setApprovedCommentTotal((n) => n + 1);
         if (parentId && replyingTo) {
           setComments((prev) =>
             prev.map((item) =>
@@ -127,6 +199,7 @@ export function PostComments({ slug, initialComments }: { slug: string; initialC
           toast.success("回复发布成功");
         } else {
           setComments((prev) => [incoming, ...prev]);
+          setTotalRootCount((n) => n + 1);
           toast.success("评论发布成功");
         }
       } else if (parentId) {
@@ -269,10 +342,12 @@ export function PostComments({ slug, initialComments }: { slug: string; initialC
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={4}
+          disabled={submitting}
           placeholder={session?.user ? "说点什么吧..." : "欢迎留言（未登录留言需要审核）"}
         />
         <div className="flex justify-end">
           <Button variant="primary" onPress={handleSubmit} isDisabled={submitting}>
+            {submitting ? <Spinner color="current" size="sm" /> : null }
             {submitting ? "提交中..." : "提交留言"}
           </Button>
         </div>
@@ -286,6 +361,13 @@ export function PostComments({ slug, initialComments }: { slug: string; initialC
         ) : (
           comments.map((comment) => renderComment(comment))
         )}
+        {hasMoreRoots ? (
+          <div className="flex justify-center pt-2">
+            <Button variant="outline" isDisabled={loadingMore} onPress={loadMoreComments}>
+              {loadingMore ? "加载中…" : "加载更多"}
+            </Button>
+          </div>
+        ) : null}
       </div>
     </section>
   );

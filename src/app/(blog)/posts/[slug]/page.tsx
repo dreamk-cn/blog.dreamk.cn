@@ -8,7 +8,9 @@ import { PostTocActiveProvider } from "@/components/post/post-toc-active-context
 import { PostTableOfContents } from "@/components/post/post-table-of-contents";
 import { estimateArticleCharCount, extractMarkdownToc } from "@/lib/markdown-toc";
 import { prisma } from "@/libs/prisma";
-import { listApprovedCommentsBySlug } from "@/services/comment-service";
+import { countApprovedCommentsByPostSlug, listApprovedCommentsBySlug } from "@/services/comment-service";
+
+const POST_COMMENT_ROOT_PAGE_SIZE = 20;
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -62,7 +64,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PostDetail({ params }: PageProps) {
   const { slug } = await params;
-  const [post, comments] = await Promise.all([getPostBySlug(slug), listApprovedCommentsBySlug(slug)]);
+  const [post, commentBundle, totalApprovedCommentCount] = await Promise.all([
+    getPostBySlug(slug),
+    listApprovedCommentsBySlug(slug, { rootSkip: 0, rootTake: POST_COMMENT_ROOT_PAGE_SIZE }),
+    countApprovedCommentsByPostSlug(slug),
+  ]);
+  const { comments, totalRootCount } = commentBundle;
 
   if (!post) {
     notFound();
@@ -126,7 +133,11 @@ export default async function PostDetail({ params }: PageProps) {
                 </div>
               </article>
               <PostComments
+                key={slug}
                 slug={slug}
+                rootPageSize={POST_COMMENT_ROOT_PAGE_SIZE}
+                initialTotalRootCount={totalRootCount}
+                totalApprovedCommentCount={totalApprovedCommentCount}
                 initialComments={comments.map((comment) => ({
                   id: comment.id,
                   content: comment.content,

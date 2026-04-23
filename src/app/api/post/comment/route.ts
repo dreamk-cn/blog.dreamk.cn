@@ -18,12 +18,17 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
 
   try {
-    const { slug } = CommentListSchema.parse({
+    const { slug, skip, take } = CommentListSchema.parse({
       slug: searchParams.get("slug"),
+      skip: searchParams.get("skip") ?? undefined,
+      take: searchParams.get("take") ?? undefined,
     });
 
-    const comments = await listApprovedCommentsBySlug(slug);
-    return ok(comments, "获取评论成功");
+    const { comments, totalRootCount } = await listApprovedCommentsBySlug(slug, {
+      rootSkip: skip,
+      rootTake: take,
+    });
+    return ok({ comments, totalRootCount }, "获取评论成功");
   } catch (err) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误");

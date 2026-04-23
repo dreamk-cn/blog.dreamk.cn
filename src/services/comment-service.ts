@@ -1,37 +1,29 @@
-import { $Enums } from "@prisma/client";
+import { $Enums, type Prisma } from "@prisma/client";
 import { prisma } from "@/libs/prisma";
 
 type CommentStatus = $Enums.CommentStatus;
 
-export async function listApprovedCommentsBySlug(slug: string) {
-  const comments = await prisma.comment.findMany({
-    where: {
-      post: {
-        slug,
-        status: "PUBLISHED",
-      },
-      status: "APPROVED",
-    },
-    orderBy: {
-      createdAt: "asc",
-    },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          image: true,
-        },
-      },
-    },
-  });
+const commentUserSelect = {
+  id: true,
+  name: true,
+  image: true,
+} as const;
 
+type FlatApprovedComment = Prisma.CommentGetPayload<{
+  include: { user: { select: typeof commentUserSelect } };
+}>;
+
+function buildThreadedRootsFromFlat(
+  comments: FlatApprovedComment[],
+  rootIdsInOrder: string[],
+) {
   const commentMap = new Map(comments.map((item) => [item.id, item]));
-  const parentItems = comments
-    .filter((item) => item.parentId === null)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
-  return parentItems.map((parent) => {
+  return rootIdsInOrder.map((rootId) => {
+    const parent = commentMap.get(rootId);
+    if (!parent) {
+      throw new Error(`Missing root comment ${rootId}`);
+    }
     const replies = comments
       .filter((item) => item.parentId !== null && isDescendantOf(item, parent.id, commentMap))
       .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
@@ -49,6 +41,104 @@ export async function listApprovedCommentsBySlug(slug: string) {
       replyTo: null,
       replies,
     };
+  });
+}
+
+async function collectApprovedSubtreeForRoots(postId: string, rootRows: FlatApprovedComment[]) {
+  const collected = new Map<string, FlatApprovedComment>();
+  for (const row of rootRows) {
+    collected.set(row.id, row);
+  }
+  let frontier = rootRows.map((r) => r.id);
+
+  while (frontier.length > 0) {
+    const children = await prisma.comment.findMany({
+      where: {
+        postId,
+        status: "APPROVED",
+        parentId: { in: frontier },
+      },
+      include: {
+        user: {
+          select: commentUserSelect,
+        },
+      },
+    });
+    if (children.length === 0) {
+      break;
+    }
+    for (const child of children) {
+      collected.set(child.id, child);
+    }
+    frontier = children.map((c) => c.id);
+  }
+
+  return [...collected.values()];
+}
+
+export async function listApprovedCommentsBySlug(
+  slug: string,
+  options?: { rootSkip?: number; rootTake?: number },
+) {
+  const post = await prisma.post.findFirst({
+    where: {
+      slug,
+      status: "PUBLISHED",
+    },
+    select: { id: true },
+  });
+
+  if (!post) {
+    return { comments: [], totalRootCount: 0 };
+  }
+
+  const rootSkip = options?.rootSkip ?? 0;
+  const rootTake = options?.rootTake ?? 20;
+
+  const totalRootCount = await prisma.comment.count({
+    where: {
+      postId: post.id,
+      status: "APPROVED",
+      parentId: null,
+    },
+  });
+
+  const rootRows = await prisma.comment.findMany({
+    where: {
+      postId: post.id,
+      status: "APPROVED",
+      parentId: null,
+    },
+    orderBy: { createdAt: "desc" },
+    skip: rootSkip,
+    take: rootTake,
+    include: {
+      user: {
+        select: commentUserSelect,
+      },
+    },
+  });
+
+  if (rootRows.length === 0) {
+    return { comments: [], totalRootCount };
+  }
+
+  const flat = await collectApprovedSubtreeForRoots(post.id, rootRows);
+  const rootIdsInOrder = rootRows.map((r) => r.id);
+  const comments = buildThreadedRootsFromFlat(flat, rootIdsInOrder);
+
+  return { comments, totalRootCount };
+}
+
+export async function countApprovedCommentsByPostSlug(slug: string) {
+  return prisma.comment.count({
+    where: {
+      status: "APPROVED",
+      post: {
+        slug,
+        status: "PUBLISHED",
+      },
+    },
   });
 }
 
