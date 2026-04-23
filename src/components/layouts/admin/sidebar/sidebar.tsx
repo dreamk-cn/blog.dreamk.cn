@@ -71,9 +71,10 @@ export const SidebarWrapper = () => {
 
             <SidebarMenu title="系统">
               <SidebarItem
-                isActive={pathname === "/friend-link"}
+                isActive={pathname === "/admin/friend-link/list"}
                 title="友链"
                 icon={<SettingsIcon />}
+                href="/admin/friend-link/list"
               />
               <SidebarItem
                 isActive={pathname === "/caches"}
