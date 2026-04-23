@@ -40,7 +40,7 @@ export default function AdminCommentListPage() {
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState<CommentStatus | "all">("all");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -72,7 +72,9 @@ export default function AdminCommentListPage() {
   };
 
   useEffect(() => {
-    fetchComments();
+    queueMicrotask(() => {
+      fetchComments();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageNo, pageSize, keywordDebounced, sortOrder, status]);
 

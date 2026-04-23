@@ -18,7 +18,7 @@ import { request } from '@/libs/request';
 export default function AdminTagListPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [keyword, setKeyword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const createModal = useOverlayState();
@@ -35,11 +35,11 @@ export default function AdminTagListPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
 
-  useEffect(() => {
-    if (!newTagSlug) {
-      setNewTagSlug(newTagName.trim().toLowerCase().replace(/\s+/g, '-'));
-    }
-  }, [newTagName, newTagSlug]);
+  // useEffect(() => {
+  //   if (!newTagSlug) {
+  //     setNewTagSlug(newTagName.trim().toLowerCase().replace(/\s+/g, '-'));
+  //   }
+  // }, [newTagName, newTagSlug]);
 
   const fetchTags = async (kw = '') => {
     try {
@@ -60,7 +60,9 @@ export default function AdminTagListPage() {
   };
 
   useEffect(() => {
-    fetchTags();
+    queueMicrotask(() => {
+      fetchTags();
+    });
   }, []);
 
   useEffect(() => {

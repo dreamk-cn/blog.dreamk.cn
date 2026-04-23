@@ -34,15 +34,6 @@ export function PostTocActiveProvider({ items, children }: { items: MarkdownTocI
   }, [items]);
 
   useEffect(() => {
-    if (items.length === 0) {
-      setActiveIdState(null);
-      return;
-    }
-    setActiveIdState(items[0].id);
-    computeActive();
-  }, [items, computeActive]);
-
-  useEffect(() => {
     if (items.length === 0 || typeof window === "undefined") return;
     const elements = items
       .map((item) => document.getElementById(item.id))
@@ -75,7 +66,13 @@ export function PostTocActiveProvider({ items, children }: { items: MarkdownTocI
     return () => observer.disconnect();
   }, [items, computeActive]);
 
-  const value = useMemo(() => ({ activeId, setActiveId }), [activeId, setActiveId]);
+  const resolvedActiveId = useMemo(() => {
+    if (items.length === 0) return null;
+    if (activeId && items.some((item) => item.id === activeId)) return activeId;
+    return items[0].id;
+  }, [activeId, items]);
+
+  const value = useMemo(() => ({ activeId: resolvedActiveId, setActiveId }), [resolvedActiveId, setActiveId]);
 
   return <TocActiveContext.Provider value={value}>{children}</TocActiveContext.Provider>;
 }

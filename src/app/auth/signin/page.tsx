@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 
 import { getProviders } from "next-auth/react";
-import { Separator, Tabs } from '@heroui/react'
+import { Separator, Tabs, useIsMounted } from '@heroui/react'
 import LoginForm from "@/components/auth/login-form";
 import LoginButton from '@/components/buttons/login-button';
 import RegisterForm from "@/components/auth/register-form";
@@ -23,10 +23,9 @@ const renderLoginButtons = (
 export default function SignIn() {
   const [providers, setProviders] = useState<Providers | null>(null);
   const [selected, setSelected] = useState<string>('login');
-  const [mounted, setMounted] = useState(false);
+  const isMounted = useIsMounted();
 
   useEffect(() => {
-    setMounted(true);
 
     async function fetchProviders() {
       const response = await getProviders();
@@ -35,7 +34,7 @@ export default function SignIn() {
     fetchProviders();
   }, []);
 
-  if (!mounted) {
+  if (!isMounted) {
     return null;
   }
 

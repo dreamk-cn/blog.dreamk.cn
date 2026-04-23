@@ -11,7 +11,7 @@ export default function AdminUserListPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [keyword, setKeyword] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [userToBan, setUserToBan] = useState<User | null>(null);
@@ -36,14 +36,27 @@ export default function AdminUserListPage() {
   };
 
   useEffect(() => {
-    fetchUsers();
+    queueMicrotask(() => {
+      fetchUsers();
+    });
   }, []);
 
   useEffect(() => {
+    let isIgnore = false; // 竞态标记
+
+    const performFetch = async () => {
+      // 只有在非防抖状态下或初次加载才调用
+      await fetchUsers(keyword.trim(), statusFilter);
+    };
+
     const timer = setTimeout(() => {
-      fetchUsers(keyword.trim(), statusFilter);
+      if (!isIgnore) performFetch();
     }, 300);
-    return () => clearTimeout(timer);
+
+    return () => {
+      isIgnore = true; // 组件卸载或依赖变化时，忽略之前的请求回调
+      clearTimeout(timer);
+    };
   }, [keyword, statusFilter]);
 
   const handleBanToggle = async (u: User, to: "BAN" | "VALID") => {

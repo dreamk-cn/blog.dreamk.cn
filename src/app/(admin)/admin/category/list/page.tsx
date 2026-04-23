@@ -18,7 +18,7 @@ import { request } from '@/libs/request';
 export default function AdminCategoryListPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [keyword, setKeyword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const createModal = useOverlayState();
@@ -35,11 +35,11 @@ export default function AdminCategoryListPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
-  useEffect(() => {
-    if (!newSlug) {
-      setNewSlug(newName.trim().toLowerCase().replace(/\s+/g, '-'));
-    }
-  }, [newName, newSlug]);
+  // useEffect(() => {
+  //   if (!newSlug) {
+  //     setNewSlug(newName.trim().toLowerCase().replace(/\s+/g, '-'));
+  //   }
+  // }, [newName, newSlug]);
 
   const fetchCategories = async (kw = '') => {
     try {
@@ -60,7 +60,9 @@ export default function AdminCategoryListPage() {
   };
 
   useEffect(() => {
-    fetchCategories();
+    queueMicrotask(() => {
+      fetchCategories();
+    });
   }, []);
 
   useEffect(() => {

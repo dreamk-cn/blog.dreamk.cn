@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EmailRegex } from '@/utils/verify';
@@ -16,8 +16,8 @@ type RegisterFormProps = {
 export default function RegisterForm() {
   const {
     register,
+    control,
     handleSubmit,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormProps>({
     mode: "onBlur",
@@ -32,7 +32,7 @@ export default function RegisterForm() {
 
   const [submitError, setSubmitError] = useState<string | null>(null);
   const router = useRouter();
-  const password = watch("password");
+  const password = useWatch({ control, name: "password" });
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
 

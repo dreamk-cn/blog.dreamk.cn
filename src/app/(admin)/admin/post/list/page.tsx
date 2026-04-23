@@ -37,7 +37,7 @@ export default function Posts() {
   const [sortBy, setSortBy] = useState<SortBy>('createdAt');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -70,7 +70,9 @@ export default function Posts() {
   };
 
   useEffect(() => {
-    fetchPosts();
+    queueMicrotask(() => {
+      fetchPosts();
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageNo, pageSize, sortBy, sortOrder, status, keywordDebounced]);
 

@@ -4,6 +4,7 @@ import { FC, useEffect, useState } from "react";
 import clsx from "clsx";
 
 import { SunFilledIcon, MoonFilledIcon } from "@/components/icons";
+import { useMounted } from "@/hooks/useMounted";
 
 type ThemeSwitchClassNames = {
   base?: string;
@@ -19,23 +20,21 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
   className,
   classNames,
 }) => {
-  const [mounted, setMounted] = useState(false);
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const mounted = useMounted();
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "dark";
+
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "light" || savedTheme === "dark") return savedTheme;
+
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
 
   useEffect(() => {
     const root = document.documentElement;
-    const savedTheme = localStorage.getItem("theme");
-    const preferredTheme =
-      savedTheme === "light" || savedTheme === "dark"
-        ? savedTheme
-        : window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light";
-
-    root.classList.toggle("dark", preferredTheme === "dark");
-    setTheme(preferredTheme);
-    setMounted(true);
-  }, []);
+    root.classList.toggle("dark", theme === "dark");
+    localStorage.setItem("theme", theme);
+  }, [theme]);
 
   const isLight = theme !== "dark";
 
