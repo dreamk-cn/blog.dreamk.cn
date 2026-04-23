@@ -199,6 +199,7 @@ export function PostForm({
               <Label className="text-text-muted">Slug</Label>
               <Description>将用于生成文章URL</Description>
               <Input
+                className="text-text-base"
                 value={formData.slug}
                 onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
               />
@@ -233,6 +234,7 @@ export function PostForm({
               <Label className="text-text-muted">文章摘要</Label>
               <Description>文章摘要</Description>
               <TextArea
+                className="text-text-base"
                 rows={2}
                 value={formData.excerpt}
                 onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
@@ -244,6 +246,7 @@ export function PostForm({
               <Label className="text-text-muted">封面图片URL</Label>
               <Description>文章封面图片URL</Description>
               <Input
+                className="text-text-base"
                 value={formData.coverUrl}
                 onChange={(e) => setFormData(prev => ({ ...prev, coverUrl: e.target.value }))}
               />
@@ -253,6 +256,7 @@ export function PostForm({
               <Label className="text-text-muted">文章内容</Label>
               <Description>文章内容</Description>
               <TextArea
+                className="text-text-base"
                 rows={10}
                 value={formData.content}
                 onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
@@ -299,7 +303,7 @@ export function PostForm({
               />
               <Button
                 size="sm"
-                variant="ghost"
+                variant="secondary"
                 onPress={handleAddNewTag}
               >
                 添加

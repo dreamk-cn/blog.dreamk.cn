@@ -35,7 +35,7 @@ export function StringSelect({
           onSelectionChange(String(key));
         }}
       >
-        <Select.Trigger className="text-text-muted">
+        <Select.Trigger className="text-text-base">
           <Select.Value />
           <Select.Indicator />
         </Select.Trigger>
