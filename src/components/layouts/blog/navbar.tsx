@@ -11,7 +11,7 @@ import clsx from "clsx";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switcher";
-import { LogoIcon } from '@/components/icons';
+import { LogoIcon, MenuIcon } from '@/components/icons';
 import { signOut, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
@@ -134,7 +134,7 @@ export const Navbar = () => {
             onClick={() => setIsMenuOpen((prev) => !prev)}
             className="rounded-lg cursor-pointer border border-default-200 px-2 py-1 text-sm text-text-base"
           >
-            {isMenuOpen ? "关闭" : "菜单"}
+            <MenuIcon color="current" size={20} />
           </button>
         </div>
       </nav>
