@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { contentConfig } from "@/config/content";
 import { prisma } from "@/libs/prisma";
 
 type PostTagInput = { id?: string; name?: string; slug?: string };
@@ -54,6 +55,13 @@ export async function listPosts(params: {
     },
     where: {
       status: isAdmin ? status : "PUBLISHED",
+      ...(isAdmin
+        ? {}
+        : {
+            slug: {
+              notIn: [...contentConfig.excludedPostSlugsForPublicFeed],
+            },
+          }),
     },
     orderBy: { [sortBy]: sortOrder },
     skip: (pageNo - 1) * pageSize,

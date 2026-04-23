@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Avatar, Button, Popover, Spinner, TextArea, toast } from "@heroui/react";
+import { Avatar, Button, Spinner, TextArea, toast } from "@heroui/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -114,6 +114,8 @@ export function PostComments({
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingReplyRootId, setLoadingReplyRootId] = useState<string | null>(null);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const confirmDeleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [content, setContent] = useState("");
   const [replyContent, setReplyContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<{
@@ -277,6 +279,30 @@ export function PostComments({
     } finally {
       setDeletingCommentId(null);
     }
+  };
+
+  const requestDeleteWithConfirm = (comment: CommentItem, rootId: string) => {
+    if (confirmDeleteId === comment.id) {
+      if (confirmDeleteTimer.current) {
+        clearTimeout(confirmDeleteTimer.current);
+        confirmDeleteTimer.current = null;
+      }
+      setConfirmDeleteId(null);
+      void handleDeleteComment(comment, rootId);
+      return;
+    }
+
+    if (confirmDeleteTimer.current) {
+      clearTimeout(confirmDeleteTimer.current);
+    }
+    setConfirmDeleteId(comment.id);
+    toast.warning("再次点击删除以确认", {
+      description: "3 秒内再次点击“删除”将执行删除操作",
+    });
+    confirmDeleteTimer.current = setTimeout(() => {
+      setConfirmDeleteId((prev) => (prev === comment.id ? null : prev));
+      confirmDeleteTimer.current = null;
+    }, 3000);
   };
 
   const submitComment = async (text: string, parentId?: string) => {
@@ -462,8 +488,7 @@ export function PostComments({
           回复
         </Button>
         {session?.user?.id && comment.user?.id === session.user.id ? (
-          <Popover>
-            <Button
+          <Button
             size="sm"
             variant="ghost"
             className="text-danger"
@@ -471,13 +496,16 @@ export function PostComments({
             onPress={() => {
               const found = findComment(comment.id);
               if (!found) return;
-              void handleDeleteComment(found.comment, found.rootId);
+              requestDeleteWithConfirm(found.comment, found.rootId);
             }}
           >
             {deletingCommentId === comment.id ? <Spinner color="current" size="sm" /> : null}
-            {deletingCommentId === comment.id ? "删除中..." : "删除"}
+            {deletingCommentId === comment.id
+              ? "删除中..."
+              : confirmDeleteId === comment.id
+                ? "确认删除"
+                : "删除"}
           </Button>
-          </Popover>
         ) : null}
       </div>
 

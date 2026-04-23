@@ -1,6 +1,7 @@
 import { PostCard } from "@/components/post/post-card";
 import { ProfileSidebar } from "@/components/layouts/blog/profile-sidebar";
 import { HotPosts } from "@/components/post/hot-posts";
+import { contentConfig } from "@/config/content";
 import { prisma } from "@/libs/prisma";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 
@@ -12,6 +13,9 @@ export default async function Home() {
       },
       where: {
         status: 'PUBLISHED',
+        slug: {
+          notIn: [...contentConfig.excludedPostSlugsForPublicFeed],
+        },
       },
       orderBy: {
         publishedAt: 'desc',
@@ -26,6 +30,9 @@ export default async function Home() {
       },
       where: {
         status: 'PUBLISHED',
+        slug: {
+          notIn: [...contentConfig.excludedPostSlugsForPublicFeed],
+        },
       },
       orderBy: {
         viewCount: 'desc',
