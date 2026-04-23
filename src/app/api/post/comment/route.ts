@@ -1,11 +1,12 @@
 import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
 import { fail, internalError, ok, zodFail } from "@/libs/api-response";
-import { CommentCreateSchema, CommentListSchema, CommentReplyListSchema } from "@/schemas/comment";
+import { CommentCreateSchema, CommentListSchema, CommentReplyListSchema, CommentSelfDeleteSchema } from "@/schemas/comment";
 import {
   createComment,
   listApprovedCommentsBySlug,
   listApprovedRepliesForRootSlug,
+  softDeleteOwnCommentBySlug,
 } from "@/services/comment-service";
 import { NextRequest } from "next/server";
 import z from "zod";
@@ -88,6 +89,35 @@ export async function POST(request: NextRequest) {
       },
       status === "APPROVED" ? "评论发布成功" : "留言已提交，等待审核",
     );
+  } catch (err) {
+    if (err instanceof z.ZodError) {
+      return zodFail(err.issues[0]?.message || "参数错误");
+    }
+    return internalError();
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const json = await request.json();
+    const { slug, id } = CommentSelfDeleteSchema.parse(json ?? {});
+    const session = await auth();
+    const userId = session?.user?.id;
+    if (!userId) {
+      return fail(ResponseCode.UNAUTHORIZED, "请先登录");
+    }
+
+    const deleted = await softDeleteOwnCommentBySlug({
+      slug,
+      id,
+      userId,
+    });
+
+    if (!deleted) {
+      return fail(ResponseCode.FAIL, "评论不存在或无权限删除");
+    }
+
+    return ok(deleted, "评论删除成功");
   } catch (err) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误");

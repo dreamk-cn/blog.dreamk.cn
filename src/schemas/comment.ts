@@ -22,6 +22,11 @@ export const CommentCreateSchema = z.object({
   parentId: zValue(z.string().optional()),
 });
 
+export const CommentSelfDeleteSchema = z.object({
+  slug: zValue(z.string().min(1, "slug不能为空")),
+  id: zValue(z.string().min(1, "评论ID不能为空")),
+});
+
 export const CommentAdminListSchema = SearchPageSchema.extend({
   status: zValue(z.enum(["PENDING", "APPROVED", "SPAM", "DELETED"]).optional()),
 });

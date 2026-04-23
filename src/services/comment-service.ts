@@ -362,3 +362,81 @@ export async function softDeleteComments(ids: string[]) {
     data: { status: "DELETED" },
   });
 }
+
+export async function softDeleteOwnCommentBySlug(input: { slug: string; id: string; userId: string }) {
+  const { slug, id, userId } = input;
+  const target = await prisma.comment.findFirst({
+    where: {
+      id,
+      userId,
+      post: {
+        slug,
+        status: "PUBLISHED",
+      },
+      status: {
+        not: "DELETED",
+      },
+    },
+    select: {
+      id: true,
+      postId: true,
+    },
+  });
+
+  if (!target) {
+    return null;
+  }
+
+  const descendants = new Set<string>([target.id]);
+  let frontier = [target.id];
+
+  while (frontier.length > 0) {
+    const children = await prisma.comment.findMany({
+      where: {
+        postId: target.postId,
+        status: {
+          not: "DELETED",
+        },
+        parentId: { in: frontier },
+      },
+      select: { id: true },
+    });
+    if (children.length === 0) {
+      break;
+    }
+    frontier = [];
+    for (const child of children) {
+      if (!descendants.has(child.id)) {
+        descendants.add(child.id);
+        frontier.push(child.id);
+      }
+    }
+  }
+
+  const ids = [...descendants];
+  const [approvedCount, deletedRootCount] = await prisma.$transaction([
+    prisma.comment.count({
+      where: {
+        id: { in: ids },
+        status: "APPROVED",
+      },
+    }),
+    prisma.comment.count({
+      where: {
+        id: { in: ids },
+        status: "APPROVED",
+        parentId: null,
+      },
+    }),
+    prisma.comment.updateMany({
+      where: { id: { in: ids } },
+      data: { status: "DELETED" },
+    }),
+  ]);
+
+  return {
+    deletedIds: ids,
+    deletedApprovedCount: approvedCount,
+    deletedRootCount,
+  };
+}

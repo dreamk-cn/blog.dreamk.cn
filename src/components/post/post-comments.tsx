@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Avatar, Button, Spinner, TextArea, toast } from "@heroui/react";
+import { Avatar, Button, Popover, Spinner, TextArea, toast } from "@heroui/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -31,6 +31,21 @@ type ApiResponse<T> = {
   message: string;
   data: T;
 };
+
+function isDescendantInList(
+  candidate: { parentId: string | null },
+  rootId: string,
+  map: Map<string, { parentId: string | null }>,
+) {
+  let cursor = candidate.parentId;
+  while (cursor) {
+    if (cursor === rootId) return true;
+    const parent = map.get(cursor);
+    if (!parent) return false;
+    cursor = parent.parentId;
+  }
+  return false;
+}
 
 function formatDateTime(value: string) {
   const date = new Date(value);
@@ -98,6 +113,7 @@ export function PostComments({
   const [approvedCommentTotal, setApprovedCommentTotal] = useState(totalApprovedCommentCount);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingReplyRootId, setLoadingReplyRootId] = useState<string | null>(null);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [content, setContent] = useState("");
   const [replyContent, setReplyContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<{
@@ -201,6 +217,66 @@ export function PostComments({
       if (reply) return { comment: reply, rootId: item.id };
     }
     return null;
+  };
+
+  const removeLoadedDescendantsFromReplies = (replies: CommentItem[], rootId: string) => {
+    const map = new Map(replies.map((item) => [item.id, { parentId: item.parentId }]));
+    return replies.filter((item) => item.id !== rootId && !isDescendantInList(item, rootId, map));
+  };
+
+  const handleDeleteComment = async (comment: CommentItem, rootId: string) => {
+    if (deletingCommentId) return;
+    setDeletingCommentId(comment.id);
+    try {
+      const response = await fetch("/api/post/comment", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          slug,
+          id: comment.id,
+        }),
+      });
+      const result = (await response.json()) as ApiResponse<{
+        deletedIds: string[];
+        deletedApprovedCount: number;
+        deletedRootCount: number;
+      }>;
+      if (result.code !== 200) {
+        toast.danger("删除失败", { description: result.message || "请稍后再试" });
+        return;
+      }
+
+      if (comment.parentId === null) {
+        setComments((prev) => prev.filter((item) => item.id !== comment.id));
+      } else {
+        setComments((prev) =>
+          prev.map((item) => {
+            if (item.id !== rootId) return item;
+            const nextReplies = removeLoadedDescendantsFromReplies(item.replies, comment.id);
+            const oldTotal = item.totalReplyCount ?? item.replies.length;
+            const nextTotal = Math.max(nextReplies.length, oldTotal - result.data.deletedApprovedCount);
+            return {
+              ...item,
+              replies: nextReplies,
+              totalReplyCount: nextTotal,
+            };
+          }),
+        );
+      }
+      setApprovedCommentTotal((n) => Math.max(0, n - result.data.deletedApprovedCount));
+      setTotalRootCount((n) => Math.max(0, n - result.data.deletedRootCount));
+      if (replyingTo && (replyingTo.id === comment.id || replyingTo.rootId === comment.id)) {
+        setReplyingTo(null);
+        setReplyContent("");
+      }
+      toast.success("评论删除成功");
+    } catch {
+      toast.danger("删除失败", { description: "网络异常，请稍后重试" });
+    } finally {
+      setDeletingCommentId(null);
+    }
   };
 
   const submitComment = async (text: string, parentId?: string) => {
@@ -367,10 +443,11 @@ export function PostComments({
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.content}</ReactMarkdown>
       </div>
 
-      <div className="mt-3 flex justify-end">
+      <div className="mt-3 flex justify-end gap-2">
         <Button
           size="sm"
           variant="ghost"
+          isDisabled={submitting || !!deletingCommentId}
           onPress={() => {
             const found = findComment(comment.id);
             if (!found) return;
@@ -384,6 +461,24 @@ export function PostComments({
         >
           回复
         </Button>
+        {session?.user?.id && comment.user?.id === session.user.id ? (
+          <Popover>
+            <Button
+            size="sm"
+            variant="ghost"
+            className="text-danger"
+            isDisabled={submitting || !!deletingCommentId}
+            onPress={() => {
+              const found = findComment(comment.id);
+              if (!found) return;
+              void handleDeleteComment(found.comment, found.rootId);
+            }}
+          >
+            {deletingCommentId === comment.id ? <Spinner color="current" size="sm" /> : null}
+            {deletingCommentId === comment.id ? "删除中..." : "删除"}
+          </Button>
+          </Popover>
+        ) : null}
       </div>
 
       {replyingTo?.id === comment.id ? (
