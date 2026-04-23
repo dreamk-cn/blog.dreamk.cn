@@ -9,7 +9,7 @@ import NextLink from "next/link";
 const HOME_RECENT_POSTS_LIMIT = 6;
 
 export default async function Home() {
-  const [posts, hotPosts, tagCloud] = await Promise.all([
+  const [posts, hotPosts, categories, friendLinks] = await Promise.all([
     prisma.post.findMany({
       include: {
         tags: true
@@ -43,15 +43,34 @@ export default async function Home() {
       },
       take: 8,
     }),
-    prisma.tag.findMany({
+    prisma.category.findMany({
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
       orderBy: {
         updatedAt: 'desc',
       },
       take: 16,
     }),
+    prisma.friendLink.findMany({
+      where: {
+        status: "APPROVED",
+      },
+      orderBy: [
+        { sortOrder: "desc" },
+        { createdAt: "desc" },
+      ],
+      select: {
+        id: true,
+        name: true,
+        url: true,
+      },
+    }),
   ]);
 
-  const profileSidebarEl = <ProfileSidebar tagCloud={tagCloud} />;
+  const profileSidebarEl = <ProfileSidebar categories={categories} friendLinks={friendLinks} />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4">

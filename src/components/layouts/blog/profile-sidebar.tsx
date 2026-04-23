@@ -4,18 +4,22 @@ import { Avatar, Card, Separator } from "@heroui/react";
 import NextLink from "next/link";
 import { siteConfig } from "@/config/site";
 import { ClientChip } from "@/components/ui/heroui-client";
+import type { Category } from "@prisma/client";
 import { getTagColor } from "@/lib/tag-color";
-import type { Tag } from "@prisma/client";
 
-export function ProfileSidebar({ tagCloud }: { tagCloud: Tag[] }) {
-  const friendLinks = [
-    { name: "木小沫", url: "https://github.com/dreamk-cn" },
-    { name: "google", url: "https://www.google.com" },
-    { name: "百度云", url: "https://www.baidu.com" },
-    { name: "bilibili", url: "https://www.bilibili.com" },
-    { name: "百度", url: "https://www.baidu.com" },
-    { name: "淘宝", url: "https://www.taobao.com" }
-  ];
+type FriendLinkItem = {
+  id: string;
+  name: string;
+  url: string;
+};
+
+export function ProfileSidebar({
+  categories,
+  friendLinks,
+}: {
+  categories: Pick<Category, "id" | "name" | "slug">[];
+  friendLinks: FriendLinkItem[];
+}) {
 
   return (
     <Card className="overflow-hidden shadow-sm bg-background">
@@ -43,13 +47,19 @@ export function ProfileSidebar({ tagCloud }: { tagCloud: Tag[] }) {
       <Separator />
 
       <Card.Content className="px-4 py-4">
-        <div className="mb-3 text-md font-semibold text-text-base">标签</div>
+        <div className="mb-3 text-md font-semibold text-text-base">分类</div>
         <div className="flex flex-wrap gap-2">
-          {tagCloud.map((tag) => (
-            <ClientChip key={tag.id} color={getTagColor(tag.name)} variant="soft" size="sm">
-              <ClientChip.Label>{tag.name}</ClientChip.Label>
-            </ClientChip>
-          ))}
+          {categories.length === 0 ? (
+            <span className="text-sm text-text-muted">暂无分类</span>
+          ) : (
+            categories.map((category) => (
+              <NextLink key={category.id} href={`/categories/${category.slug}`}>
+                <ClientChip variant="soft" color={getTagColor(category.name)}>
+                  <ClientChip.Label>{category.name}</ClientChip.Label>
+                </ClientChip>
+              </NextLink>
+            ))
+          )}
         </div>
       </Card.Content>
 
@@ -58,17 +68,21 @@ export function ProfileSidebar({ tagCloud }: { tagCloud: Tag[] }) {
       <Card.Content className="p-4">
         <div className="mb-3 text-md font-semibold text-text-base">友链</div>
         <div className="flex flex-wrap gap-x-3 gap-y-2 px-1 text-sm">
-          {friendLinks.map((item) => (
-            <NextLink
-              href={item.url}
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm text-text-muted transition-colors hover:text-accent"
-              key={item.name}
-            >
-              {item.name}
-            </NextLink>
-          ))}
+          {friendLinks.length === 0 ? (
+            <span className="text-sm text-text-muted">暂无友链</span>
+          ) : (
+            friendLinks.map((item) => (
+              <NextLink
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-sm text-text-muted transition-colors hover:text-accent"
+                key={item.id}
+              >
+                {item.name}
+              </NextLink>
+            ))
+          )}
         </div>
       </Card.Content>
     </Card>
