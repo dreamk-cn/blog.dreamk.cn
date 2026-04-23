@@ -4,6 +4,9 @@ import { HotPosts } from "@/components/post/hot-posts";
 import { contentConfig } from "@/config/content";
 import { prisma } from "@/libs/prisma";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
+import NextLink from "next/link";
+
+const HOME_RECENT_POSTS_LIMIT = 6;
 
 export default async function Home() {
   const [posts, hotPosts, tagCloud] = await Promise.all([
@@ -19,7 +22,8 @@ export default async function Home() {
       },
       orderBy: {
         publishedAt: 'desc',
-      }
+      },
+      take: HOME_RECENT_POSTS_LIMIT,
     }),
     prisma.post.findMany({
       select: {
@@ -66,6 +70,16 @@ export default async function Home() {
                 还没有发布文章
               </ClientCardBody>
             </ClientCard>
+          )}
+          {posts.length > 0 && (
+            <div className="pt-1 text-center">
+              <NextLink
+                href="/posts"
+                className="inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm text-text-base transition-colors hover:border-primary hover:text-primary"
+              >
+                查看全部文章
+              </NextLink>
+            </div>
           )}
         </main>
 
