@@ -6,6 +6,14 @@ export const CommentListSchema = z.object({
   slug: zValue(z.string().min(1, "slug不能为空")),
   skip: z.coerce.number().int().min(0).optional().default(0),
   take: z.coerce.number().int().min(1).max(50).optional().default(20),
+  replyTake: z.coerce.number().int().min(1).max(50).optional().default(5),
+});
+
+export const CommentReplyListSchema = z.object({
+  slug: zValue(z.string().min(1, "slug不能为空")),
+  rootId: zValue(z.string().min(1, "rootId不能为空")),
+  replySkip: z.coerce.number().int().min(0).optional().default(0),
+  replyTake: z.coerce.number().int().min(1).max(500).optional().default(5),
 });
 
 export const CommentCreateSchema = z.object({

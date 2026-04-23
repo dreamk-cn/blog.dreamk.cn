@@ -11,6 +11,7 @@ import { prisma } from "@/libs/prisma";
 import { countApprovedCommentsByPostSlug, listApprovedCommentsBySlug } from "@/services/comment-service";
 
 const POST_COMMENT_ROOT_PAGE_SIZE = 20;
+const POST_COMMENT_REPLY_PAGE_SIZE = 5;
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -66,7 +67,12 @@ export default async function PostDetail({ params }: PageProps) {
   const { slug } = await params;
   const [post, commentBundle, totalApprovedCommentCount] = await Promise.all([
     getPostBySlug(slug),
-    listApprovedCommentsBySlug(slug, { rootSkip: 0, rootTake: POST_COMMENT_ROOT_PAGE_SIZE }),
+    listApprovedCommentsBySlug(slug, {
+      rootSkip: 0,
+      rootTake: POST_COMMENT_ROOT_PAGE_SIZE,
+      replySkip: 0,
+      replyTake: POST_COMMENT_REPLY_PAGE_SIZE,
+    }),
     countApprovedCommentsByPostSlug(slug),
   ]);
   const { comments, totalRootCount } = commentBundle;
@@ -136,6 +142,7 @@ export default async function PostDetail({ params }: PageProps) {
                 key={slug}
                 slug={slug}
                 rootPageSize={POST_COMMENT_ROOT_PAGE_SIZE}
+                replyPageSize={POST_COMMENT_REPLY_PAGE_SIZE}
                 initialTotalRootCount={totalRootCount}
                 totalApprovedCommentCount={totalApprovedCommentCount}
                 initialComments={comments.map((comment) => ({
@@ -145,6 +152,7 @@ export default async function PostDetail({ params }: PageProps) {
                   createdAt: comment.createdAt.toISOString(),
                   user: comment.user,
                   replyTo: comment.replyTo,
+                  totalReplyCount: comment.totalReplyCount,
                   replies: comment.replies.map((reply) => ({
                     id: reply.id,
                     content: reply.content,

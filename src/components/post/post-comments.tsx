@@ -21,6 +21,8 @@ type CommentItem = {
     name: string | null;
     image: string | null;
   } | null;
+  /** 仅顶层：该线程下已审核的回复总条数（含嵌套回复，扁平计数） */
+  totalReplyCount?: number;
   replies: CommentItem[];
 };
 
@@ -50,6 +52,7 @@ type ServerCommentPayload = {
   createdAt: string;
   user: CommentItem["user"];
   replyTo: CommentItem["replyTo"];
+  totalReplyCount?: number;
   replies: ServerCommentPayload[];
 };
 
@@ -61,6 +64,7 @@ function mapServerCommentToItem(comment: ServerCommentPayload): CommentItem {
     createdAt: comment.createdAt,
     user: comment.user,
     replyTo: comment.replyTo,
+    totalReplyCount: comment.totalReplyCount,
     replies: (comment.replies ?? []).map((reply) => ({
       id: reply.id,
       content: reply.content,
@@ -77,12 +81,14 @@ export function PostComments({
   slug,
   initialComments,
   rootPageSize,
+  replyPageSize,
   initialTotalRootCount,
   totalApprovedCommentCount,
 }: {
   slug: string;
   initialComments: CommentItem[];
   rootPageSize: number;
+  replyPageSize: number;
   initialTotalRootCount: number;
   totalApprovedCommentCount: number;
 }) {
@@ -91,6 +97,7 @@ export function PostComments({
   const [totalRootCount, setTotalRootCount] = useState(initialTotalRootCount);
   const [approvedCommentTotal, setApprovedCommentTotal] = useState(totalApprovedCommentCount);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingReplyRootId, setLoadingReplyRootId] = useState<string | null>(null);
   const [content, setContent] = useState("");
   const [replyContent, setReplyContent] = useState("");
   const [replyingTo, setReplyingTo] = useState<{
@@ -112,6 +119,7 @@ export function PostComments({
         slug,
         skip: String(skip),
         take: String(rootPageSize),
+        replyTake: String(replyPageSize),
       });
       const response = await fetch(`/api/post/comment?${params.toString()}`);
       const result = (await response.json()) as ApiResponse<{
@@ -132,10 +140,53 @@ export function PostComments({
     }
   };
 
+  const loadMoreRepliesForRoot = async (rootId: string) => {
+    const root = comments.find((c) => c.id === rootId);
+    const replyCap = root ? (root.totalReplyCount ?? root.replies.length) : 0;
+    if (!root || replyCap <= root.replies.length || loadingReplyRootId) return;
+    setLoadingReplyRootId(rootId);
+    try {
+      const params = new URLSearchParams({
+        slug,
+        rootId,
+        replySkip: String(root.replies.length),
+        replyTake: String(replyPageSize),
+      });
+      const response = await fetch(`/api/post/comment?${params.toString()}`);
+      const result = (await response.json()) as ApiResponse<{
+        replies: ServerCommentPayload[];
+        totalReplyCount: number;
+      }>;
+      if (result.code !== 200) {
+        toast.danger("加载失败", { description: result.message || "请稍后再试" });
+        return;
+      }
+      const mapped = result.data.replies.map((r) =>
+        mapServerCommentToItem({ ...r, replies: r.replies ?? [] }),
+      );
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === rootId
+            ? {
+                ...c,
+                replies: [...c.replies, ...mapped],
+                totalReplyCount: result.data.totalReplyCount,
+              }
+            : c,
+        ),
+      );
+    } catch {
+      toast.danger("加载失败", { description: "网络异常，请稍后重试" });
+    } finally {
+      setLoadingReplyRootId(null);
+    }
+  };
+
   const createDisplayComment = (comment: CommentItem): CommentItem => ({
     ...comment,
     replies: comment.replies || [],
     replyTo: comment.replyTo || null,
+    totalReplyCount: comment.parentId != null ? undefined : (comment.totalReplyCount ?? 0),
     user: comment.user || {
       id: "anonymous",
       name: session?.user?.name || "匿名访客",
@@ -173,29 +224,68 @@ export function PostComments({
       }
 
       if (result.data.status === "APPROVED") {
-        const incoming = createDisplayComment(result.data.comment);
+        const incoming = createDisplayComment(result.data.comment as CommentItem);
         setApprovedCommentTotal((n) => n + 1);
         if (parentId && replyingTo) {
-          setComments((prev) =>
-            prev.map((item) =>
-              item.id === replyingTo.rootId
-                ? {
-                    ...item,
-                    replies: [
-                      ...item.replies,
-                      {
-                        ...incoming,
-                        replyTo: {
-                          id: replyingTo.id,
-                          name: replyingTo.name,
-                          image: null,
+          const rootId = replyingTo.rootId;
+          const rootSnapshot = comments.find((c) => c.id === rootId);
+          const replyCap =
+            rootSnapshot == null ? 0 : (rootSnapshot.totalReplyCount ?? rootSnapshot.replies.length);
+          const emptyThread = rootSnapshot != null && replyCap === 0;
+          const hadAllReplies =
+            rootSnapshot != null && replyCap > 0 && rootSnapshot.replies.length >= replyCap;
+
+          if (hadAllReplies || emptyThread) {
+            setComments((prev) =>
+              prev.map((item) =>
+                item.id === rootId
+                  ? {
+                      ...item,
+                      replies: [
+                        ...item.replies,
+                        {
+                          ...incoming,
+                          replyTo: {
+                            id: replyingTo.id,
+                            name: replyingTo.name,
+                            image: null,
+                          },
+                          replies: [],
                         },
-                      },
-                    ],
-                  }
-                : item,
-            ),
-          );
+                      ],
+                      totalReplyCount: (item.totalReplyCount ?? item.replies.length) + 1,
+                    }
+                  : item,
+              ),
+            );
+          } else {
+            const newTotal = replyCap + 1;
+            const params = new URLSearchParams({
+              slug,
+              rootId,
+              replySkip: "0",
+              replyTake: String(Math.min(newTotal, 500)),
+            });
+            const response = await fetch(`/api/post/comment?${params.toString()}`);
+            const refetch = (await response.json()) as ApiResponse<{
+              replies: ServerCommentPayload[];
+              totalReplyCount: number;
+            }>;
+            if (refetch.code !== 200) {
+              toast.danger("留言失败", { description: refetch.message || "请稍后再试" });
+              return false;
+            }
+            const mapped = refetch.data.replies.map((r) =>
+              mapServerCommentToItem({ ...r, replies: r.replies ?? [] }),
+            );
+            setComments((prev) =>
+              prev.map((item) =>
+                item.id === rootId
+                  ? { ...item, replies: mapped, totalReplyCount: refetch.data.totalReplyCount }
+                  : item,
+              ),
+            );
+          }
           toast.success("回复发布成功");
         } else {
           setComments((prev) => [incoming, ...prev]);
@@ -323,8 +413,24 @@ export function PostComments({
         </div>
       ) : null}
 
-      {!isReply && comment.replies.length > 0 ? (
-        <div className="mt-2">{comment.replies.map((reply) => renderComment(reply, true))}</div>
+      {!isReply &&
+      (comment.replies.length > 0 || (comment.totalReplyCount ?? comment.replies.length) > 0) ? (
+        <div className="mt-2">
+          {comment.replies.map((reply) => renderComment(reply, true))}
+          {(comment.totalReplyCount ?? comment.replies.length) > comment.replies.length ? (
+            <div className="mt-3 flex justify-center">
+              <Button
+                size="sm"
+                variant="ghost"
+                isDisabled={loadingReplyRootId === comment.id}
+                onPress={() => loadMoreRepliesForRoot(comment.id)}
+              >
+                {loadingReplyRootId === comment.id ? <Spinner color="current" size="sm" /> : null}
+                {loadingReplyRootId === comment.id ? "加载中…" : "加载更多回复"}
+              </Button>
+            </div>
+          ) : null}
+        </div>
       ) : null}
     </article>
   );
@@ -364,6 +470,7 @@ export function PostComments({
         {hasMoreRoots ? (
           <div className="flex justify-center pt-2">
             <Button variant="outline" isDisabled={loadingMore} onPress={loadMoreComments}>
+              {loadingMore ? <Spinner color="current" size="sm" /> : null}
               {loadingMore ? "加载中…" : "加载更多"}
             </Button>
           </div>

@@ -1,8 +1,12 @@
 import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
 import { fail, internalError, ok, zodFail } from "@/libs/api-response";
-import { CommentCreateSchema, CommentListSchema } from "@/schemas/comment";
-import { createComment, listApprovedCommentsBySlug } from "@/services/comment-service";
+import { CommentCreateSchema, CommentListSchema, CommentReplyListSchema } from "@/schemas/comment";
+import {
+  createComment,
+  listApprovedCommentsBySlug,
+  listApprovedRepliesForRootSlug,
+} from "@/services/comment-service";
 import { NextRequest } from "next/server";
 import z from "zod";
 
@@ -18,15 +22,33 @@ export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
 
   try {
-    const { slug, skip, take } = CommentListSchema.parse({
+    const rootId = searchParams.get("rootId")?.trim();
+    if (rootId) {
+      const { slug, rootId: parsedRootId, replySkip, replyTake } = CommentReplyListSchema.parse({
+        slug: searchParams.get("slug"),
+        rootId,
+        replySkip: searchParams.get("replySkip") ?? undefined,
+        replyTake: searchParams.get("replyTake") ?? undefined,
+      });
+      const data = await listApprovedRepliesForRootSlug(slug, parsedRootId, { skip: replySkip, take: replyTake });
+      if (!data) {
+        return fail(ResponseCode.FAIL, "评论不存在");
+      }
+      return ok(data, "获取回复成功");
+    }
+
+    const { slug, skip, take, replyTake } = CommentListSchema.parse({
       slug: searchParams.get("slug"),
       skip: searchParams.get("skip") ?? undefined,
       take: searchParams.get("take") ?? undefined,
+      replyTake: searchParams.get("replyTake") ?? undefined,
     });
 
     const { comments, totalRootCount } = await listApprovedCommentsBySlug(slug, {
       rootSkip: skip,
       rootTake: take,
+      replySkip: 0,
+      replyTake,
     });
     return ok({ comments, totalRootCount }, "获取评论成功");
   } catch (err) {
