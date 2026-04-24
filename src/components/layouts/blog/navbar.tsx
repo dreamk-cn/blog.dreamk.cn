@@ -68,6 +68,7 @@ export const NavBarUser = () => {
 export const Navbar = () => {
   const { data: session } = useSession()
   const pathname = usePathname()
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const searchInput = (
@@ -83,12 +84,7 @@ export const Navbar = () => {
   const authButton = (
     session ?
     <NavBarUser /> :
-    <NextLink
-      className="text-accent"
-      href="/auth/signin"
-    >
-      <Button>登录</Button>
-    </NextLink>
+    <Button onPress={() => router.push("/auth/signin")}>登录</Button>
   )
 
   return (
