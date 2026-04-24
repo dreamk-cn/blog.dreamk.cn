@@ -30,7 +30,8 @@ services:
       - .env
     environment:
       DATABASE_URL: postgresql://blog:blog_password@db:5432/blog?schema=public
-      BASE_URL: http://localhost:3000
+      NEXT_PUBLIC_BASE_URL: http://localhost:3000
+      AUTH_URL: http://localhost:3000/api/auth
     ports:
       - "3000:3000"
     command: sh -c "pnpm prisma migrate deploy && pnpm build && pnpm start"

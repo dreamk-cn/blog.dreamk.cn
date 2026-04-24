@@ -5,7 +5,7 @@ import { ApiResponse } from '@/types/request';
 import { isClient } from '@/utils';
 
 // 基础URL配置
-const BASE_URL = process.env.BASE_URL ?? (isDev ? 'http://localhost:3000' : 'https://blog.dreamk.cn');
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? (isDev ? 'http://localhost:3000' : 'https://blog.dreamk.cn');
 
 // 请求配置接口
 export interface RequestConfig extends AxiosRequestConfig {
