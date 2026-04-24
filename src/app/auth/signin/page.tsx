@@ -43,7 +43,7 @@ export default function SignIn() {
       <Tabs selectedKey={selected} onSelectionChange={(key) => setSelected(String(key))}>
         <Tabs.ListContainer>
           <Tabs.List>
-            <Tabs.Tab id="login">登录</Tabs.Tab>
+            <Tabs.Tab id="login" className="text-text-base">登录</Tabs.Tab>
             {/* <Tabs.Tab id="register" isDisabled>注册</Tabs.Tab> */}
           </Tabs.List>
         </Tabs.ListContainer>

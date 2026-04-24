@@ -1,56 +1,34 @@
 "use client";
 
-import { Alert, Button, Form, FieldError, Input, Label, TextField } from "@heroui/react";
+import { Alert, Button, Form, FieldError, Input, Label, TextField, Spinner } from "@heroui/react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
+import { getLoginFieldErrors, LoginSchema } from "@/schemas/auth";
 
 export default function LoginForm() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [submitError, setSubmitError] = useState('');
-  const [fieldErrors, setFieldErrors] = useState({ email: '', password: '' });
-  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
 
-  const getEmailError = (value: string) => {
-    if (!value.trim()) {
-      return '请输入邮箱';
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-      return '邮箱格式不正确';
-    }
-    return '';
-  };
-
-  const getPasswordError = (value: string) => {
-    if (value === '') {
-      return '请输入密码'
-    }
-    return '';
-  };
-
-
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (loading) return;
     e.preventDefault();
-    setHasSubmitted(true);
     setSubmitError('');
-    const nextFieldErrors = {
-      email: getEmailError(formData.email),
-      password: getPasswordError(formData.password),
-    };
-    setFieldErrors(nextFieldErrors);
-    if (nextFieldErrors.email || nextFieldErrors.password) {
+    const parsed = LoginSchema.safeParse(formData);
+    if (!parsed.success) {
       return;
     }
+    const { email, password } = parsed.data;
     setLoading(true)
 
     try {
       const result = await signIn("dreamk-credentials", {
-        email: formData.email,
-        password: formData.password,
+        email,
+        password,
         redirect: false,
         callbackUrl
       })
@@ -83,43 +61,52 @@ export default function LoginForm() {
         className="flex w-full flex-col gap-4"
         onSubmit={onSubmit}
       >
-        <TextField isRequired isInvalid={!!fieldErrors.email}>
-          <Label>邮箱</Label>
+        <TextField
+          isRequired
+          validate={(value) =>
+            getLoginFieldErrors({ ...formData, email: value }).email
+          }
+        >
+          <Label className="text-text-base">邮箱</Label>
           <Input
+            className="text-text-base"
             name="email"
             placeholder="请输入邮箱地址"
             type="email"
             value={formData.email}
+            disabled={loading}
             onChange={(e) => {
               const nextEmail = e.target.value;
-              setFormData({ ...formData, email: nextEmail });
-              if (hasSubmitted) {
-                setFieldErrors((prev) => ({ ...prev, email: getEmailError(nextEmail) }));
-              }
+              setFormData((prev) => ({ ...prev, email: nextEmail }));
             }}
           />
-          {fieldErrors.email ? <FieldError>{fieldErrors.email}</FieldError> : null}
+          <FieldError />
         </TextField>
-        <TextField isRequired isInvalid={!!fieldErrors.password}>
-          <Label>密码</Label>
+        <TextField
+          isRequired
+          validate={(value) =>
+            getLoginFieldErrors({ ...formData, password: value }).password
+          }
+        >
+          <Label className="text-text-base">密码</Label>
           <Input
+            className="text-text-base"
             name="password"
             placeholder="请输入密码"
             type="password"
             value={formData.password}
+            disabled={loading}
             onChange={(e) => {
               const nextPassword = e.target.value;
-              setFormData({ ...formData, password: nextPassword });
-              if (hasSubmitted) {
-                setFieldErrors((prev) => ({ ...prev, password: getPasswordError(nextPassword) }));
-              }
+              setFormData(prev => ({ ...prev, password: nextPassword }));
             }}
           />
-          {fieldErrors.password ? <FieldError>{fieldErrors.password}</FieldError> : null}
+          <FieldError />
         </TextField>
         <div className="flex w-full gap-2">
           <Button className="flex-1" variant="primary" type="submit" isDisabled={loading} isPending={loading}>
-            登录
+            { loading ? <Spinner color="current" size="sm" /> : null }
+            { loading ? '登录中...' : '登录'}
           </Button>
           <Button
             type="reset"
@@ -128,8 +115,6 @@ export default function LoginForm() {
             onPress={() => {
               setFormData({ email: '', password: '' });
               setSubmitError('');
-              setFieldErrors({ email: '', password: '' });
-              setHasSubmitted(false);
             }}
           >
             重置
