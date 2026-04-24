@@ -120,6 +120,7 @@ export default function Posts() {
         <TextField className="w-full sm:max-w-[30%]">
           <Label className="text-text-muted">关键词</Label>
           <Input
+            className="text-text-base"
             placeholder="按标题或内容搜索"
             value={keyword}
             onChange={(e) => {

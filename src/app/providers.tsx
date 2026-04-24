@@ -15,7 +15,7 @@ export function AppProviders({ children }: ProvidersProps) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <SessionProvider>
         <NextTopLoader color="var(--color-primary)" showSpinner={false} height={3} />
-        <Toast.Provider placement="top" className="pt-16" />
+        <Toast.Provider placement="top" className="top-5" />
         {children}
       </SessionProvider>
     </ThemeProvider>

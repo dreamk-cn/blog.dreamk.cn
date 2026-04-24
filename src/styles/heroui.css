@@ -1,0 +1,9 @@
+@layer components {
+  .toast__title {
+    @apply text-text-base;
+  }
+
+  .toast__indicator {
+    @apply text-text-base;
+  }
+}

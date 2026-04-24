@@ -296,10 +296,10 @@ export function PostForm({
 
             <div className="flex gap-2">
               <Input
+                className="text-text-base max-w-xs"
                 placeholder="输入新标签"
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                className="max-w-xs"
               />
               <Button
                 size="sm"

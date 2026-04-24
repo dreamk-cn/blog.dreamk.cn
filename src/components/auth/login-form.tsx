@@ -1,6 +1,6 @@
 "use client";
 
-import { Alert, Button, Form, FieldError, Input, Label, TextField, Spinner } from "@heroui/react";
+import { Alert, Button, Form, FieldError, Input, Label, TextField, Spinner, toast } from "@heroui/react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
@@ -8,7 +8,6 @@ import { getLoginFieldErrors, LoginSchema } from "@/schemas/auth";
 
 export default function LoginForm() {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const [submitError, setSubmitError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -17,7 +16,6 @@ export default function LoginForm() {
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     if (loading) return;
     e.preventDefault();
-    setSubmitError('');
     const parsed = LoginSchema.safeParse(formData);
     if (!parsed.success) {
       return;
@@ -33,18 +31,14 @@ export default function LoginForm() {
         callbackUrl
       })
 
+      console.warn('result', result)
       if (result.error) {
-        try {
-          const errorData = JSON.parse(result.error);
-          setSubmitError(errorData.errors[0].message);
-        } catch {
-          setSubmitError("无效的邮箱或密码");
-        }
+        toast.danger('登录失败', { description: '无效的邮箱或密码' });
       } else {
         router.push(callbackUrl)
       }
     } catch {
-      setSubmitError("遇到未知错误，请重试");
+      toast.danger('登录失败', { description: '遇到未知错误，请重试' });
     } finally {
       setLoading(false)
     }
@@ -52,11 +46,6 @@ export default function LoginForm() {
 
   return (
     <div className="mt-5">
-      {submitError && (
-        <Alert status="danger" className="mb-4">
-          <Alert.Title>{submitError}</Alert.Title>
-        </Alert>
-      )}
       <Form
         className="flex w-full flex-col gap-4"
         onSubmit={onSubmit}
@@ -114,7 +103,6 @@ export default function LoginForm() {
             isDisabled={loading}
             onPress={() => {
               setFormData({ email: '', password: '' });
-              setSubmitError('');
             }}
           >
             重置
