@@ -1,7 +1,8 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
+import { FC } from "react";
 import clsx from "clsx";
+import { useTheme } from "next-themes";
 
 import { SunFilledIcon, MoonFilledIcon } from "@/components/icons";
 import { useMounted } from "@/hooks/useMounted";
@@ -21,36 +22,17 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
   classNames,
 }) => {
   const mounted = useMounted();
-  const [theme, setTheme] = useState<"light" | "dark">(() => {
-    if (typeof window === "undefined") return "dark";
-
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "light" || savedTheme === "dark") return savedTheme;
-
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.toggle("dark", theme === "dark");
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const isLight = theme !== "dark";
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   const onToggleTheme = () => {
-    const nextTheme: "light" | "dark" = isLight ? "dark" : "light";
-    const root = document.documentElement;
-
-    root.classList.toggle("dark", nextTheme === "dark");
-    localStorage.setItem("theme", nextTheme);
-    setTheme(nextTheme);
+    setTheme(isDark ? "light" : "dark");
   };
 
   return (
     <button
       type="button"
-      aria-label={mounted ? `Switch to ${isLight ? "dark" : "light"} mode` : "Toggle theme"}
+      aria-label={mounted ? `Switch to ${isDark ? "light" : "dark"} mode` : "Toggle theme"}
       onClick={onToggleTheme}
       className={clsx(
         "cursor-pointer px-px transition-opacity hover:opacity-80",
@@ -68,10 +50,10 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
       >
         {!mounted ? (
           <MoonFilledIcon size={22} />
-        ) : isLight ? (
-          <SunFilledIcon size={22} />
-        ) : (
+        ) : isDark ? (
           <MoonFilledIcon size={22} />
+        ) : (
+          <SunFilledIcon size={22} />
         )}
       </div>
     </button>

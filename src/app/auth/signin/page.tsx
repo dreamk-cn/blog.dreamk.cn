@@ -39,7 +39,7 @@ export default function SignIn() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-[40rem] flex-col items-center p-20">
+    <div className="mx-auto flex min-h-screen max-w-[40rem] flex-col items-center p-20 bg-background">
       <Tabs selectedKey={selected} onSelectionChange={(key) => setSelected(String(key))}>
         <Tabs.ListContainer>
           <Tabs.List>

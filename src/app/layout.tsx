@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html suppressHydrationWarning lang="zh" className="dark">
+    <html suppressHydrationWarning lang="zh">
       <head>
         <meta content="width=device-width, initial-scale=1" name="viewport" />
       </head>
