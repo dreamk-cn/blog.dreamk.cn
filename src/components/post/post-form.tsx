@@ -94,6 +94,37 @@ export function PostForm({
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
+  const [generatingExcerpt, setGeneratingExcerpt] = useState(false);
+
+  async function handleGenerateExcerpt() {
+    if (!formData.content.trim()) {
+      setErrors((prev) => ({ ...prev, content: "请先填写文章内容" }));
+      toast("请先填写文章内容");
+      return;
+    }
+
+    setGeneratingExcerpt(true);
+    try {
+      const response = await request.post<{ excerpt: string }>("/ai/excerpt", {
+        content: formData.content,
+      });
+      const generatedExcerpt = response.data?.excerpt?.trim();
+
+      if (!generatedExcerpt) {
+        toast("未生成有效摘要，请重试");
+        return;
+      }
+
+      setFormData((prev) => ({ ...prev, excerpt: generatedExcerpt }));
+      setErrors((prev) => ({ ...prev, excerpt: undefined }));
+      toast("摘要生成成功");
+    } catch (error) {
+      console.error("生成摘要失败:", error);
+      toast("生成摘要失败，请稍后再试");
+    } finally {
+      setGeneratingExcerpt(false);
+    }
+  }
 
   async function handleSubmit() {
     const validationErrors: FormErrors = {};
@@ -232,13 +263,25 @@ export function PostForm({
 
             <TextField isInvalid={!!errors.excerpt} className="md:col-span-2">
               <Label className="text-text-muted">文章摘要</Label>
-              <Description>文章摘要</Description>
+              <Description>可手动编辑，或根据正文一键生成</Description>
               <TextArea
                 className="text-text-base"
                 rows={2}
                 value={formData.excerpt}
                 onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
               />
+              <div className="mt-2 flex justify-end">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  onPress={handleGenerateExcerpt}
+                  isDisabled={loading || generatingExcerpt}
+                  isPending={generatingExcerpt}
+                >
+                  {generatingExcerpt ? "生成中..." : "AI 生成摘要"}
+                </Button>
+              </div>
               {errors.excerpt ? <FieldError>{errors.excerpt}</FieldError> : null}
             </TextField>
 
