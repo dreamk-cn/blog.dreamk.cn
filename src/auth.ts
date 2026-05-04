@@ -1,10 +1,15 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { UserStatus } from "@prisma/client";
 import NextAuth from "next-auth";
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/libs/prisma'
 import bcrypt from "bcryptjs";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
+
+function isUserBlocked(status: UserStatus) {
+  return status === "BAN" || status === "DELETED";
+}
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -34,7 +39,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               email: true,
               image: true,
               password: true,
-              role: true
+              role: true,
+              status: true,
             }
           })
 
@@ -57,6 +63,16 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               }]
             }));
           }
+
+          if (isUserBlocked(user.status)) {
+            throw new Error(JSON.stringify({
+              errors: [{
+                message: user.status === "BAN" ? "账号已被禁用" : "账号不可用",
+                field: "credentials",
+              }],
+            }));
+          }
+
           return {
             id: user.id,
             email: user.email,
@@ -98,10 +114,28 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   },
   session: { strategy: "jwt" },
   callbacks: {
-    async signIn(userDetail) {
-      if (Object.keys(userDetail).length === 0) {
+    async signIn({ user }) {
+      if (!user) return false;
+
+      const userId = typeof user.id === "string" ? user.id : null;
+      const email = typeof user.email === "string" ? user.email : null;
+
+      const dbUser = userId
+        ? await prisma.user.findUnique({
+            where: { id: userId },
+            select: { status: true },
+          })
+        : email
+          ? await prisma.user.findUnique({
+              where: { email },
+              select: { status: true },
+            })
+          : null;
+
+      if (dbUser && isUserBlocked(dbUser.status)) {
         return false;
       }
+
       return true;
     },
     async redirect({ baseUrl }) {
@@ -117,14 +151,30 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       return session;
     },
     async jwt({ token, user }) {
-      if (user && user.id) {
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { role: true }
-        })
-        token.role = dbUser?.role || 'USER'
-        token.id = user.id
+      const userId =
+        typeof user?.id === "string"
+          ? user.id
+          : typeof token.id === "string"
+            ? token.id
+            : typeof token.sub === "string"
+              ? token.sub
+              : null;
+
+      if (!userId) {
+        return token;
       }
+
+      const dbUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true, status: true },
+      });
+
+      if (!dbUser || isUserBlocked(dbUser.status)) {
+        return null;
+      }
+
+      token.role = dbUser.role;
+      token.id = userId;
       return token;
     },
   },
