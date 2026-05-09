@@ -5,9 +5,7 @@ export default function BlogLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="relative min-h-screen bg-foreground pb-10">
       <Navbar />
-      <div>
-        { children }
-      </div>
+      { children }
       <Footer />
     </div>
   )

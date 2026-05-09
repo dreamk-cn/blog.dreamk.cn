@@ -75,8 +75,10 @@ export default async function Home() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-4">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_280px]">
-        <aside className="hidden lg:block lg:sticky lg:top-20 lg:max-h-[calc(100vh-7rem)] lg:overflow-auto lg:space-y-4">
-          {profileSidebarEl}
+        <aside className="hidden lg:block">
+          <div className="fixed top-20 w-[280px] max-h-[calc(100vh-7rem)] overflow-auto">
+            {profileSidebarEl}
+          </div>
         </aside>
 
         <main className="order-1 space-y-4 lg:order-none">
