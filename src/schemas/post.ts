@@ -9,7 +9,7 @@ type PostStatus = $Enums.PostStatus;
 export const PostDetailSchema = z.object({
   id: zValue(z.string().optional()),
   slug: zValue(z.string().optional()),
-  status: zValue(z.enum<PostStatus[]>(['ARCHIVED', 'DRAFT', 'PUBLISHED']).default('PUBLISHED'))
+  status: zValue(z.enum<PostStatus[]>(['ARCHIVED', 'DRAFT', 'PUBLISHED']).optional())
 }).superRefine((data, ctx) => {
   if (!data.id && !data.slug) {
     ctx.addIssue({
@@ -24,7 +24,7 @@ export const PostDetailSchema = z.object({
 // 文章列表查询参数（支持分页、搜索、排序）
 export const PostListSchema = SearchPageSchema.extend({
   sortBy: zValue(z.enum(['createdAt', 'updatedAt', 'title', 'content'], { error: 'sortBy字段错误'}).default('createdAt')),
-  status: zValue(z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('PUBLISHED'))
+  status: zValue(z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional())
 })
 
 

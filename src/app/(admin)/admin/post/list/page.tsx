@@ -23,7 +23,7 @@ type ListResponse = { list: PostItem[]; total: number };
 
 type SortBy = 'createdAt' | 'updatedAt' | 'title';
 type SortOrder = 'asc' | 'desc';
-type Status = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+type Status = 'ALL' | 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
 export default function Posts() {
   const router = useRouter();
@@ -33,7 +33,7 @@ export default function Posts() {
   const [pageSize, setPageSize] = useState(10);
 
   const [keyword, setKeyword] = useState('');
-  const [status, setStatus] = useState<Status>('PUBLISHED');
+  const [status, setStatus] = useState<Status>('ALL');
   const [sortBy, setSortBy] = useState<SortBy>('createdAt');
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
@@ -53,7 +53,7 @@ export default function Posts() {
         keyword: keywordDebounced || undefined,
         sortBy,
         sortOrder,
-        status,
+        status: status === 'ALL' ? undefined : status,
       });
       if (res.code === 200) {
         setItems(res.data?.list || []);
@@ -139,6 +139,7 @@ export default function Posts() {
             setStatus(id as Status);
           }}
           options={[
+            { id: 'ALL', label: '全部' },
             { id: 'DRAFT', label: '草稿' },
             { id: 'PUBLISHED', label: '已发布' },
             { id: 'ARCHIVED', label: '已归档' },

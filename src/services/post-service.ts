@@ -19,7 +19,7 @@ function toTagConnectOrCreate(tags: PostTagInput[]): Prisma.TagCreateOrConnectWi
   });
 }
 
-export async function getPostDetail(params: { id?: string; slug?: string; status: "DRAFT" | "PUBLISHED" | "ARCHIVED"; isAdmin: boolean }) {
+export async function getPostDetail(params: { id?: string; slug?: string; status?: "DRAFT" | "PUBLISHED" | "ARCHIVED"; isAdmin: boolean }) {
   const { id, slug, status, isAdmin } = params;
   const queryKey = (id ? "id" : "slug") as "id" | "slug";
   const queryValue = (id || slug) as string;
@@ -27,7 +27,11 @@ export async function getPostDetail(params: { id?: string; slug?: string; status
   const query: Parameters<typeof prisma.post.findFirst>[0] = {
     where: {
       [queryKey]: queryValue,
-      ...(isAdmin ? { status } : { status: "PUBLISHED" }),
+      ...(!isAdmin
+        ? { status: "PUBLISHED" }
+        : status
+          ? { status }
+          : {}),
     },
     include: {
       tags: true,
@@ -44,7 +48,7 @@ export async function listPosts(params: {
   keyword?: string;
   sortBy: "createdAt" | "updatedAt" | "title" | "content";
   sortOrder: "asc" | "desc";
-  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  status?: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   isAdmin: boolean;
 }) {
   const { pageNo, pageSize, keyword, sortBy, sortOrder, status, isAdmin } = params;
@@ -54,7 +58,11 @@ export async function listPosts(params: {
       tags: true,
     },
     where: {
-      status: isAdmin ? status : "PUBLISHED",
+      ...(!isAdmin
+        ? { status: "PUBLISHED" }
+        : status
+          ? { status }
+          : {}),
       ...(isAdmin
         ? {}
         : {
