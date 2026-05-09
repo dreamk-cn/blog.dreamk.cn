@@ -40,11 +40,22 @@ export default function SignIn() {
 
   return (
     <div className="mx-auto flex min-h-screen max-w-[40rem] flex-col items-center p-20 bg-background">
-      <Tabs selectedKey={selected} onSelectionChange={(key) => setSelected(String(key))}>
+      <Tabs
+        className="w-full max-w-md"
+        selectedKey={selected}
+        onSelectionChange={(key) => setSelected(String(key))}
+      >
         <Tabs.ListContainer>
-          <Tabs.List>
-            <Tabs.Tab id="login" className="text-text-base">登录</Tabs.Tab>
-            {/* <Tabs.Tab id="register" isDisabled>注册</Tabs.Tab> */}
+          <Tabs.List aria-label="登录或注册">
+            <Tabs.Tab id="login" className="text-text-base">
+              登录
+              <Tabs.Indicator />
+            </Tabs.Tab>
+            <Tabs.Tab id="register" className="text-text-base">
+              <Tabs.Separator />
+              注册
+              <Tabs.Indicator />
+            </Tabs.Tab>
           </Tabs.List>
         </Tabs.ListContainer>
         <Tabs.Panel id="login" className="mt-4">

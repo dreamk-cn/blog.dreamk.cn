@@ -1,243 +1,235 @@
 "use client";
 
-import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import {
+  Button,
+  Description,
+  FieldError,
+  Form,
+  Input,
+  Label,
+  Spinner,
+  TextField,
+  toast,
+} from "@heroui/react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { EmailRegex } from '@/utils/verify';
+import { useState } from "react";
 
-type RegisterFormProps = {
-  name: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
+import {
+  getRegisterFieldErrors,
+  RegisterSchema,
+} from "@/schemas/auth";
 
 export default function RegisterForm() {
-  const {
-    register,
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<RegisterFormProps>({
-    mode: "onBlur",
-    reValidateMode: "onChange",
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
-
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const password = useWatch({ control, name: "password" });
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
 
-  const onSubmit = async (data: RegisterFormProps) => {
-    setSubmitError(null);
-    
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    if (loading) return;
+    e.preventDefault();
+    const parsed = RegisterSchema.safeParse(formData);
+    if (!parsed.success) {
+      return;
+    }
+    const { name, email, password, confirmPassword } = parsed.data;
+    setLoading(true);
+
     try {
-      // 前端验证确认密码（双重验证）
-      if (data.password !== data.confirmPassword) {
-        throw new Error("Passwords do not match");
-      }
-
-      // 发送注册请求
       const response = await fetch("/api/auth/register", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json" 
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          password: data.password,
-          confirmPassword: data.confirmPassword
+          name,
+          email,
+          password,
+          confirmPassword,
         }),
       });
 
       const result = await response.json();
 
-      if (!response.ok) {
-        // 处理API返回的错误
-        setSubmitError(result.error || "注册遇到了未知错误");
+      if (result.code !== 200) {
+        toast.danger("注册失败", {
+          description:
+            typeof result.message === "string"
+              ? result.message
+              : "注册遇到了未知错误",
+        });
         return;
       }
 
-      // 注册成功后尝试登录
-      const signInResult = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
+      const signInResult = await signIn("dreamk-credentials", {
+        email,
+        password,
         redirect: false,
+        callbackUrl,
       });
 
-      if (signInResult.error) {
+      if (signInResult?.error) {
         try {
-          // 解析结构化错误
           const errorData = JSON.parse(signInResult.error);
-          setSubmitError(errorData.errors[0].message);
+          const msg = errorData.errors?.[0]?.message;
+          toast.danger("自动登录失败", {
+            description:
+              typeof msg === "string" ? msg : "请切换到登录页手动登录",
+          });
         } catch {
-          // 如果不是结构化错误，使用通用消息
-          setSubmitError("无效的邮箱或密码");
+          toast.danger("自动登录失败", {
+            description: "请切换到登录页手动登录",
+          });
         }
       } else {
-        router.push(callbackUrl)
+        router.push(callbackUrl);
       }
-    } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "遇到了未知错误");
+    } catch {
+      toast.danger("注册失败", {
+        description: "遇到未知错误，请重试",
+      });
+    } finally {
+      setLoading(false);
     }
-  };
+  }
 
   return (
-    <div className="mt-5 sm:mx-auto sm:w-full sm:max-w-sm">
-      <form 
-        className="mt-5 space-y-6" 
-        onSubmit={handleSubmit(onSubmit)}
+    <div className="mt-5">
+      <Form
+        className="flex w-full flex-col gap-4"
+        onSubmit={onSubmit}
       >
-        {submitError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-            {submitError}
-          </div>
-        )}
-        
-        <div>
-          <label
-            htmlFor="name"
-            className="block text-sm font-medium leading-6 text-gray-900"
-          >
-            用户名
-          </label>
-          <div className="mt-2">
-            <input
-              {...register("name", {
-                required: "请输入用户名",
-                minLength: {
-                  value: 2,
-                  message: "用户名必须至少有2个字符",
-                },
-              })}
-              id="name"
-              name="name"
-              type="text"
-              autoComplete="name"
-              className="block w-full rounded-md border-0 px-2 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            />
-          </div>
-          <span className="text-red-500 text-xs">{errors.name?.message}</span>
-        </div>
+        <TextField
+          isRequired
+          validate={(value) =>
+            getRegisterFieldErrors({ ...formData, name: value }).name
+          }
+        >
+          <Label className="text-text-base">用户名</Label>
+          <Input
+            className="text-text-base"
+            name="name"
+            placeholder="请输入用户名"
+            type="text"
+            autoComplete="name"
+            value={formData.name}
+            disabled={loading}
+            onChange={(e) => {
+              const next = e.target.value;
+              setFormData((prev) => ({ ...prev, name: next }));
+            }}
+          />
+          <FieldError />
+        </TextField>
 
-        <div>
-          <label
-            htmlFor="email"
-            className="block text-sm font-medium leading-6 text-gray-900"
-          >
-            邮箱地址
-          </label>
-          <div className="mt-2">
-            <input
-              {...register("email", {
-                required: "请输入邮箱地址",
-                pattern: {
-                  value: EmailRegex,
-                  message: "请输入正确的邮箱格式",
-                },
-              })}
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              className="block w-full rounded-md border-0 px-2 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            />
-          </div>
-          <span className="text-red-500 text-xs">{errors.email?.message}</span>
-        </div>
+        <TextField
+          isRequired
+          validate={(value) =>
+            getRegisterFieldErrors({ ...formData, email: value }).email
+          }
+        >
+          <Label className="text-text-base">邮箱</Label>
+          <Input
+            className="text-text-base"
+            name="email"
+            placeholder="请输入邮箱地址"
+            type="email"
+            autoComplete="email"
+            value={formData.email}
+            disabled={loading}
+            onChange={(e) => {
+              const next = e.target.value;
+              setFormData((prev) => ({ ...prev, email: next }));
+            }}
+          />
+          <FieldError />
+        </TextField>
 
-        <div>
-          <label
-            htmlFor="password"
-            className="block text-sm font-medium leading-6 text-gray-900"
-          >
-            密码
-          </label>
-          <div className="mt-2">
-            <input
-              {...register("password", {
-                required: "Password is required",
-                minLength: {
-                  value: 8,
-                  message: "密码必须至少有8位",
-                },
-                validate: {
-                  hasUpperCase: value => 
-                    /[A-Z]/.test(value) || "密码必须包含一个大写字母",
-                  hasLowerCase: value => 
-                    /[a-z]/.test(value) || "密码必须包含一个小写字母",
-                  hasNumber: value => 
-                    /\d/.test(value) || "密码必须包含一个数字",
-                }
-              })}
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              className="block w-full rounded-md border-0 px-2 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            />
-          </div>
-          <div className="mt-1 text-xs text-gray-500">
-            密码必须至少包含8个字符，包含大写字母、小写字母和数字
-          </div>
-          <span className="text-red-500 text-xs">{errors.password?.message}</span>
-        </div>
+        <TextField
+          isRequired
+          validate={(value) =>
+            getRegisterFieldErrors({ ...formData, password: value }).password
+          }
+        >
+          <Label className="text-text-base">密码</Label>
+          <Description className="text-text-muted">
+            至少 8 位，且需包含大写、小写字母与数字
+          </Description>
+          <Input
+            className="text-text-base"
+            name="password"
+            placeholder="请输入密码"
+            type="password"
+            autoComplete="new-password"
+            value={formData.password}
+            disabled={loading}
+            onChange={(e) => {
+              const next = e.target.value;
+              setFormData((prev) => ({ ...prev, password: next }));
+            }}
+          />
+          <FieldError />
+        </TextField>
 
-        <div>
-          <label
-            htmlFor="confirmPassword"
-            className="block text-sm font-medium leading-6 text-gray-900"
-          >
-            确认密码
-          </label>
-          <div className="mt-2">
-            <input
-              {...register("confirmPassword", {
-                required: "请输入确认密码",
-                validate: value => 
-                  value === password || "两次输入的密码不匹配",
-              })}
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              className="block w-full rounded-md border-0 px-2 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-            />
-          </div>
-          <span className="text-red-500 text-xs">
-            {errors.confirmPassword?.message}
-          </span>
-        </div>
+        <TextField
+          isRequired
+          validate={(value) =>
+            getRegisterFieldErrors({
+              ...formData,
+              confirmPassword: value,
+            }).confirmPassword
+          }
+        >
+          <Label className="text-text-base">确认密码</Label>
+          <Input
+            className="text-text-base"
+            name="confirmPassword"
+            placeholder="请再次输入密码"
+            type="password"
+            autoComplete="new-password"
+            value={formData.confirmPassword}
+            disabled={loading}
+            onChange={(e) => {
+              const next = e.target.value;
+              setFormData((prev) => ({ ...prev, confirmPassword: next }));
+            }}
+          />
+          <FieldError />
+        </TextField>
 
-        <div>
-          <button
+        <div className="flex w-full gap-2">
+          <Button
+            className="flex-1"
+            variant="primary"
             type="submit"
-            disabled={isSubmitting}
-            className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-75"
+            isDisabled={loading}
+            isPending={loading}
           >
-            {isSubmitting ? "Creating account..." : "Create Account"}
-          </button>
-        </div>
-
-        <div className="text-center text-sm">
-          已经有账号?{" "}
-          <a 
-            href="/auth/signin" 
-            className="font-medium text-indigo-600 hover:text-indigo-500"
+            {loading ? <Spinner color="current" size="sm" /> : null}
+            {loading ? "注册中..." : "注册"}
+          </Button>
+          <Button
+            type="reset"
+            variant="ghost"
+            isDisabled={loading}
+            onPress={() => {
+              setFormData({
+                name: "",
+                email: "",
+                password: "",
+                confirmPassword: "",
+              });
+            }}
           >
-            登录
-          </a>
+            重置
+          </Button>
         </div>
-      </form>
+      </Form>
     </div>
   );
 }

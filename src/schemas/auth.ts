@@ -1,5 +1,7 @@
 import z from "zod";
 
+import { PasswordRegex } from "@/utils/verify";
+
 /** 登录表单（与 credentials 提交字段一致） */
 export const LoginSchema = z.object({
   email: z
@@ -28,6 +30,63 @@ export function getLoginFieldErrors(data: {
     }
     if (key === "password" && !out.password) {
       out.password = issue.message;
+    }
+  }
+  return out;
+}
+
+/** 注册表单（与 POST /api/auth/register 校验一致） */
+export const RegisterSchema = z
+  .object({
+    name: z.string().trim().min(2, "用户名至少 2 个字符"),
+    email: z.string().trim().pipe(z.email("邮箱格式不正确")),
+    password: z
+      .string()
+      .regex(
+        PasswordRegex,
+        "密码至少 8 位，且需包含大写、小写字母与数字",
+      ),
+    confirmPassword: z.string().min(1, "请再次输入密码"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "两次输入的密码不一致",
+    path: ["confirmPassword"],
+  });
+
+export type RegisterInput = z.infer<typeof RegisterSchema>;
+
+export function getRegisterFieldErrors(data: {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}): {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+} {
+  const empty = {
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  };
+  const result = RegisterSchema.safeParse(data);
+  if (result.success) {
+    return { ...empty };
+  }
+  const out = { ...empty };
+  for (const issue of result.error.issues) {
+    const key = issue.path[0];
+    if (
+      (key === "name" ||
+        key === "email" ||
+        key === "password" ||
+        key === "confirmPassword") &&
+      !out[key]
+    ) {
+      out[key] = issue.message;
     }
   }
   return out;
