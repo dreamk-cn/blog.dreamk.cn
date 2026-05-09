@@ -212,3 +212,122 @@ export const MenuIcon = ({
     />
   </svg>
 )
+
+export const DashboardIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path d="M3 13.5H10.5V21H3V13.5Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M13.5 3H21V10.5H13.5V3Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M3 3H10.5V10.5H3V3Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M13.5 13.5H21V21H13.5V13.5Z" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+)
+
+export const PostIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path d="M6 3.75H14.5L18.75 8V20.25H6V3.75Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M14.25 3.75V8.25H18.75" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M8.5 11.25H16.25M8.5 14.25H16.25M8.5 17.25H13.25" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+)
+
+export const CommentIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path d="M4 5.25H20V15.75H9.25L4 20.25V5.25Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M7.5 9H16.5M7.5 12H13.5" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+)
+
+export const TagIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path d="M3.75 10.5L10.5 3.75H18.75V12L12 18.75L3.75 10.5Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M14.25 8.25C14.6642 8.25 15 7.91421 15 7.5C15 7.08579 14.6642 6.75 14.25 6.75C13.8358 6.75 13.5 7.08579 13.5 7.5C13.5 7.91421 13.8358 8.25 14.25 8.25Z" fill="currentColor" />
+  </svg>
+)
+
+export const CategoryIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path d="M3.75 3.75H10.5V10.5H3.75V3.75Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M13.5 3.75H20.25V8.25H13.5V3.75Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M3.75 13.5H8.25V20.25H3.75V13.5Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M11.25 11.25H20.25V20.25H11.25V11.25Z" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+)
+
+export const UserIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path d="M12 12C14.0711 12 15.75 10.3211 15.75 8.25C15.75 6.17893 14.0711 4.5 12 4.5C9.92893 4.5 8.25 6.17893 8.25 8.25C8.25 10.3211 9.92893 12 12 12Z" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M4.5 19.5C4.5 16.6005 7.1005 14.25 12 14.25C16.8995 14.25 19.5 16.6005 19.5 19.5" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+)
+
+export const LinkIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path d="M10.5 13.5L13.5 10.5" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M8.25 15.75H6.75C5.09315 15.75 3.75 14.4069 3.75 12.75V12.75C3.75 11.0931 5.09315 9.75 6.75 9.75H8.25" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M15.75 9.75H17.25C18.9069 9.75 20.25 11.0931 20.25 12.75V12.75C20.25 14.4069 18.9069 15.75 17.25 15.75H15.75" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+)
+
+export const DatabaseIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <ellipse cx="12" cy="6.75" rx="7.5" ry="3" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M4.5 6.75V12.75C4.5 14.4069 7.85786 15.75 12 15.75C16.1421 15.75 19.5 14.4069 19.5 12.75V6.75" stroke="currentColor" strokeWidth="1.8" />
+    <path d="M4.5 12.75V17.25C4.5 18.9069 7.85786 20.25 12 20.25C16.1421 20.25 19.5 18.9069 19.5 17.25V12.75" stroke="currentColor" strokeWidth="1.8" />
+  </svg>
+)

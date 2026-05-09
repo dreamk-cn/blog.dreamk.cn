@@ -5,8 +5,16 @@ import { SidebarItem } from "./sidebar-item";
 import { SidebarMenu } from "./sidebar-menu";
 import { useSidebarContext } from '../layout-content';
 import { usePathname, useRouter } from "next/navigation";
-import { HomeIcon } from "@/components/icons";
-const PaymentsIcon = HomeIcon, AccountsIcon = HomeIcon, CustomersIcon = HomeIcon, DevIcon = HomeIcon, ViewIcon = HomeIcon, SettingsIcon = HomeIcon, ChangeLogIcon = HomeIcon
+import {
+  CategoryIcon,
+  CommentIcon,
+  DashboardIcon,
+  DatabaseIcon,
+  LinkIcon,
+  PostIcon,
+  TagIcon,
+  UserIcon
+} from "@/components/icons";
 
 export const SidebarWrapper = () => {
   const pathname = usePathname();
@@ -47,27 +55,27 @@ export const SidebarWrapper = () => {
           <div className={Sidebar.Body()}>
             <SidebarItem
               title="仪表盘"
-              icon={<HomeIcon />}
+              icon={<DashboardIcon />}
               isActive={pathname === "/admin/dashboard"}
               href="/admin/dashboard"
             />
             <SidebarMenu title="文章和留言-管理">
               <SidebarItem
-                isActive={pathname === "/post/create"}
+                isActive={pathname === "/admin/post/create"}
                 title="发布文章"
-                icon={<CustomersIcon />}
+                icon={<PostIcon />}
                 href="/admin/post/create"
               />
               <SidebarItem
-                isActive={pathname === "/post"}
+                isActive={pathname === "/admin/post/list"}
                 title="文章管理"
-                icon={<AccountsIcon />}
+                icon={<PostIcon />}
                 href="/admin/post/list"
               />
               <SidebarItem
                 isActive={pathname === "/admin/comment/list"}
                 title="留言管理"
-                icon={<PaymentsIcon />}
+                icon={<CommentIcon />}
                 href="/admin/comment/list"
               />
             </SidebarMenu>
@@ -76,13 +84,13 @@ export const SidebarWrapper = () => {
               <SidebarItem
                 isActive={pathname === "/admin/tag/list"}
                 title="标签管理"
-                icon={<DevIcon />}
+                icon={<TagIcon />}
                 href="/admin/tag/list"
               />
               <SidebarItem
                 isActive={pathname === "/admin/category/list"}
                 title="分类管理"
-                icon={<ViewIcon />}
+                icon={<CategoryIcon />}
                 href="/admin/category/list"
               />
             </SidebarMenu>
@@ -91,18 +99,18 @@ export const SidebarWrapper = () => {
               <SidebarItem
                 isActive={pathname === "/admin/friend-link/list"}
                 title="友链"
-                icon={<SettingsIcon />}
+                icon={<LinkIcon />}
                 href="/admin/friend-link/list"
               />
               <SidebarItem
                 isActive={pathname === "/caches"}
                 title="缓存"
-                icon={<ChangeLogIcon />}
+                icon={<DatabaseIcon />}
               />
             </SidebarMenu>
             <SidebarItem
               title="用户管理"
-              icon={<HomeIcon />}
+              icon={<UserIcon />}
               isActive={pathname === "/admin/user/list"}
               href="/admin/user/list"
             />
