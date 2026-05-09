@@ -1,6 +1,6 @@
 import { internalError, ok, zodFail } from "@/libs/api-response";
+import { getDeepseekClient } from "@/libs/ai-client";
 import { requireAdmin } from "@/libs/route-auth";
-import OpenAI from "openai";
 import { NextRequest } from "next/server";
 import z from "zod";
 
@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
     const json = await request.json();
     const { content } = GenerateExcerptSchema.parse(json ?? {});
 
-    const apiKey = process.env.DEEPSEEK_API_KEY;
-    if (!apiKey) {
+    const client = getDeepseekClient();
+    if (!client) {
       return internalError("未配置 DEEPSEEK_API_KEY");
     }
 
@@ -44,11 +44,6 @@ export async function POST(request: NextRequest) {
       "3) 不要包含 Markdown 语法符号。",
       "4) 语气中性，突出文章核心价值和结论。",
     ].join("\n");
-
-    const client = new OpenAI({
-      apiKey,
-      baseURL: "https://api.deepseek.com",
-    });
 
     const result = await client.chat.completions.create({
       model: deepseekModel,

@@ -95,6 +95,38 @@ export function PostForm({
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [generatingExcerpt, setGeneratingExcerpt] = useState(false);
+  const [generatingSlug, setGeneratingSlug] = useState(false);
+
+  async function handleGenerateSlug() {
+    if (!formData.title.trim()) {
+      setErrors((prev) => ({ ...prev, title: "请先填写文章标题" }));
+      toast("请先填写文章标题");
+      return;
+    }
+
+    setGeneratingSlug(true);
+    try {
+      const response = await request.post<{ slug: string }>("/ai/slug", {
+        title: formData.title,
+        content: formData.content.trim() ? formData.content : undefined,
+      });
+      const generated = response.data?.slug?.trim();
+
+      if (!generated) {
+        toast("未生成有效 slug，请重试");
+        return;
+      }
+
+      setFormData((prev) => ({ ...prev, slug: generated }));
+      setErrors((prev) => ({ ...prev, slug: undefined }));
+      toast("Slug 生成成功");
+    } catch (error) {
+      console.error("生成 slug 失败:", error);
+      toast("生成 slug 失败，请稍后再试");
+    } finally {
+      setGeneratingSlug(false);
+    }
+  }
 
   async function handleGenerateExcerpt() {
     if (!formData.content.trim()) {
@@ -228,12 +260,25 @@ export function PostForm({
             </TextField>
             <TextField isRequired isInvalid={!!errors.slug}>
               <Label className="text-text-muted">Slug</Label>
-              <Description>将用于生成文章URL</Description>
-              <Input
-                className="text-text-base"
-                value={formData.slug}
-                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-              />
+              <Description>将用于生成文章 URL；可根据标题（与正文）一键 AI 生成</Description>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Input
+                  className="text-text-base flex-1"
+                  value={formData.slug}
+                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="shrink-0 sm:self-auto"
+                  onPress={handleGenerateSlug}
+                  isDisabled={loading || generatingSlug}
+                  isPending={generatingSlug}
+                >
+                  {generatingSlug ? "生成中..." : "AI 生成 Slug"}
+                </Button>
+              </div>
               {errors.slug ? <FieldError>{errors.slug}</FieldError> : null}
             </TextField>
 
