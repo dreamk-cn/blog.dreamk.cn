@@ -1,56 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# dreamk-blog
 
-## Getting Started
+`dreamk-blog` 是一个基于 Next.js App Router + Prisma + PostgreSQL 的个人博客项目，支持文章、评论、分类、标签、友链与后台管理。
 
-First, run the development server:
+## 技术栈
+
+- Next.js 16
+- React 19
+- Prisma + PostgreSQL
+- NextAuth
+- Tailwind CSS v4 + HeroUI v3
+- Docker Compose（应用与数据库部署）
+
+## 本地开发
+
+开发时推荐只在 Docker 里运行数据库，应用在本机运行，热更新和调试体验最好。
+
+1) 启动数据库：
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+docker compose up -d db
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2) 在 `.env.development` 配置数据库连接：
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+DATABASE_URL=postgresql://blog:blog_password@127.0.0.1:5432/blog?schema=public
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3) 安装依赖并启动开发服务：
 
-## Learn More
+```bash
+pnpm install
+pnpm prisma generate
+pnpm prisma migrate dev
+pnpm dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+4) 打开 [http://localhost:3000](http://localhost:3000)。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+常用命令：
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+docker compose logs -f db
+docker compose down
+```
 
-## Deploy on Vercel
+## 部署
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+项目提供了 `docker-compose.yml`，可直接部署应用和 PostgreSQL。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## Run with Docker Compose
-
-This project can run with local PostgreSQL via Docker Compose and does not require Neon.
-
-1. Update `.env` auth variables as needed (`AUTH_SECRET`, OAuth keys, `ADMIN_EMAIL`).
-2. Start services:
+1) 启动（构建并后台运行）：
 
 ```bash
 docker compose up -d --build
 ```
 
-3. Open [http://localhost:3000](http://localhost:3000).
-
-Useful commands:
+2) 查看日志：
 
 ```bash
 docker compose logs -f app
+docker compose logs -f db
+```
+
+3) 停止服务：
+
+```bash
 docker compose down
 ```
+
+## 环境变量说明
+
+至少需要配置以下变量（建议分别维护 `.env.development` / `.env.production`）：
+
+- `DATABASE_URL`
+- `NEXT_PUBLIC_BASE_URL`
+- `AUTH_SECRET`
+- `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET`（如启用 GitHub 登录）
+- `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`（如启用 Google 登录）
+- `ADMIN_EMAIL`
