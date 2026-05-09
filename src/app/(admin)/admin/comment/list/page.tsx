@@ -3,7 +3,7 @@
 import { StringSelect } from "@/components/admin/string-select";
 import { request } from "@/libs/request";
 import type { Comment, Post, User } from "@prisma/client";
-import { Alert, Button, Chip, Input, Label, Pagination, Table, TextField } from "@heroui/react";
+import { Alert, Button, Chip, Input, Label, Pagination, Spinner, Table, TextField } from "@heroui/react";
 import { useEffect, useMemo, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 
@@ -188,7 +188,9 @@ export default function AdminCommentListPage() {
                 {loading ? (
                   <Table.Row>
                     <Table.Cell colSpan={6}>
-                      <span className="text-text-muted">加载中...</span>
+                      <div className="flex justify-center py-3">
+                        <Spinner color="accent" aria-label="加载中" />
+                      </div>
                     </Table.Cell>
                   </Table.Row>
                 ) : items.length === 0 ? (

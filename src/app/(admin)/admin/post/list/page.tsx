@@ -11,6 +11,7 @@ import {
   Input,
   Label,
   Pagination,
+  Spinner,
   Table,
   TextField,
 } from '@heroui/react';
@@ -247,7 +248,9 @@ export default function Posts() {
                 {loading ? (
                   <Table.Row>
                     <Table.Cell colSpan={8}>
-                      <span className="text-text-muted">加载中...</span>
+                      <div className="flex justify-center py-3">
+                        <Spinner color="accent" aria-label="加载中" />
+                      </div>
                     </Table.Cell>
                   </Table.Row>
                 ) : items.length === 0 ? (

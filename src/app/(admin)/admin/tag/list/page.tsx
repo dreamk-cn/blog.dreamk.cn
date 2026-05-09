@@ -7,6 +7,7 @@ import {
   InputGroup,
   Label,
   Modal,
+  Spinner,
   Table,
   TextField,
   useOverlayState,
@@ -14,10 +15,12 @@ import {
 import { SearchIcon } from '@/components/icons';
 import type { Tag } from '@prisma/client';
 import { request } from '@/libs/request';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export default function AdminTagListPage() {
   const [tags, setTags] = useState<Tag[]>([]);
   const [keyword, setKeyword] = useState('');
+  const keywordDebounced = useDebounce(keyword, 300);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,17 +63,8 @@ export default function AdminTagListPage() {
   };
 
   useEffect(() => {
-    queueMicrotask(() => {
-      fetchTags();
-    });
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchTags(keyword.trim());
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [keyword]);
+    fetchTags(keywordDebounced.trim());
+  }, [keywordDebounced]);
 
   const handleCreateTag = async () => {
     if (!newTagName.trim()) return;
@@ -151,7 +145,7 @@ export default function AdminTagListPage() {
 
   const tableItems = useMemo(() => tags, [tags]);
 
-  const emptyMessage = loading ? '加载中...' : (error || '暂无数据');
+  const emptyMessage = error || '暂无数据';
 
   return (
     <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
@@ -183,7 +177,15 @@ export default function AdminTagListPage() {
               <Table.Column>操作</Table.Column>
             </Table.Header>
             <Table.Body>
-              {tableItems.length === 0 ? (
+              {loading ? (
+                <Table.Row>
+                  <Table.Cell colSpan={5}>
+                    <div className="flex justify-center py-3">
+                      <Spinner color="accent" aria-label="加载中" />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ) : tableItems.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan={5}>
                     <span className="text-text-muted">{emptyMessage}</span>

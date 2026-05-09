@@ -16,6 +16,7 @@ import {
   useOverlayState,
 } from "@heroui/react";
 import { useEffect, useMemo, useState } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 
 type LinkStatusOption = LinkStatus | "all";
 
@@ -30,6 +31,7 @@ const linkStatusOptions: { id: LinkStatusOption; label: string }[] = [
 export default function AdminFriendLinkListPage() {
   const [items, setItems] = useState<FriendLink[]>([]);
   const [keyword, setKeyword] = useState("");
+  const keywordDebounced = useDebounce(keyword, 300);
   const [status, setStatus] = useState<LinkStatusOption>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -82,17 +84,8 @@ export default function AdminFriendLinkListPage() {
   };
 
   useEffect(() => {
-    queueMicrotask(() => {
-      fetchLinks();
-    });
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchLinks(keyword.trim(), status);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [keyword, status]);
+    fetchLinks(keywordDebounced.trim(), status);
+  }, [keywordDebounced, status]);
 
   const resetCreateForm = () => {
     setNewName("");
@@ -200,7 +193,7 @@ export default function AdminFriendLinkListPage() {
   };
 
   const tableItems = useMemo(() => items, [items]);
-  const emptyMessage = loading ? "加载中..." : error || "暂无数据";
+  const emptyMessage = error || "暂无数据";
 
   return (
     <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
@@ -244,7 +237,15 @@ export default function AdminFriendLinkListPage() {
               <Table.Column>操作</Table.Column>
             </Table.Header>
             <Table.Body>
-              {tableItems.length === 0 ? (
+              {loading ? (
+                <Table.Row>
+                  <Table.Cell colSpan={6}>
+                    <div className="flex justify-center py-3">
+                      <Spinner color="accent" aria-label="加载中" />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ) : tableItems.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan={6}>
                     <span className="text-text-muted">{emptyMessage}</span>

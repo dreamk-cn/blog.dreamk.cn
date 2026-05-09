@@ -8,9 +8,10 @@ interface Props {
   icon: React.ReactNode;
   isActive?: boolean;
   href?: string;
+  prefetch?: boolean;
 }
 
-export const SidebarItem = ({ icon, title, isActive, href = "" }: Props) => {
+export const SidebarItem = ({ icon, title, isActive, href = "", prefetch = true }: Props) => {
   const { setCollapsed } = useSidebarContext();
 
   const handleClick = () => {
@@ -19,7 +20,7 @@ export const SidebarItem = ({ icon, title, isActive, href = "" }: Props) => {
     }
   };
   return (
-    <NextLink href={href} className="max-w-full text-text-base active:bg-none">
+    <NextLink href={href} prefetch={prefetch} className="max-w-full text-text-base active:bg-none">
       <div
         className={clsx(
           isActive ? "bg-primary/10 text-primary [&_svg_path]:fill-current" : "hover:bg-foreground",

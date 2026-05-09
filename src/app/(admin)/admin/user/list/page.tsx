@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Button, InputGroup, Table, TextField, Label, Modal, useOverlayState } from "@heroui/react";
+import { Button, InputGroup, Table, TextField, Label, Modal, Spinner, useOverlayState } from "@heroui/react";
 import { SearchIcon } from "@/components/icons";
 import type { User } from "@prisma/client";
 import { request } from "@/libs/request";
 import { StringSelect } from "@/components/admin/string-select";
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function AdminUserListPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [keyword, setKeyword] = useState("");
+  const keywordDebounced = useDebounce(keyword, 300);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,28 +38,8 @@ export default function AdminUserListPage() {
   };
 
   useEffect(() => {
-    queueMicrotask(() => {
-      fetchUsers();
-    });
-  }, []);
-
-  useEffect(() => {
-    let isIgnore = false; // 竞态标记
-
-    const performFetch = async () => {
-      // 只有在非防抖状态下或初次加载才调用
-      await fetchUsers(keyword.trim(), statusFilter);
-    };
-
-    const timer = setTimeout(() => {
-      if (!isIgnore) performFetch();
-    }, 300);
-
-    return () => {
-      isIgnore = true; // 组件卸载或依赖变化时，忽略之前的请求回调
-      clearTimeout(timer);
-    };
-  }, [keyword, statusFilter]);
+    fetchUsers(keywordDebounced.trim(), statusFilter);
+  }, [keywordDebounced, statusFilter]);
 
   const handleBanToggle = async (u: User, to: "BAN" | "VALID") => {
     try {
@@ -81,7 +63,7 @@ export default function AdminUserListPage() {
 
   const statusSelectId = statusFilter ?? "all";
 
-  const emptyMessage = loading ? "加载中..." : (error || "暂无数据");
+  const emptyMessage = error || "暂无数据";
 
   const openBanConfirm = (user: User) => {
     setUserToBan(user);
@@ -141,7 +123,15 @@ export default function AdminUserListPage() {
               <Table.Column>操作</Table.Column>
             </Table.Header>
             <Table.Body>
-              {tableItems.length === 0 ? (
+              {loading ? (
+                <Table.Row>
+                  <Table.Cell colSpan={6}>
+                    <div className="flex justify-center py-3">
+                      <Spinner color="accent" aria-label="加载中" />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ) : tableItems.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan={6}>
                     <span className="text-text-muted">{emptyMessage}</span>

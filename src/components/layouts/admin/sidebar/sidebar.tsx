@@ -4,13 +4,31 @@ import { CompaniesDropdown } from "./companies-dropdown";
 import { SidebarItem } from "./sidebar-item";
 import { SidebarMenu } from "./sidebar-menu";
 import { useSidebarContext } from '../layout-content';
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { HomeIcon } from "@/components/icons";
 const PaymentsIcon = HomeIcon, AccountsIcon = HomeIcon, CustomersIcon = HomeIcon, DevIcon = HomeIcon, ViewIcon = HomeIcon, SettingsIcon = HomeIcon, ChangeLogIcon = HomeIcon
 
 export const SidebarWrapper = () => {
   const pathname = usePathname();
+  const router = useRouter();
   const { collapsed, setCollapsed } = useSidebarContext();
+  const adminRoutes = React.useMemo(
+    () => [
+      "/admin/dashboard",
+      "/admin/post/create",
+      "/admin/post/list",
+      "/admin/comment/list",
+      "/admin/tag/list",
+      "/admin/category/list",
+      "/admin/friend-link/list",
+      "/admin/user/list",
+    ],
+    []
+  );
+
+  React.useEffect(() => {
+    adminRoutes.forEach((route) => router.prefetch(route));
+  }, [adminRoutes, router]);
 
   return (
     <aside className="h-screen z-[20] sticky top-0">

@@ -7,6 +7,7 @@ import {
   InputGroup,
   Label,
   Modal,
+  Spinner,
   Table,
   TextField,
   useOverlayState,
@@ -14,10 +15,12 @@ import {
 import { SearchIcon } from '@/components/icons';
 import type { Category } from '@prisma/client';
 import { request } from '@/libs/request';
+import { useDebounce } from '@/hooks/useDebounce';
 
 export default function AdminCategoryListPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [keyword, setKeyword] = useState('');
+  const keywordDebounced = useDebounce(keyword, 300);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,17 +63,8 @@ export default function AdminCategoryListPage() {
   };
 
   useEffect(() => {
-    queueMicrotask(() => {
-      fetchCategories();
-    });
-  }, []);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchCategories(keyword.trim());
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [keyword]);
+    fetchCategories(keywordDebounced.trim());
+  }, [keywordDebounced]);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -149,7 +143,7 @@ export default function AdminCategoryListPage() {
 
   const tableItems = useMemo(() => categories, [categories]);
 
-  const emptyMessage = loading ? '加载中...' : (error || '暂无数据');
+  const emptyMessage = error || '暂无数据';
 
   return (
     <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
@@ -181,7 +175,15 @@ export default function AdminCategoryListPage() {
               <Table.Column>操作</Table.Column>
             </Table.Header>
             <Table.Body>
-              {tableItems.length === 0 ? (
+              {loading ? (
+                <Table.Row>
+                  <Table.Cell colSpan={5}>
+                    <div className="flex justify-center py-3">
+                      <Spinner color="accent" aria-label="加载中" />
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              ) : tableItems.length === 0 ? (
                 <Table.Row>
                   <Table.Cell colSpan={5}>
                     <span className="text-text-muted">{emptyMessage}</span>
