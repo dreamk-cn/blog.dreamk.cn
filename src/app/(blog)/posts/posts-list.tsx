@@ -6,9 +6,15 @@ import { prisma } from "@/lib/prisma";
 
 const PAGE_SIZE = 10;
 
-function buildPageHref(page: number) {
-  if (page <= 1) return "/posts";
-  return `/posts/page/${page}`;
+function buildPageHref(page: number, keyword?: string) {
+  const query = new URLSearchParams();
+  if (keyword) {
+    query.set("keyword", keyword);
+  }
+
+  if (page <= 1) return `/posts${query.toString() ? `?${query.toString()}` : ""}`;
+  const pagePath = `/posts/page/${page}`;
+  return `${pagePath}${query.toString() ? `?${query.toString()}` : ""}`;
 }
 
 function buildPageNumbers(currentPage: number, totalPages: number) {
@@ -22,14 +28,39 @@ function buildPageNumbers(currentPage: number, totalPages: number) {
     .sort((a, b) => a - b);
 }
 
-export async function renderPostsListPage(requestedPage: number) {
+export async function renderPostsListPage(requestedPage: number, keyword?: string) {
   const safePage = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
+  const normalizedKeyword = keyword?.trim() ?? "";
 
   const baseWhere = {
     status: "PUBLISHED" as const,
     slug: {
       notIn: [...contentConfig.excludedPostSlugsForPublicFeed],
     },
+    ...(normalizedKeyword
+      ? {
+          OR: [
+            {
+              title: {
+                contains: normalizedKeyword,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              excerpt: {
+                contains: normalizedKeyword,
+                mode: "insensitive" as const,
+              },
+            },
+            {
+              content: {
+                contains: normalizedKeyword,
+                mode: "insensitive" as const,
+              },
+            },
+          ],
+        }
+      : {}),
   };
 
   const total = await prisma.post.count({ where: baseWhere });
@@ -55,6 +86,11 @@ export async function renderPostsListPage(requestedPage: number) {
     <div className="mx-auto max-w-7xl px-4 py-4">
       <main className="space-y-4">
         <h1 className="text-2xl font-semibold tracking-tight text-text-base">文章列表</h1>
+        {normalizedKeyword && (
+          <p className="text-sm text-text-muted">
+            搜索关键词：<span className="font-medium text-text-base">{normalizedKeyword}</span>
+          </p>
+        )}
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {posts.map((post) => (
@@ -71,7 +107,7 @@ export async function renderPostsListPage(requestedPage: number) {
         <nav aria-label="文章分页导航" className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
           {hasPrev ? (
             <NextLink
-              href={buildPageHref(currentPage - 1)}
+              href={buildPageHref(currentPage - 1, normalizedKeyword)}
               rel="prev"
               className="rounded-md border border-border px-3 py-1.5 text-sm text-text-base transition-colors hover:border-primary hover:text-primary"
             >
@@ -91,7 +127,7 @@ export async function renderPostsListPage(requestedPage: number) {
               <div key={page} className="flex items-center gap-2">
                 {showEllipsis && <span className="px-1 text-text-sub">...</span>}
                 <NextLink
-                  href={buildPageHref(page)}
+                  href={buildPageHref(page, normalizedKeyword)}
                   aria-current={page === currentPage ? "page" : undefined}
                   className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
                     page === currentPage
@@ -107,7 +143,7 @@ export async function renderPostsListPage(requestedPage: number) {
 
           {hasNext ? (
             <NextLink
-              href={buildPageHref(currentPage + 1)}
+              href={buildPageHref(currentPage + 1, normalizedKeyword)}
               rel="next"
               className="rounded-md border border-border px-3 py-1.5 text-sm text-text-base transition-colors hover:border-primary hover:text-primary"
             >

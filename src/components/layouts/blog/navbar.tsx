@@ -70,9 +70,25 @@ export const Navbar = () => {
   const pathname = usePathname()
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+
+  const handleSearchSubmit = (value: string) => {
+    const keyword = value.trim();
+    const params = new URLSearchParams();
+    if (keyword) {
+      params.set("keyword", keyword);
+    }
+    router.push(`/posts${params.toString() ? `?${params.toString()}` : ""}`);
+    setIsMenuOpen(false);
+  };
 
   const searchInput = (
-    <SearchField aria-label="站内搜索">
+    <SearchField
+      aria-label="站内搜索"
+      value={searchValue}
+      onChange={setSearchValue}
+      onSubmit={handleSearchSubmit}
+    >
       <SearchField.Group>
         <SearchField.SearchIcon />
         <SearchField.Input aria-label="站内搜索" placeholder="Search..." className="placeholder:text-text-muted" />

@@ -5,10 +5,15 @@ type PageProps = {
   params: Promise<{
     page: string;
   }>;
+  searchParams: Promise<{
+    keyword?: string;
+  }>;
 };
 
-export default async function PostsPaged({ params }: PageProps) {
+export default async function PostsPaged({ params, searchParams }: PageProps) {
   const { page } = await params;
+  const resolvedSearchParams = await searchParams;
+  const keyword = resolvedSearchParams.keyword?.trim() ?? "";
   const pageNo = Number(page);
 
   if (!Number.isInteger(pageNo) || pageNo < 1) {
@@ -16,8 +21,12 @@ export default async function PostsPaged({ params }: PageProps) {
   }
 
   if (pageNo === 1) {
-    redirect("/posts");
+    const query = new URLSearchParams();
+    if (keyword) {
+      query.set("keyword", keyword);
+    }
+    redirect(`/posts${query.toString() ? `?${query.toString()}` : ""}`);
   }
 
-  return renderPostsListPage(pageNo);
+  return renderPostsListPage(pageNo, keyword);
 }
