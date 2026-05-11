@@ -1,12 +1,20 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import NextLink from 'next/link';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { request } from '@/lib/request';
 import type { DashboardStats } from '@/services/admin-dashboard-stats';
-import { Avatar, Spinner } from '@heroui/react';
+import {
+  Alert,
+  Avatar,
+  Button,
+  Card,
+  Chip,
+  Separator,
+  Spinner,
+} from '@heroui/react';
 import {
   AreaChart,
   Area,
@@ -21,8 +29,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-
-// ── helpers ────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -43,81 +49,80 @@ const STATUS_LABEL: Record<string, string> = {
   ARCHIVED: '已归档',
 };
 
-const STATUS_COLOR: Record<string, string> = {
-  PUBLISHED: '#22c55e',
-  DRAFT: '#f59e0b',
-  ARCHIVED: '#94a3b8',
-};
-
-// ── sub-components ──────────────────────────────────────────────────────────
+function postStatusChipColor(status: string): 'success' | 'warning' | 'default' {
+  if (status === 'PUBLISHED') return 'success';
+  if (status === 'ARCHIVED') return 'warning';
+  return 'default';
+}
 
 interface StatCardProps {
   label: string;
   value: number | string;
   icon: string;
-  accent?: string;
+  href?: string;
   badge?: string;
-  badgeColor?: string;
-  onClick?: () => void;
+  badgeTone?: 'success' | 'warning' | 'danger' | 'default' | 'accent';
 }
 
-function StatCard({ label, value, icon, badge, badgeColor, onClick }: StatCardProps) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`group flex flex-col gap-3 rounded-2xl bg-background p-5 text-left shadow-sm transition-all hover:shadow-md ${onClick ? 'cursor-pointer' : 'cursor-default'}`}
+function StatCard({ label, value, icon, href, badge, badgeTone = 'warning' }: StatCardProps) {
+  const inner = (
+    <Card
+      className={`h-full shadow-sm transition-shadow ${href ? 'group-hover:shadow-md' : ''}`}
+      variant="default"
     >
-      <div className="flex items-start justify-between">
-        <span className="text-2xl">{icon}</span>
-        {badge && (
-          <span
-            className="rounded-full px-2 py-0.5 text-xs font-medium"
-            style={{ backgroundColor: `${badgeColor}22`, color: badgeColor }}
-          >
-            {badge}
+      <Card.Content className="flex flex-col gap-3 p-5">
+        <div className="flex items-start justify-between gap-2">
+          <span className="text-2xl leading-none" aria-hidden>
+            {icon}
           </span>
-        )}
-      </div>
-      <div>
-        <p className="text-3xl font-bold text-text-base tabular-nums">{value}</p>
-        <p className="mt-0.5 text-sm text-text-muted">{label}</p>
-      </div>
-    </button>
+          {badge ? (
+            <Chip size="sm" variant="soft" color={badgeTone}>
+              <Chip.Label>{badge}</Chip.Label>
+            </Chip>
+          ) : null}
+        </div>
+        <div>
+          <p className="text-3xl font-bold text-text-base tabular-nums">{value}</p>
+          <p className="mt-0.5 text-sm text-text-muted">{label}</p>
+        </div>
+      </Card.Content>
+    </Card>
   );
+
+  if (href) {
+    return (
+      <NextLink href={href} className="group block h-full min-h-0 rounded-2xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-accent">
+        {inner}
+      </NextLink>
+    );
+  }
+
+  return inner;
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="mb-4 text-base font-semibold text-text-base">{children}</h2>
-  );
-}
-
-function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`rounded-2xl bg-background p-5 shadow-sm ${className}`}>
-      {children}
-    </div>
-  );
-}
-
-// ── custom tooltip ──────────────────────────────────────────────────────────
-
-function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string }) {
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { name: string; value: number; color: string }[];
+  label?: string;
+}) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-border bg-background px-3 py-2 text-xs shadow-lg">
-      {label && <p className="mb-1 font-medium text-text-base">{label}</p>}
-      {payload.map((p) => (
-        <p key={p.name} style={{ color: p.color }}>
-          {p.name}: <span className="font-bold">{p.value}</span>
-        </p>
-      ))}
-    </div>
+    <Card className="border border-border px-3 py-2 shadow-lg" variant="transparent">
+      <Card.Content className="p-0 text-xs">
+        {label ? <p className="mb-1 font-medium text-text-base">{label}</p> : null}
+        {payload.map((p) => (
+          <p key={p.name} style={{ color: p.color }}>
+            {p.name}: <span className="font-bold">{p.value}</span>
+          </p>
+        ))}
+      </Card.Content>
+    </Card>
   );
 }
-
-// ── main page ───────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
   const { data: session } = useSession();
@@ -126,40 +131,62 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await request.get<DashboardStats>('/admin/dashboard-stats');
-        if (res.code === 200 && res.data) {
-          setStats(res.data);
-        } else {
-          setError(res.message || '获取数据失败');
-        }
-      } catch {
-        setError('网络错误');
-      } finally {
-        setLoading(false);
+  const loadStats = useCallback(async (signal?: AbortSignal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await request.get<DashboardStats>('/admin/dashboard-stats');
+      if (signal?.aborted) return;
+      if (res.code === 200 && res.data) {
+        setStats(res.data);
+      } else {
+        setStats(null);
+        setError(res.message || '获取数据失败');
       }
-    })();
+    } catch {
+      if (!signal?.aborted) {
+        setStats(null);
+        setError('网络错误');
+      }
+    } finally {
+      if (!signal?.aborted) setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    void loadStats(ac.signal);
+    return () => ac.abort();
+  }, [loadStats]);
 
   if (loading) {
     return (
-      <div className="flex h-full items-center justify-center bg-foreground">
-        <Spinner color="accent" size="lg" />
+      <div className="flex h-full items-center justify-center bg-foreground p-6">
+        <Card className="shadow-sm" variant="secondary">
+          <Card.Content className="flex flex-col items-center gap-4 px-10 py-8">
+            <Spinner color="accent" size="lg" />
+            <p className="text-sm text-text-muted">加载仪表盘…</p>
+          </Card.Content>
+        </Card>
       </div>
     );
   }
 
   if (error || !stats) {
     return (
-      <div className="flex h-full items-center justify-center bg-foreground text-text-muted">
-        {error ?? '数据加载失败'}
+      <div className="flex h-full items-center justify-center bg-foreground p-6">
+        <div className="w-full max-w-md">
+          <Alert status="danger">
+            <Alert.Title>加载失败</Alert.Title>
+            <Alert.Description>{error ?? '数据加载失败'}</Alert.Description>
+          </Alert>
+          <Button className="mt-4 w-full" variant="secondary" onPress={() => void loadStats()}>
+            重试
+          </Button>
+        </div>
       </div>
     );
   }
-
-  // ── derived chart data ──────────────────────────────────────────────────
 
   const postStatusPie = [
     { name: '已发布', value: stats.publishedPosts, fill: '#22c55e' },
@@ -180,256 +207,225 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-full space-y-6 bg-foreground p-6">
-
-      {/* ── welcome banner ── */}
-      <div className="flex items-center gap-4 rounded-2xl bg-background px-6 py-4 shadow-sm">
-        {session?.user?.image && (
-          <Avatar>
-            <Avatar.Image src={session.user.image}></Avatar.Image>
-            <Avatar.Fallback>
-              {session.user.name?.slice(0, 1) ?? '?'}
-            </Avatar.Fallback>
+      <Card className="shadow-sm" variant="default">
+        <Card.Content className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
+          <Avatar color="accent" size="lg" className="h-14 w-14 shrink-0">
+            {session?.user?.image ? <Avatar.Image src={session.user.image} alt="" /> : null}
+            <Avatar.Fallback>{session?.user?.name?.slice(0, 1) ?? '管'}</Avatar.Fallback>
           </Avatar>
-        )}
-        <div>
-          <p className="text-lg font-semibold text-text-base">
-            欢迎回来，{session?.user?.name ?? '管理员'} 👋
-          </p>
-          <p className="text-sm text-text-muted">
-            {new Date().toLocaleDateString('zh-CN', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </p>
-        </div>
-      </div>
+          <div className="min-w-0 flex-1">
+            <Card.Title className="text-lg font-semibold text-text-base">
+              欢迎回来，{session?.user?.name ?? '管理员'}
+            </Card.Title>
+            <Card.Description className="mt-1 text-sm text-text-muted">
+              {new Date().toLocaleDateString('zh-CN', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </Card.Description>
+          </div>
+        </Card.Content>
+      </Card>
 
-      {/* ── stat cards ── */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        <StatCard
-          label="文章总数"
-          value={stats.totalPosts}
-          icon="📝"
-          onClick={() => router.push('/admin/post/list')}
-        />
+        <StatCard label="文章总数" value={stats.totalPosts} icon="📝" href="/admin/post/list" />
         <StatCard
           label="已发布"
           value={stats.publishedPosts}
           icon="✅"
           badge={`草稿 ${stats.draftPosts}`}
-          badgeColor="#f59e0b"
-          onClick={() => router.push('/admin/post/list')}
+          badgeTone="warning"
+          href="/admin/post/list"
         />
-        <StatCard
-          label="总浏览量"
-          value={stats.totalViews.toLocaleString()}
-          icon="👁️"
-        />
+        <StatCard label="总浏览量" value={stats.totalViews.toLocaleString()} icon="👁️" />
         <StatCard
           label="评论总数"
           value={stats.totalComments}
           icon="💬"
           badge={stats.pendingComments > 0 ? `待审 ${stats.pendingComments}` : undefined}
-          badgeColor="#ef4444"
-          onClick={() => router.push('/admin/comment/list')}
+          badgeTone="danger"
+          href="/admin/comment/list"
         />
-        <StatCard
-          label="用户数"
-          value={stats.totalUsers}
-          icon="👤"
-          onClick={() => router.push('/admin/user/list')}
-        />
-        <StatCard
-          label="分类数"
-          value={stats.totalCategories}
-          icon="📂"
-          onClick={() => router.push('/admin/category/list')}
-        />
-        <StatCard
-          label="标签数"
-          value={stats.totalTags}
-          icon="🏷️"
-          onClick={() => router.push('/admin/tag/list')}
-        />
+        <StatCard label="用户数" value={stats.totalUsers} icon="👤" href="/admin/user/list" />
+        <StatCard label="分类数" value={stats.totalCategories} icon="📂" href="/admin/category/list" />
+        <StatCard label="标签数" value={stats.totalTags} icon="🏷️" href="/admin/tag/list" />
         <StatCard
           label="友情链接"
           value={stats.totalFriendLinks}
           icon="🔗"
           badge={stats.pendingFriendLinks > 0 ? `待审 ${stats.pendingFriendLinks}` : undefined}
-          badgeColor="#ef4444"
-          onClick={() => router.push('/admin/friend-link/list')}
+          badgeTone="danger"
+          href="/admin/friend-link/list"
         />
       </div>
 
-      {/* ── charts row 1 ── */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-
-        {/* posts last 30 days */}
-        <Panel className="lg:col-span-2">
-          <SectionTitle>最近 30 天新增文章</SectionTitle>
-          <ResponsiveContainer width="100%" height={220}>
-            <AreaChart data={postsChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="postGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #e2e8f0)" />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 11, fill: 'var(--color-text-muted, #94a3b8)' }}
-                interval={4}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: 'var(--color-text-muted, #94a3b8)' }}
-                tickLine={false}
-                axisLine={false}
-                allowDecimals={false}
-              />
-              <Tooltip content={<ChartTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="count"
-                name="新增文章"
-                stroke="#6366f1"
-                strokeWidth={2}
-                fill="url(#postGrad)"
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 0 }}
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </Panel>
-
-        {/* post status pie */}
-        <Panel>
-          <SectionTitle>文章状态分布</SectionTitle>
-          {postStatusPie.length === 0 ? (
-            <div className="flex h-[220px] items-center justify-center text-text-muted text-sm">
-              暂无数据
-            </div>
-          ) : (
+        <Card className="shadow-sm lg:col-span-2" variant="default">
+          <Card.Header className="flex flex-col gap-1 px-5 pb-0 pt-5">
+            <Card.Title className="text-base font-semibold text-text-base">最近 30 天新增文章</Card.Title>
+          </Card.Header>
+          <Card.Content className="px-2 pb-4 pt-2 sm:px-4">
             <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie
-                  data={postStatusPie}
-                  cx="50%"
-                  cy="45%"
-                  innerRadius={55}
-                  outerRadius={80}
-                  paddingAngle={3}
-                  dataKey="value"
+              <AreaChart data={postsChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="postGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #e2e8f0)" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: 'var(--color-text-muted, #94a3b8)' }}
+                  interval={4}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: 'var(--color-text-muted, #94a3b8)' }}
+                  tickLine={false}
+                  axisLine={false}
+                  allowDecimals={false}
+                />
+                <Tooltip content={<ChartTooltip />} />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  name="新增文章"
+                  stroke="#6366f1"
+                  strokeWidth={2}
+                  fill="url(#postGrad)"
+                  dot={false}
+                  activeDot={{ r: 4, strokeWidth: 0 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </Card.Content>
+        </Card>
+
+        <Card className="shadow-sm" variant="default">
+          <Card.Header className="flex flex-col gap-1 px-5 pb-0 pt-5">
+            <Card.Title className="text-base font-semibold text-text-base">文章状态分布</Card.Title>
+          </Card.Header>
+          <Card.Content className="px-2 pb-4 pt-2 sm:px-4">
+            {postStatusPie.length === 0 ? (
+              <div className="flex h-[220px] items-center justify-center text-sm text-text-muted">暂无数据</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={postStatusPie}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={55}
+                    outerRadius={80}
+                    paddingAngle={3}
+                    dataKey="value"
+                  />
+                  <Tooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null;
+                      const d = payload[0];
+                      return (
+                        <Card className="border border-border px-3 py-2 shadow-lg" variant="transparent">
+                          <Card.Content className="p-0 text-xs">
+                            <p style={{ color: d.payload.fill }} className="font-bold">
+                              {d.name}
+                            </p>
+                            <p className="text-text-base">数量: {d.value}</p>
+                          </Card.Content>
+                        </Card>
+                      );
+                    }}
+                  />
+                  <Legend
+                    iconType="circle"
+                    iconSize={8}
+                    formatter={(value) => <span className="text-xs text-text-muted">{value}</span>}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </Card.Content>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <Card className="shadow-sm" variant="default">
+          <Card.Header className="flex flex-col gap-1 px-5 pb-0 pt-5">
+            <Card.Title className="text-base font-semibold text-text-base">评论状态分布</Card.Title>
+          </Card.Header>
+          <Card.Content className="px-2 pb-4 pt-2 sm:px-4">
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={commentStatusBar} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #e2e8f0)" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11, fill: 'var(--color-text-muted, #94a3b8)' }}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: 'var(--color-text-muted, #94a3b8)' }}
+                  tickLine={false}
+                  axisLine={false}
+                  allowDecimals={false}
                 />
                 <Tooltip
-                  content={({ active, payload }) => {
+                  content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
-                    const d = payload[0];
                     return (
-                      <div className="rounded-xl border border-border bg-background px-3 py-2 text-xs shadow-lg">
-                        <p style={{ color: d.payload.fill }} className="font-bold">{d.name}</p>
-                        <p className="text-text-base">数量: {d.value}</p>
-                      </div>
+                      <Card className="border border-border px-3 py-2 shadow-lg" variant="transparent">
+                        <Card.Content className="p-0 text-xs">
+                          <p className="font-medium text-text-base">{label}</p>
+                          <p style={{ color: payload[0].payload.fill }}>
+                            数量: <span className="font-bold">{payload[0].value}</span>
+                          </p>
+                        </Card.Content>
+                      </Card>
                     );
                   }}
                 />
-                <Legend
-                  iconType="circle"
-                  iconSize={8}
-                  formatter={(value) => (
-                    <span className="text-xs text-text-muted">{value}</span>
-                  )}
-                />
-              </PieChart>
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} />
+              </BarChart>
             </ResponsiveContainer>
-          )}
-        </Panel>
-      </div>
+          </Card.Content>
+        </Card>
 
-      {/* ── charts row 2 ── */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-
-        {/* comment status bar */}
-        <Panel>
-          <SectionTitle>评论状态分布</SectionTitle>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={commentStatusBar} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #e2e8f0)" vertical={false} />
-              <XAxis
-                dataKey="name"
-                tick={{ fontSize: 11, fill: 'var(--color-text-muted, #94a3b8)' }}
-                tickLine={false}
-                axisLine={false}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: 'var(--color-text-muted, #94a3b8)' }}
-                tickLine={false}
-                axisLine={false}
-                allowDecimals={false}
-              />
-              <Tooltip
-                content={({ active, payload, label }) => {
-                  if (!active || !payload?.length) return null;
-                  return (
-                    <div className="rounded-xl border border-border bg-background px-3 py-2 text-xs shadow-lg">
-                      <p className="font-medium text-text-base">{label}</p>
-                      <p style={{ color: payload[0].payload.fill }}>
-                        数量: <span className="font-bold">{payload[0].value}</span>
-                      </p>
-                    </div>
-                  );
-                }}
-              />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </Panel>
-
-        {/* recent posts */}
-        <Panel className="lg:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
-            <SectionTitle>最近文章</SectionTitle>
-            <button
-              type="button"
-              onClick={() => router.push('/admin/post/list')}
-              className="text-xs text-accent hover:underline"
-            >
-              查看全部 →
-            </button>
-          </div>
-          <div className="divide-y divide-border">
+        <Card className="shadow-sm lg:col-span-2" variant="default">
+          <Card.Header className="flex flex-row items-center justify-between gap-3 px-5 pb-0 pt-5">
+            <Card.Title className="text-base font-semibold text-text-base">最近文章</Card.Title>
+            <Button size="sm" variant="ghost" onPress={() => router.push('/admin/post/list')}>
+              查看全部
+            </Button>
+          </Card.Header>
+          <Card.Content className="px-5 pb-5 pt-3">
             {stats.recentPosts.length === 0 ? (
-              <p className="py-4 text-center text-sm text-text-muted">暂无文章</p>
+              <p className="py-6 text-center text-sm text-text-muted">暂无文章</p>
             ) : (
-              stats.recentPosts.map((post) => (
-                <div key={post.id} className="flex items-center gap-3 py-2.5">
-                  <span
-                    className="shrink-0 rounded-full px-2 py-0.5 text-xs font-medium"
-                    style={{
-                      backgroundColor: `${STATUS_COLOR[post.status]}22`,
-                      color: STATUS_COLOR[post.status],
-                    }}
-                  >
-                    {STATUS_LABEL[post.status] ?? post.status}
-                  </span>
-                  <span className="flex-1 truncate text-sm text-text-base">{post.title}</span>
-                  <span className="shrink-0 text-xs text-text-muted">
-                    👁 {post.viewCount}
-                  </span>
-                  <span className="shrink-0 text-xs text-text-muted">
-                    {formatFullDate(post.createdAt)}
-                  </span>
-                </div>
-              ))
+              <ul className="flex flex-col">
+                {stats.recentPosts.map((post, index) => (
+                  <li key={post.id}>
+                    {index > 0 ? <Separator className="my-1" /> : null}
+                    <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3">
+                      <Chip size="sm" variant="soft" color={postStatusChipColor(post.status)}>
+                        <Chip.Label>{STATUS_LABEL[post.status] ?? post.status}</Chip.Label>
+                      </Chip>
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-base">{post.title}</span>
+                      <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
+                        <span>浏览 {post.viewCount}</span>
+                        <span>{formatFullDate(post.createdAt)}</span>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             )}
-          </div>
-        </Panel>
+          </Card.Content>
+        </Card>
       </div>
-
     </div>
   );
 }
