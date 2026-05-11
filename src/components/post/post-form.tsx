@@ -74,22 +74,28 @@ export function PostForm({
   }
 
   function handleAddNewTag() {
-    if (newTag.trim() && !tags.some(tag => tag.name?.toLowerCase() === newTag.trim().toLowerCase())) {
-      const newTagObject: Tag = {
-        id: `temp-${Date.now()}`,
-        name: newTag.trim(),
-        slug: newTag.trim().toLowerCase().replace(/ /g, '-'),
-        createdAt: new Date(),
-        updatedAt: new Date()
-      };
+    const trimmed = newTag.trim();
+    if (!trimmed) return;
 
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, newTagObject]
-      }));
+    const lower = trimmed.toLowerCase();
+    const inCatalog = tags.some((tag) => tag.name?.toLowerCase() === lower);
+    const alreadySelected = formData.tags.some((t) => t.name?.toLowerCase() === lower);
+    if (inCatalog || alreadySelected) return;
 
-      setNewTag('');
-    }
+    const newTagObject: Tag = {
+      id: `temp-${Date.now()}`,
+      name: trimmed,
+      slug: trimmed.toLowerCase().replace(/ /g, '-'),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      tags: [...prev.tags, newTagObject],
+    }));
+
+    setNewTag('');
   }
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -234,17 +240,10 @@ export function PostForm({
 
   return (
     <Card className="mx-auto w-full bg-foreground">
-      <Card.Header className="flex flex-row items-center justify-between">
+      <Card.Header>
         <h2 className="text-xl font-bold text-text-base">
           #{article?.id ? '编辑文章' : '发布文章'}
         </h2>
-        <div className="flex gap-2">
-          {article && (
-            <Button variant="secondary">
-              预览
-            </Button>
-          )}
-        </div>
       </Card.Header>
 
       <Form
