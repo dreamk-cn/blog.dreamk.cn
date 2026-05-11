@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { request } from '@/lib/request';
 import type { Post, Category, Tag } from '@prisma/client';
 import {
@@ -28,6 +28,7 @@ type Status = 'ALL' | 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
 export default function Posts() {
   const router = useRouter();
+  const pathname = usePathname();
   const [items, setItems] = useState<PostItem[]>([]);
   const [total, setTotal] = useState(0);
   const [pageNo, setPageNo] = useState(1);
@@ -175,9 +176,26 @@ export default function Posts() {
             { id: 'asc', label: '正序' },
           ]}
         />
+
+        <Button
+          size="sm"
+          variant="secondary"
+          className="text-text-muted"
+          onPress={() => {
+            setKeyword('');
+            setStatus('ALL');
+            setSortBy('createdAt');
+            setSortOrder('desc');
+            setPageNo(1);
+            setPageSize(10);
+            router.replace(pathname, { scroll: false });
+          }}
+        >
+          清空
+        </Button>
       </div>
     </div>
-  ), [keyword, status, sortBy, sortOrder, router]);
+  ), [keyword, status, sortBy, sortOrder, router, pathname]);
 
   const bottomContent = useMemo(() => (
     <div className="flex items-center justify-between px-2 py-4">

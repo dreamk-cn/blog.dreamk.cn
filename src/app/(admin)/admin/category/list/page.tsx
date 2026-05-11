@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, use, useMemo, useState, useTransition } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Button,
   Input,
@@ -94,6 +95,8 @@ function CategoryTableRows({
 }
 
 export default function AdminCategoryListPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [keyword, setKeyword] = useState('');
   const keywordDebounced = useDebounce(keyword, 300);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -202,17 +205,29 @@ export default function AdminCategoryListPage() {
   return (
     <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
       <div className="flex items-center justify-between gap-3">
-        <InputGroup className="max-w-sm">
-          <InputGroup.Prefix>
-            <SearchIcon className="text-base text-text-muted" />
-          </InputGroup.Prefix>
-          <InputGroup.Input
-            className="text-text-base placeholder:text-text-muted"
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-            placeholder="搜索分类名称或slug"
-          />
-        </InputGroup>
+        <div className="flex flex-wrap items-end gap-2">
+          <InputGroup className="max-w-sm">
+            <InputGroup.Prefix>
+              <SearchIcon className="text-base text-text-muted" />
+            </InputGroup.Prefix>
+            <InputGroup.Input
+              className="text-text-base placeholder:text-text-muted"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              placeholder="搜索分类名称或slug"
+            />
+          </InputGroup>
+          <Button
+            size="sm"
+            variant="secondary"
+            onPress={() => {
+              setKeyword('');
+              router.replace(pathname, { scroll: false });
+            }}
+          >
+            清空
+          </Button>
+        </div>
         <Button variant="primary" onPress={() => createModal.open()}>
           新增分类
         </Button>

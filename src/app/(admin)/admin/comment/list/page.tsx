@@ -5,6 +5,7 @@ import { request } from "@/lib/request";
 import type { Comment, Post, User } from "@prisma/client";
 import { Alert, Button, Chip, Input, Label, Pagination, Spinner, Table, TextField } from "@heroui/react";
 import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
 
 type CommentStatus = "PENDING" | "APPROVED" | "SPAM" | "DELETED";
@@ -33,6 +34,8 @@ function shortText(text: string, length = 80) {
 }
 
 export default function AdminCommentListPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [items, setItems] = useState<CommentItem[]>([]);
   const [total, setTotal] = useState(0);
   const [pageNo, setPageNo] = useState(1);
@@ -169,6 +172,21 @@ export default function AdminCommentListPage() {
               { id: "asc", label: "正序" },
             ]}
           />
+
+          <Button
+            size="sm"
+            variant="secondary"
+            onPress={() => {
+              setKeyword("");
+              setStatus("all");
+              setSortOrder("desc");
+              setPageNo(1);
+              setPageSize(10);
+              router.replace(pathname, { scroll: false });
+            }}
+          >
+            清空
+          </Button>
         </div>
       </div>
 

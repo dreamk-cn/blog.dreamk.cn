@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, use, useMemo, useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { StringSelect } from "@/components/admin/string-select";
 import { SearchIcon } from "@/components/icons";
 import { request } from "@/lib/request";
@@ -114,6 +115,8 @@ function FriendLinkTableRows({
 }
 
 export default function AdminFriendLinkListPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [keyword, setKeyword] = useState("");
   const keywordDebounced = useDebounce(keyword, 300);
   const [status, setStatus] = useState<LinkStatusOption>("all");
@@ -286,6 +289,17 @@ export default function AdminFriendLinkListPage() {
             onSelectionChange={(id) => setStatus(id as LinkStatusOption)}
             options={linkStatusOptions}
           />
+          <Button
+            size="sm"
+            variant="secondary"
+            onPress={() => {
+              setKeyword("");
+              setStatus("all");
+              router.replace(pathname, { scroll: false });
+            }}
+          >
+            清空
+          </Button>
         </div>
         <Button variant="primary" onPress={createModal.open}>
           新增友链

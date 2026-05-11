@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, use, useMemo, useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Button, InputGroup, Table, TextField, Label, Modal, Spinner, useOverlayState } from "@heroui/react";
 import { SearchIcon } from "@/components/icons";
 import type { User } from "@prisma/client";
@@ -96,6 +97,8 @@ function UserTableRows({
 }
 
 export default function AdminUserListPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [keyword, setKeyword] = useState("");
   const keywordDebounced = useDebounce(keyword, 300);
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
@@ -180,6 +183,17 @@ export default function AdminUserListPage() {
               { id: "DELETED", label: "已删除" },
             ]}
           />
+          <Button
+            size="sm"
+            variant="secondary"
+            onPress={() => {
+              setKeyword("");
+              setStatusFilter(undefined);
+              router.replace(pathname, { scroll: false });
+            }}
+          >
+            清空
+          </Button>
         </div>
       </div>
 
