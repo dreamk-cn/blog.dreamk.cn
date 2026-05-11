@@ -155,7 +155,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     const ac = new AbortController();
-    void loadStats(ac.signal);
+    queueMicrotask(() => {
+      void loadStats(ac.signal);
+    });
     return () => ac.abort();
   }, [loadStats]);
 
