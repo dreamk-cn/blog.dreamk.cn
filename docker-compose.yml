@@ -27,7 +27,7 @@ services:
       db:
         condition: service_healthy
     env_file:
-      - .env
+      - .env.production
     environment:
       DATABASE_URL: postgresql://blog:blog_password@db:5432/blog?schema=public
       NEXT_PUBLIC_BASE_URL: http://localhost:3000
