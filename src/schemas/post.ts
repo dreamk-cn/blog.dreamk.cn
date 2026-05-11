@@ -31,12 +31,17 @@ export const PostListSchema = SearchPageSchema.extend({
 // 文章创建参数（支持草稿、已发布、已归档状态）
 export const PostCreateSchema = z.object({
   title: zValue(z.string().min(1).max(255)),
-  slug: zValue(z.string().min(1).max(255)),
+  slug: zValue(
+    z.string()
+      .min(1)
+      .max(255)
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug只能包含小写字母、数字和连字符')
+  ),
   content: zValue(z.string().min(1)),
   excerpt: zValue(z.string().min(1)),
   status: zValue(z.enum<PostStatus[]>(['ARCHIVED', 'DRAFT', 'PUBLISHED']).default('PUBLISHED')),
   featured: zValue(z.boolean().default(false)),
-  coverUrl: zValue(z.string().optional()),
+  coverUrl: zValue(z.url('封面图片URL格式不正确').max(100, '封面图片URL不能超过100个字符').optional()),
   categoryId: zValue(z.string().optional()),
   tags: zValue(z.array(
     z.object({

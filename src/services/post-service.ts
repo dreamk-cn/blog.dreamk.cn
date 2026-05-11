@@ -1,12 +1,13 @@
 import { Prisma } from "@prisma/client";
 import { contentConfig } from "@/config/content";
 import { prisma } from "@/lib/prisma";
+import { normalizeSlug } from "@/lib/slug";
 
 type PostTagInput = { id?: string; name?: string; slug?: string };
 
 function toTagConnectOrCreate(tags: PostTagInput[]): Prisma.TagCreateOrConnectWithoutPostsInput[] {
   return tags.map((tag) => {
-    const normalizedSlug = (tag.slug || tag.name || "").toLowerCase().replace(/ /g, "-");
+    const normalizedSlug = normalizeSlug(tag.slug || tag.name || "", 50);
     const tagName = tag.name || normalizedSlug || "untitled-tag";
 
     return {
@@ -116,6 +117,7 @@ export async function createPost(input: {
       excerpt,
       featured,
       coverUrl,
+      publishedAt: status === "PUBLISHED" ? new Date() : null,
       user: { connect: { id: userId } },
       ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
       ...(tags.length > 0 ? { tags: { connectOrCreate: toTagConnectOrCreate(tags) } } : {}),
@@ -142,6 +144,8 @@ export async function updatePost(input: {
   });
   if (!existingPost) return null;
 
+  const shouldSetPublishedAt = status === "PUBLISHED" && !existingPost.publishedAt;
+
   return prisma.post.update({
     where: { id },
     data: {
@@ -152,6 +156,9 @@ export async function updatePost(input: {
       status,
       featured,
       coverUrl,
+      ...(status === "PUBLISHED"
+        ? { publishedAt: shouldSetPublishedAt ? new Date() : existingPost.publishedAt }
+        : { publishedAt: null }),
       categoryId,
       tags: {
         disconnect: existingPost.tags.map((tag) => ({ id: tag.id })),

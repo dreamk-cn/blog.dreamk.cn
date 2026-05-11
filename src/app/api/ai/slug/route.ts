@@ -1,6 +1,7 @@
 import { internalError, ok, zodFail } from "@/lib/api-response";
 import { getDeepseekClient } from "@/lib/ai-client";
 import { requireAdmin } from "@/lib/route-auth";
+import { normalizeSlug } from "@/lib/slug";
 import { NextRequest } from "next/server";
 import z from "zod";
 
@@ -16,12 +17,7 @@ const deepseekModel =
 
 function cleanSlug(text: string) {
   const line = text.split(/\r?\n/)[0] ?? "";
-  return line
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 255);
+  return normalizeSlug(line);
 }
 
 export async function POST(request: NextRequest) {

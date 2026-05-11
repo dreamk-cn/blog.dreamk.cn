@@ -5,8 +5,21 @@ import { fail, internalError, ok, zodFail } from "@/lib/api-response";
 import { requireAdmin } from "@/lib/route-auth";
 import { PostCreateSchema, PostDeleteSchema, PostDetailSchema, PostUpdateSchema } from "@/schemas/post";
 import { createPost, deletePosts, getPostDetail, updatePost } from "@/services/post-service";
+import { Prisma } from "@prisma/client";
 import { NextRequest } from "next/server";
 import z from "zod";
+
+function prismaPostError(err: unknown) {
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === "P2002") {
+      return fail(ResponseCode.FAIL, "Slug已存在，请换一个");
+    }
+    if (err.code === "P2025") {
+      return fail(ResponseCode.FAIL, "关联的分类或标签不存在");
+    }
+  }
+  return null;
+}
 
 
 // 获取文章详情（支持id或slug）
@@ -70,6 +83,8 @@ export async function POST(request: NextRequest) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误")
     }
+    const knownError = prismaPostError(err)
+    if (knownError) return knownError
     console.warn('err', err)
     return internalError()
   }
@@ -107,6 +122,8 @@ export async function PUT(request: NextRequest) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误")
     }
+    const knownError = prismaPostError(err)
+    if (knownError) return knownError
     console.error('更新文章失败:', err)
     return internalError()
   }
