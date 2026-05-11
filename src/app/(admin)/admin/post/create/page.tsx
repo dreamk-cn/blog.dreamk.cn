@@ -87,6 +87,7 @@ export default function Post() {
   return (
     <div className="p-3 bg-foreground min-h-full">
       <PostForm 
+        className="shadow-none"
         key={article?.id ?? type}
         article={article}
         categories={categories}

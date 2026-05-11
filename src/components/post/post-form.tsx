@@ -137,12 +137,14 @@ export function PostForm({
   article,
   categories = [],
   tags = [],
+  className,
   onSubmit,
   onCancel,
 }: {
   article?: PostDetail;
   categories?: Partial<Category>[];
   tags?: Partial<Tag>[];
+  className?: string;
   onSubmit?: (article: Partial<Post>) => void;
   onCancel?: () => void;
 }) {
@@ -377,7 +379,7 @@ export function PostForm({
         : "保存文章";
 
   return (
-    <Card className="mx-auto w-full bg-foreground">
+    <Card className={`mx-auto w-full bg-foreground ${className}`}>
       <Card.Header className="border-b rounded-2xl border-border bg-background/70 px-5 py-4">
         <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
