@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, use, useMemo, useState, useTransition } from 'react';
 import {
   Button,
   Input,
@@ -17,12 +17,87 @@ import type { Category } from '@prisma/client';
 import { request } from '@/lib/request';
 import { useDebounce } from '@/hooks/useDebounce';
 
+async function loadCategories(kw: string, _nonce: number): Promise<{ data: Category[]; error: string | null }> {
+  try {
+    const res = await request.get<Category[]>('/categories', { keyword: kw });
+    if (res.code === 200) return { data: res.data || [], error: null };
+    return { data: [], error: res.message || '获取分类失败' };
+  } catch {
+    return { data: [], error: '获取分类失败' };
+  }
+}
+
+function CategoryTableRows({
+  promise,
+  deletingId,
+  onEdit,
+  onDelete,
+}: {
+  promise: Promise<{ data: Category[]; error: string | null }>;
+  deletingId: string | null;
+  onEdit: (cat: Category) => void;
+  onDelete: (cat: Category) => void;
+}) {
+  const { data: categories, error } = use(promise);
+
+  if (error) {
+    return (
+      <Table.Row>
+        <Table.Cell colSpan={5}>
+          <span className="text-red-500">{error}</span>
+        </Table.Cell>
+      </Table.Row>
+    );
+  }
+
+  if (categories.length === 0) {
+    return (
+      <Table.Row>
+        <Table.Cell colSpan={5}>
+          <span className="text-text-muted">暂无数据</span>
+        </Table.Cell>
+      </Table.Row>
+    );
+  }
+
+  return categories.map((cat) => (
+    <Table.Row key={cat.id}>
+      <Table.Cell>
+        <span className="text-text-base">{cat.name}</span>
+      </Table.Cell>
+      <Table.Cell>
+        <span className="text-text-muted">{cat.slug}</span>
+      </Table.Cell>
+      <Table.Cell>
+        <span className="text-xs text-text-muted">{new Date(cat.createdAt).toLocaleString()}</span>
+      </Table.Cell>
+      <Table.Cell>
+        <span className="text-xs text-text-muted">{new Date(cat.updatedAt).toLocaleString()}</span>
+      </Table.Cell>
+      <Table.Cell>
+        <div className="flex gap-2">
+          <Button size="sm" variant="secondary" onPress={() => onEdit(cat)}>
+            编辑
+          </Button>
+          <Button
+            size="sm"
+            variant="danger"
+            isDisabled={deletingId === cat.id}
+            onPress={() => onDelete(cat)}
+          >
+            {deletingId === cat.id ? '删除中...' : '删除'}
+          </Button>
+        </div>
+      </Table.Cell>
+    </Table.Row>
+  ));
+}
+
 export default function AdminCategoryListPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
   const [keyword, setKeyword] = useState('');
   const keywordDebounced = useDebounce(keyword, 300);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isPending, startTransition] = useTransition();
 
   const createModal = useOverlayState();
   const editModal = useOverlayState();
@@ -38,33 +113,16 @@ export default function AdminCategoryListPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
-  // useEffect(() => {
-  //   if (!newSlug) {
-  //     setNewSlug(newName.trim().toLowerCase().replace(/\s+/g, '-'));
-  //   }
-  // }, [newName, newSlug]);
+  const promise = useMemo(
+    () => loadCategories(keywordDebounced.trim(), refreshKey),
+    [keywordDebounced, refreshKey],
+  );
 
-  const fetchCategories = async (kw = '') => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await request.get<Category[]>('/categories', { keyword: kw });
-      if (res.code === 200) {
-        setCategories(res.data || []);
-      } else {
-        setError(res.message || '获取分类失败');
-      }
-    } catch (err) {
-      setError('获取分类失败');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const refresh = () => {
+    startTransition(() => {
+      setRefreshKey((k) => k + 1);
+    });
   };
-
-  useEffect(() => {
-    fetchCategories(keywordDebounced.trim());
-  }, [keywordDebounced]);
 
   const handleCreate = async () => {
     if (!newName.trim()) return;
@@ -73,13 +131,13 @@ export default function AdminCategoryListPage() {
       const res = await request.post<Category>(
         '/categories',
         { name: newName.trim(), slug: newSlug.trim() },
-        { showSuccessMessage: true }
+        { showSuccessMessage: true },
       );
       if (res.code === 200) {
         createModal.close();
         setNewName('');
         setNewSlug('');
-        fetchCategories(keyword);
+        refresh();
       }
     } catch (err) {
       console.error('创建分类失败', err);
@@ -103,14 +161,14 @@ export default function AdminCategoryListPage() {
       const res = await request.put<Category>(
         '/categories',
         { id: editing.id, name: editName.trim(), slug: editSlug.trim() },
-        { showSuccessMessage: true }
+        { showSuccessMessage: true },
       );
       if (res.code === 200) {
         editModal.close();
         setEditing(null);
         setEditName('');
         setEditSlug('');
-        fetchCategories(keyword);
+        refresh();
       }
     } catch (err) {
       console.error('更新分类失败', err);
@@ -132,7 +190,7 @@ export default function AdminCategoryListPage() {
       if (res.code === 200) {
         deleteModal.close();
         setCategoryToDelete(null);
-        fetchCategories(keyword);
+        refresh();
       }
     } catch (err) {
       console.error('删除分类失败', err);
@@ -140,10 +198,6 @@ export default function AdminCategoryListPage() {
       setDeletingId(null);
     }
   };
-
-  const tableItems = useMemo(() => categories, [categories]);
-
-  const emptyMessage = error || '暂无数据';
 
   return (
     <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
@@ -164,68 +218,41 @@ export default function AdminCategoryListPage() {
         </Button>
       </div>
 
-      <Table>
-        <Table.ScrollContainer>
-          <Table.Content aria-label="分类列表">
-            <Table.Header>
-              <Table.Column isRowHeader>名称</Table.Column>
-              <Table.Column>Slug</Table.Column>
-              <Table.Column>创建时间</Table.Column>
-              <Table.Column>更新时间</Table.Column>
-              <Table.Column>操作</Table.Column>
-            </Table.Header>
-            <Table.Body>
-              {loading ? (
-                <Table.Row>
-                  <Table.Cell colSpan={5}>
-                    <div className="flex justify-center py-3">
-                      <Spinner color="accent" aria-label="加载中" />
-                    </div>
-                  </Table.Cell>
-                </Table.Row>
-              ) : tableItems.length === 0 ? (
-                <Table.Row>
-                  <Table.Cell colSpan={5}>
-                    <span className="text-text-muted">{emptyMessage}</span>
-                  </Table.Cell>
-                </Table.Row>
-              ) : (
-                tableItems.map((cat) => (
-                  <Table.Row key={cat.id}>
-                    <Table.Cell>
-                      <span className="text-text-base">{cat.name}</span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-text-muted">{cat.slug}</span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-xs text-text-muted">{new Date(cat.createdAt).toLocaleString()}</span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-xs text-text-muted">{new Date(cat.updatedAt).toLocaleString()}</span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="secondary" onPress={() => openEdit(cat)}>
-                          编辑
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          isDisabled={deletingId === cat.id}
-                          onPress={() => openDelete(cat)}
-                        >
-                          {deletingId === cat.id ? '删除中...' : '删除'}
-                        </Button>
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                ))
-              )}
-            </Table.Body>
-          </Table.Content>
-        </Table.ScrollContainer>
-      </Table>
+      <div className={isPending ? 'opacity-60 pointer-events-none transition-opacity' : 'transition-opacity'}>
+        <Table>
+          <Table.ScrollContainer>
+            <Table.Content aria-label="分类列表">
+              <Table.Header>
+                <Table.Column isRowHeader>名称</Table.Column>
+                <Table.Column>Slug</Table.Column>
+                <Table.Column>创建时间</Table.Column>
+                <Table.Column>更新时间</Table.Column>
+                <Table.Column>操作</Table.Column>
+              </Table.Header>
+              <Table.Body>
+                <Suspense
+                  fallback={
+                    <Table.Row>
+                      <Table.Cell colSpan={5}>
+                        <div className="flex justify-center py-3">
+                          <Spinner color="accent" aria-label="加载中" />
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  }
+                >
+                  <CategoryTableRows
+                    promise={promise}
+                    deletingId={deletingId}
+                    onEdit={openEdit}
+                    onDelete={openDelete}
+                  />
+                </Suspense>
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
+      </div>
 
       <Modal state={createModal}>
         <Modal.Backdrop>

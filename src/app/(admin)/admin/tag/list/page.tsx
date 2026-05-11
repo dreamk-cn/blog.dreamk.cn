@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, use, useMemo, useState, useTransition } from 'react';
 import {
   Button,
   Input,
@@ -17,12 +17,87 @@ import type { Tag } from '@prisma/client';
 import { request } from '@/lib/request';
 import { useDebounce } from '@/hooks/useDebounce';
 
+async function loadTags(kw: string, _nonce: number): Promise<{ data: Tag[]; error: string | null }> {
+  try {
+    const res = await request.get<Tag[]>('/tags', { keyword: kw });
+    if (res.code === 200) return { data: res.data || [], error: null };
+    return { data: [], error: res.message || '获取标签失败' };
+  } catch {
+    return { data: [], error: '获取标签失败' };
+  }
+}
+
+function TagTableRows({
+  promise,
+  deletingId,
+  onEdit,
+  onDelete,
+}: {
+  promise: Promise<{ data: Tag[]; error: string | null }>;
+  deletingId: string | null;
+  onEdit: (tag: Tag) => void;
+  onDelete: (tag: Tag) => void;
+}) {
+  const { data: tags, error } = use(promise);
+
+  if (error) {
+    return (
+      <Table.Row>
+        <Table.Cell colSpan={5}>
+          <span className="text-red-500">{error}</span>
+        </Table.Cell>
+      </Table.Row>
+    );
+  }
+
+  if (tags.length === 0) {
+    return (
+      <Table.Row>
+        <Table.Cell colSpan={5}>
+          <span className="text-text-muted">暂无数据</span>
+        </Table.Cell>
+      </Table.Row>
+    );
+  }
+
+  return tags.map((tag) => (
+    <Table.Row key={tag.id}>
+      <Table.Cell>
+        <span className="text-text-base">{tag.name}</span>
+      </Table.Cell>
+      <Table.Cell>
+        <span className="text-text-muted">{tag.slug}</span>
+      </Table.Cell>
+      <Table.Cell>
+        <span className="text-xs text-text-muted">{new Date(tag.createdAt).toLocaleString()}</span>
+      </Table.Cell>
+      <Table.Cell>
+        <span className="text-xs text-text-muted">{new Date(tag.updatedAt).toLocaleString()}</span>
+      </Table.Cell>
+      <Table.Cell>
+        <div className="flex gap-2">
+          <Button size="sm" variant="secondary" onPress={() => onEdit(tag)}>
+            编辑
+          </Button>
+          <Button
+            size="sm"
+            variant="danger"
+            isDisabled={deletingId === tag.id}
+            onPress={() => onDelete(tag)}
+          >
+            {deletingId === tag.id ? '删除中...' : '删除'}
+          </Button>
+        </div>
+      </Table.Cell>
+    </Table.Row>
+  ));
+}
+
 export default function AdminTagListPage() {
-  const [tags, setTags] = useState<Tag[]>([]);
   const [keyword, setKeyword] = useState('');
   const keywordDebounced = useDebounce(keyword, 300);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isPending, startTransition] = useTransition();
 
   const createModal = useOverlayState();
   const editModal = useOverlayState();
@@ -38,33 +113,16 @@ export default function AdminTagListPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
 
-  // useEffect(() => {
-  //   if (!newTagSlug) {
-  //     setNewTagSlug(newTagName.trim().toLowerCase().replace(/\s+/g, '-'));
-  //   }
-  // }, [newTagName, newTagSlug]);
+  const promise = useMemo(
+    () => loadTags(keywordDebounced.trim(), refreshKey),
+    [keywordDebounced, refreshKey],
+  );
 
-  const fetchTags = async (kw = '') => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await request.get<Tag[]>('/tags', { keyword: kw });
-      if (res.code === 200) {
-        setTags(res.data || []);
-      } else {
-        setError(res.message || '获取标签失败');
-      }
-    } catch (err) {
-      setError('获取标签失败');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const refresh = () => {
+    startTransition(() => {
+      setRefreshKey((k) => k + 1);
+    });
   };
-
-  useEffect(() => {
-    fetchTags(keywordDebounced.trim());
-  }, [keywordDebounced]);
 
   const handleCreateTag = async () => {
     if (!newTagName.trim()) return;
@@ -73,13 +131,13 @@ export default function AdminTagListPage() {
       const res = await request.post<Tag>(
         '/tags',
         { name: newTagName.trim(), slug: newTagSlug.trim() },
-        { showSuccessMessage: true }
+        { showSuccessMessage: true },
       );
       if (res.code === 200) {
         createModal.close();
         setNewTagName('');
         setNewTagSlug('');
-        fetchTags(keyword);
+        refresh();
       } else {
         console.warn(res.message || '创建标签失败');
       }
@@ -105,14 +163,14 @@ export default function AdminTagListPage() {
       const res = await request.put<Tag>(
         '/tags',
         { id: editing.id, name: editName.trim(), slug: editSlug.trim() },
-        { showSuccessMessage: true }
+        { showSuccessMessage: true },
       );
       if (res.code === 200) {
         editModal.close();
         setEditing(null);
         setEditName('');
         setEditSlug('');
-        fetchTags(keyword);
+        refresh();
       }
     } catch (err) {
       console.error('更新标签失败', err);
@@ -134,7 +192,7 @@ export default function AdminTagListPage() {
       if (res.code === 200) {
         deleteModal.close();
         setTagToDelete(null);
-        fetchTags(keyword);
+        refresh();
       }
     } catch (err) {
       console.error('删除标签失败', err);
@@ -142,10 +200,6 @@ export default function AdminTagListPage() {
       setDeletingId(null);
     }
   };
-
-  const tableItems = useMemo(() => tags, [tags]);
-
-  const emptyMessage = error || '暂无数据';
 
   return (
     <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
@@ -166,68 +220,41 @@ export default function AdminTagListPage() {
         </Button>
       </div>
 
-      <Table>
-        <Table.ScrollContainer>
-          <Table.Content aria-label="标签列表">
-            <Table.Header>
-              <Table.Column isRowHeader>名称</Table.Column>
-              <Table.Column>Slug</Table.Column>
-              <Table.Column>创建时间</Table.Column>
-              <Table.Column>更新时间</Table.Column>
-              <Table.Column>操作</Table.Column>
-            </Table.Header>
-            <Table.Body>
-              {loading ? (
-                <Table.Row>
-                  <Table.Cell colSpan={5}>
-                    <div className="flex justify-center py-3">
-                      <Spinner color="accent" aria-label="加载中" />
-                    </div>
-                  </Table.Cell>
-                </Table.Row>
-              ) : tableItems.length === 0 ? (
-                <Table.Row>
-                  <Table.Cell colSpan={5}>
-                    <span className="text-text-muted">{emptyMessage}</span>
-                  </Table.Cell>
-                </Table.Row>
-              ) : (
-                tableItems.map((tag) => (
-                  <Table.Row key={tag.id}>
-                    <Table.Cell>
-                      <span className="text-text-base">{tag.name}</span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-text-muted">{tag.slug}</span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-xs text-text-muted">{new Date(tag.createdAt).toLocaleString()}</span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-xs text-text-muted">{new Date(tag.updatedAt).toLocaleString()}</span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="secondary" onPress={() => openEdit(tag)}>
-                          编辑
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          isDisabled={deletingId === tag.id}
-                          onPress={() => openDelete(tag)}
-                        >
-                          {deletingId === tag.id ? '删除中...' : '删除'}
-                        </Button>
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                ))
-              )}
-            </Table.Body>
-          </Table.Content>
-        </Table.ScrollContainer>
-      </Table>
+      <div className={isPending ? 'opacity-60 pointer-events-none transition-opacity' : 'transition-opacity'}>
+        <Table>
+          <Table.ScrollContainer>
+            <Table.Content aria-label="标签列表">
+              <Table.Header>
+                <Table.Column isRowHeader>名称</Table.Column>
+                <Table.Column>Slug</Table.Column>
+                <Table.Column>创建时间</Table.Column>
+                <Table.Column>更新时间</Table.Column>
+                <Table.Column>操作</Table.Column>
+              </Table.Header>
+              <Table.Body>
+                <Suspense
+                  fallback={
+                    <Table.Row>
+                      <Table.Cell colSpan={5}>
+                        <div className="flex justify-center py-3">
+                          <Spinner color="accent" aria-label="加载中" />
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  }
+                >
+                  <TagTableRows
+                    promise={promise}
+                    deletingId={deletingId}
+                    onEdit={openEdit}
+                    onDelete={openDelete}
+                  />
+                </Suspense>
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
+      </div>
 
       <Modal state={createModal}>
         <Modal.Backdrop>

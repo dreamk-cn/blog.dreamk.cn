@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense, use, useMemo, useState, useTransition } from "react";
 import { StringSelect } from "@/components/admin/string-select";
 import { SearchIcon } from "@/components/icons";
 import { request } from "@/lib/request";
@@ -15,7 +16,6 @@ import {
   TextField,
   useOverlayState,
 } from "@heroui/react";
-import { useEffect, useMemo, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
 
 type LinkStatusOption = LinkStatus | "all";
@@ -28,13 +28,97 @@ const linkStatusOptions: { id: LinkStatusOption; label: string }[] = [
   { id: "HIDDEN", label: "已隐藏" },
 ];
 
+async function loadLinks(
+  kw: string,
+  currentStatus: LinkStatusOption,
+  _nonce: number,
+): Promise<{ data: FriendLink[]; error: string | null }> {
+  try {
+    const res = await request.get<FriendLink[]>("/friend-links", {
+      keyword: kw || undefined,
+      status: currentStatus === "all" ? undefined : currentStatus,
+    });
+    if (res.code === 200) return { data: res.data || [], error: null };
+    return { data: [], error: res.message || "获取友链失败" };
+  } catch {
+    return { data: [], error: "获取友链失败" };
+  }
+}
+
+function FriendLinkTableRows({
+  promise,
+  deletingId,
+  onEdit,
+  onDelete,
+}: {
+  promise: Promise<{ data: FriendLink[]; error: string | null }>;
+  deletingId: string | null;
+  onEdit: (item: FriendLink) => void;
+  onDelete: (item: FriendLink) => void;
+}) {
+  const { data: items, error } = use(promise);
+
+  if (error) {
+    return (
+      <Table.Row>
+        <Table.Cell colSpan={6}>
+          <span className="text-red-500">{error}</span>
+        </Table.Cell>
+      </Table.Row>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <Table.Row>
+        <Table.Cell colSpan={6}>
+          <span className="text-text-muted">暂无数据</span>
+        </Table.Cell>
+      </Table.Row>
+    );
+  }
+
+  return items.map((item) => (
+    <Table.Row key={item.id}>
+      <Table.Cell>
+        <div className="flex flex-col text-text-base">
+          <span>{item.name}</span>
+          <span className="text-xs text-text-muted">{item.email || "-"}</span>
+        </div>
+      </Table.Cell>
+      <Table.Cell>
+        <span className="text-primary">{item.url}</span>
+      </Table.Cell>
+      <Table.Cell className="text-text-base">{item.status}</Table.Cell>
+      <Table.Cell className="text-text-base">{item.sortOrder}</Table.Cell>
+      <Table.Cell>
+        <span className="text-xs text-text-muted">{new Date(item.createdAt).toLocaleString()}</span>
+      </Table.Cell>
+      <Table.Cell>
+        <div className="flex gap-2">
+          <Button size="sm" variant="secondary" onPress={() => onEdit(item)}>
+            编辑
+          </Button>
+          <Button
+            size="sm"
+            variant="danger"
+            isDisabled={deletingId === item.id}
+            onPress={() => onDelete(item)}
+          >
+            {deletingId === item.id ? "删除中..." : "删除"}
+          </Button>
+        </div>
+      </Table.Cell>
+    </Table.Row>
+  ));
+}
+
 export default function AdminFriendLinkListPage() {
-  const [items, setItems] = useState<FriendLink[]>([]);
   const [keyword, setKeyword] = useState("");
   const keywordDebounced = useDebounce(keyword, 300);
   const [status, setStatus] = useState<LinkStatusOption>("all");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [isPending, startTransition] = useTransition();
 
   const createModal = useOverlayState();
   const editModal = useOverlayState();
@@ -62,30 +146,16 @@ export default function AdminFriendLinkListPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<FriendLink | null>(null);
 
-  const fetchLinks = async (kw = "", currentStatus: LinkStatusOption = "all") => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await request.get<FriendLink[]>("/friend-links", {
-        keyword: kw || undefined,
-        status: currentStatus === "all" ? undefined : currentStatus,
-      });
-      if (res.code === 200) {
-        setItems(res.data || []);
-      } else {
-        setError(res.message || "获取友链失败");
-      }
-    } catch (err) {
-      console.error("获取友链失败:", err);
-      setError("获取友链失败");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const promise = useMemo(
+    () => loadLinks(keywordDebounced.trim(), status, refreshKey),
+    [keywordDebounced, status, refreshKey],
+  );
 
-  useEffect(() => {
-    fetchLinks(keywordDebounced.trim(), status);
-  }, [keywordDebounced, status]);
+  const refresh = () => {
+    startTransition(() => {
+      setRefreshKey((k) => k + 1);
+    });
+  };
 
   const resetCreateForm = () => {
     setNewName("");
@@ -117,7 +187,7 @@ export default function AdminFriendLinkListPage() {
       if (res.code === 200) {
         createModal.close();
         resetCreateForm();
-        fetchLinks(keyword, status);
+        refresh();
       }
     } catch (err) {
       console.error("创建友链失败:", err);
@@ -161,7 +231,7 @@ export default function AdminFriendLinkListPage() {
       if (res.code === 200) {
         editModal.close();
         setEditing(null);
-        fetchLinks(keyword, status);
+        refresh();
       }
     } catch (err) {
       console.error("更新友链失败:", err);
@@ -183,7 +253,7 @@ export default function AdminFriendLinkListPage() {
       if (res.code === 200) {
         deleteModal.close();
         setItemToDelete(null);
-        fetchLinks(keyword, status);
+        refresh();
       }
     } catch (err) {
       console.error("删除友链失败:", err);
@@ -191,9 +261,6 @@ export default function AdminFriendLinkListPage() {
       setDeletingId(null);
     }
   };
-
-  const tableItems = useMemo(() => items, [items]);
-  const emptyMessage = error || "暂无数据";
 
   return (
     <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
@@ -225,71 +292,42 @@ export default function AdminFriendLinkListPage() {
         </Button>
       </div>
 
-      <Table>
-        <Table.ScrollContainer>
-          <Table.Content aria-label="友链列表">
-            <Table.Header>
-              <Table.Column isRowHeader>站点</Table.Column>
-              <Table.Column>URL</Table.Column>
-              <Table.Column>状态</Table.Column>
-              <Table.Column>排序</Table.Column>
-              <Table.Column>创建时间</Table.Column>
-              <Table.Column>操作</Table.Column>
-            </Table.Header>
-            <Table.Body>
-              {loading ? (
-                <Table.Row>
-                  <Table.Cell colSpan={6}>
-                    <div className="flex justify-center py-3">
-                      <Spinner color="accent" aria-label="加载中" />
-                    </div>
-                  </Table.Cell>
-                </Table.Row>
-              ) : tableItems.length === 0 ? (
-                <Table.Row>
-                  <Table.Cell colSpan={6}>
-                    <span className="text-text-muted">{emptyMessage}</span>
-                  </Table.Cell>
-                </Table.Row>
-              ) : (
-                tableItems.map((item) => (
-                  <Table.Row key={item.id}>
-                    <Table.Cell>
-                      <div className="flex flex-col text-text-base">
-                        <span>{item.name}</span>
-                        <span className="text-xs text-text-muted">{item.email || "-"}</span>
-                      </div>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className="text-primary">{item.url}</span>
-                    </Table.Cell>
-                    <Table.Cell className="text-text-base">{item.status}</Table.Cell>
-                    <Table.Cell className="text-text-base">{item.sortOrder}</Table.Cell>
-                    <Table.Cell>
-                      <span className="text-xs text-text-muted">{new Date(item.createdAt).toLocaleString()}</span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="secondary" onPress={() => openEdit(item)}>
-                          编辑
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          isDisabled={deletingId === item.id}
-                          onPress={() => openDelete(item)}
-                        >
-                          {deletingId === item.id ? "删除中..." : "删除"}
-                        </Button>
-                      </div>
-                    </Table.Cell>
-                  </Table.Row>
-                ))
-              )}
-            </Table.Body>
-          </Table.Content>
-        </Table.ScrollContainer>
-      </Table>
+      <div className={isPending ? "opacity-60 pointer-events-none transition-opacity" : "transition-opacity"}>
+        <Table>
+          <Table.ScrollContainer>
+            <Table.Content aria-label="友链列表">
+              <Table.Header>
+                <Table.Column isRowHeader>站点</Table.Column>
+                <Table.Column>URL</Table.Column>
+                <Table.Column>状态</Table.Column>
+                <Table.Column>排序</Table.Column>
+                <Table.Column>创建时间</Table.Column>
+                <Table.Column>操作</Table.Column>
+              </Table.Header>
+              <Table.Body>
+                <Suspense
+                  fallback={
+                    <Table.Row>
+                      <Table.Cell colSpan={6}>
+                        <div className="flex justify-center py-3">
+                          <Spinner color="accent" aria-label="加载中" />
+                        </div>
+                      </Table.Cell>
+                    </Table.Row>
+                  }
+                >
+                  <FriendLinkTableRows
+                    promise={promise}
+                    deletingId={deletingId}
+                    onEdit={openEdit}
+                    onDelete={openDelete}
+                  />
+                </Suspense>
+              </Table.Body>
+            </Table.Content>
+          </Table.ScrollContainer>
+        </Table>
+      </div>
 
       <Modal state={createModal}>
         <Modal.Backdrop>
