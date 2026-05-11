@@ -97,6 +97,13 @@ export function PostForm({
   const [generatingExcerpt, setGeneratingExcerpt] = useState(false);
   const [generatingSlug, setGeneratingSlug] = useState(false);
 
+  function updateField<K extends keyof typeof formData>(key: K, value: (typeof formData)[K]) {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+    if (key === "title" || key === "slug" || key === "content" || key === "excerpt") {
+      setErrors((prev) => ({ ...prev, [key]: undefined }));
+    }
+  }
+
   async function handleGenerateSlug() {
     if (!formData.title.trim()) {
       setErrors((prev) => ({ ...prev, title: "请先填写文章标题" }));
@@ -254,7 +261,7 @@ export function PostForm({
               <Input
                 className="text-text-base"
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) => updateField('title', e.target.value)}
               />
               {errors.title ? <FieldError>{errors.title}</FieldError> : null}
             </TextField>
@@ -265,7 +272,7 @@ export function PostForm({
                 <Input
                   className="text-text-base flex-1"
                   value={formData.slug}
-                  onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                  onChange={(e) => updateField('slug', e.target.value)}
                 />
                 <Button
                   type="button"
@@ -313,7 +320,7 @@ export function PostForm({
                 className="text-text-base"
                 rows={2}
                 value={formData.excerpt}
-                onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
+                onChange={(e) => updateField('excerpt', e.target.value)}
               />
               <div className="mt-2 flex justify-end">
                 <Button
@@ -347,7 +354,7 @@ export function PostForm({
                 className="text-text-base"
                 rows={10}
                 value={formData.content}
-                onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
+                onChange={(e) => updateField('content', e.target.value)}
               />
               {errors.content ? <FieldError>{errors.content}</FieldError> : null}
             </TextField>
