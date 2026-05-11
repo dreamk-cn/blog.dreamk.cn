@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, use, useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Button, InputGroup, Table, TextField, Label, Modal, Spinner, useOverlayState } from "@heroui/react";
 import { SearchIcon } from "@/components/icons";
@@ -9,7 +9,7 @@ import { request } from "@/lib/request";
 import { StringSelect } from "@/components/admin/string-select";
 import { useDebounce } from "@/hooks/useDebounce";
 
-async function loadUsers(kw: string, status: string | undefined, _nonce: number): Promise<{ data: User[]; error: string | null }> {
+async function loadUsers(kw: string, status: string | undefined): Promise<{ data: User[]; error: string | null }> {
   try {
     const res = await request.get<User[]>("/users", { keyword: kw, status });
     if (res.code === 200) return { data: res.data || [], error: null };
@@ -20,17 +20,31 @@ async function loadUsers(kw: string, status: string | undefined, _nonce: number)
 }
 
 function UserTableRows({
-  promise,
+  users,
+  error,
+  loading,
   updatingId,
   onBan,
   onUnban,
 }: {
-  promise: Promise<{ data: User[]; error: string | null }>;
+  users: User[];
+  error: string | null;
+  loading: boolean;
   updatingId: string | null;
   onBan: (user: User) => void;
   onUnban: (user: User) => void;
 }) {
-  const { data: users, error } = use(promise);
+  if (loading) {
+    return (
+      <Table.Row>
+        <Table.Cell colSpan={6}>
+          <div className="flex justify-center py-3">
+            <Spinner color="accent" aria-label="加载中" />
+          </div>
+        </Table.Cell>
+      </Table.Row>
+    );
+  }
 
   if (error) {
     return (
@@ -109,10 +123,25 @@ export default function AdminUserListPage() {
   const [userToBan, setUserToBan] = useState<User | null>(null);
   const banConfirmModal = useOverlayState();
 
-  const promise = useMemo(
-    () => loadUsers(keywordDebounced.trim(), statusFilter, refreshKey),
-    [keywordDebounced, statusFilter, refreshKey],
-  );
+  const [listUsers, setListUsers] = useState<User[]>([]);
+  const [listError, setListError] = useState<string | null>(null);
+  const [listLoading, setListLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      if (cancelled) return;
+      setListLoading(true);
+      const result = await loadUsers(keywordDebounced.trim(), statusFilter);
+      if (cancelled) return;
+      setListUsers(result.data);
+      setListError(result.error);
+      setListLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [keywordDebounced, statusFilter, refreshKey]);
 
   const refresh = () => {
     startTransition(() => {
@@ -210,24 +239,14 @@ export default function AdminUserListPage() {
                 <Table.Column>操作</Table.Column>
               </Table.Header>
               <Table.Body>
-                <Suspense
-                  fallback={
-                    <Table.Row>
-                      <Table.Cell colSpan={6}>
-                        <div className="flex justify-center py-3">
-                          <Spinner color="accent" aria-label="加载中" />
-                        </div>
-                      </Table.Cell>
-                    </Table.Row>
-                  }
-                >
-                  <UserTableRows
-                    promise={promise}
-                    updatingId={updatingId}
-                    onBan={openBanConfirm}
-                    onUnban={(u) => handleBanToggle(u, "VALID")}
-                  />
-                </Suspense>
+                <UserTableRows
+                  users={listUsers}
+                  error={listError}
+                  loading={listLoading}
+                  updatingId={updatingId}
+                  onBan={openBanConfirm}
+                  onUnban={(u) => handleBanToggle(u, "VALID")}
+                />
               </Table.Body>
             </Table.Content>
           </Table.ScrollContainer>

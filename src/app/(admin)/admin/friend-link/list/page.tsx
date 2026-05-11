@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, use, useMemo, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { StringSelect } from "@/components/admin/string-select";
 import { SearchIcon } from "@/components/icons";
@@ -32,7 +32,6 @@ const linkStatusOptions: { id: LinkStatusOption; label: string }[] = [
 async function loadLinks(
   kw: string,
   currentStatus: LinkStatusOption,
-  _nonce: number,
 ): Promise<{ data: FriendLink[]; error: string | null }> {
   try {
     const res = await request.get<FriendLink[]>("/friend-links", {
@@ -47,17 +46,31 @@ async function loadLinks(
 }
 
 function FriendLinkTableRows({
-  promise,
+  items,
+  error,
+  loading,
   deletingId,
   onEdit,
   onDelete,
 }: {
-  promise: Promise<{ data: FriendLink[]; error: string | null }>;
+  items: FriendLink[];
+  error: string | null;
+  loading: boolean;
   deletingId: string | null;
   onEdit: (item: FriendLink) => void;
   onDelete: (item: FriendLink) => void;
 }) {
-  const { data: items, error } = use(promise);
+  if (loading) {
+    return (
+      <Table.Row>
+        <Table.Cell colSpan={6}>
+          <div className="flex justify-center py-3">
+            <Spinner color="accent" aria-label="加载中" />
+          </div>
+        </Table.Cell>
+      </Table.Row>
+    );
+  }
 
   if (error) {
     return (
@@ -149,10 +162,25 @@ export default function AdminFriendLinkListPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<FriendLink | null>(null);
 
-  const promise = useMemo(
-    () => loadLinks(keywordDebounced.trim(), status, refreshKey),
-    [keywordDebounced, status, refreshKey],
-  );
+  const [listItems, setListItems] = useState<FriendLink[]>([]);
+  const [listError, setListError] = useState<string | null>(null);
+  const [listLoading, setListLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      if (cancelled) return;
+      setListLoading(true);
+      const result = await loadLinks(keywordDebounced.trim(), status);
+      if (cancelled) return;
+      setListItems(result.data);
+      setListError(result.error);
+      setListLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [keywordDebounced, status, refreshKey]);
 
   const refresh = () => {
     startTransition(() => {
@@ -319,24 +347,14 @@ export default function AdminFriendLinkListPage() {
                 <Table.Column>操作</Table.Column>
               </Table.Header>
               <Table.Body>
-                <Suspense
-                  fallback={
-                    <Table.Row>
-                      <Table.Cell colSpan={6}>
-                        <div className="flex justify-center py-3">
-                          <Spinner color="accent" aria-label="加载中" />
-                        </div>
-                      </Table.Cell>
-                    </Table.Row>
-                  }
-                >
-                  <FriendLinkTableRows
-                    promise={promise}
-                    deletingId={deletingId}
-                    onEdit={openEdit}
-                    onDelete={openDelete}
-                  />
-                </Suspense>
+                <FriendLinkTableRows
+                  items={listItems}
+                  error={listError}
+                  loading={listLoading}
+                  deletingId={deletingId}
+                  onEdit={openEdit}
+                  onDelete={openDelete}
+                />
               </Table.Body>
             </Table.Content>
           </Table.ScrollContainer>

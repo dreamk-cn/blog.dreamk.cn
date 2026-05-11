@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, use, useMemo, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Button,
@@ -18,7 +18,7 @@ import type { Tag } from '@prisma/client';
 import { request } from '@/lib/request';
 import { useDebounce } from '@/hooks/useDebounce';
 
-async function loadTags(kw: string, _nonce: number): Promise<{ data: Tag[]; error: string | null }> {
+async function loadTags(kw: string): Promise<{ data: Tag[]; error: string | null }> {
   try {
     const res = await request.get<Tag[]>('/tags', { keyword: kw });
     if (res.code === 200) return { data: res.data || [], error: null };
@@ -29,17 +29,31 @@ async function loadTags(kw: string, _nonce: number): Promise<{ data: Tag[]; erro
 }
 
 function TagTableRows({
-  promise,
+  tags,
+  error,
+  loading,
   deletingId,
   onEdit,
   onDelete,
 }: {
-  promise: Promise<{ data: Tag[]; error: string | null }>;
+  tags: Tag[];
+  error: string | null;
+  loading: boolean;
   deletingId: string | null;
   onEdit: (tag: Tag) => void;
   onDelete: (tag: Tag) => void;
 }) {
-  const { data: tags, error } = use(promise);
+  if (loading) {
+    return (
+      <Table.Row>
+        <Table.Cell colSpan={5}>
+          <div className="flex justify-center py-3">
+            <Spinner color="accent" aria-label="加载中" />
+          </div>
+        </Table.Cell>
+      </Table.Row>
+    );
+  }
 
   if (error) {
     return (
@@ -116,10 +130,25 @@ export default function AdminTagListPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [tagToDelete, setTagToDelete] = useState<Tag | null>(null);
 
-  const promise = useMemo(
-    () => loadTags(keywordDebounced.trim(), refreshKey),
-    [keywordDebounced, refreshKey],
-  );
+  const [listTags, setListTags] = useState<Tag[]>([]);
+  const [listError, setListError] = useState<string | null>(null);
+  const [listLoading, setListLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      if (cancelled) return;
+      setListLoading(true);
+      const result = await loadTags(keywordDebounced.trim());
+      if (cancelled) return;
+      setListTags(result.data);
+      setListError(result.error);
+      setListLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [keywordDebounced, refreshKey]);
 
   const refresh = () => {
     startTransition(() => {
@@ -247,24 +276,14 @@ export default function AdminTagListPage() {
                 <Table.Column>操作</Table.Column>
               </Table.Header>
               <Table.Body>
-                <Suspense
-                  fallback={
-                    <Table.Row>
-                      <Table.Cell colSpan={5}>
-                        <div className="flex justify-center py-3">
-                          <Spinner color="accent" aria-label="加载中" />
-                        </div>
-                      </Table.Cell>
-                    </Table.Row>
-                  }
-                >
-                  <TagTableRows
-                    promise={promise}
-                    deletingId={deletingId}
-                    onEdit={openEdit}
-                    onDelete={openDelete}
-                  />
-                </Suspense>
+                <TagTableRows
+                  tags={listTags}
+                  error={listError}
+                  loading={listLoading}
+                  deletingId={deletingId}
+                  onEdit={openEdit}
+                  onDelete={openDelete}
+                />
               </Table.Body>
             </Table.Content>
           </Table.ScrollContainer>

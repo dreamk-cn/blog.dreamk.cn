@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, use, useMemo, useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Button,
@@ -18,7 +18,7 @@ import type { Category } from '@prisma/client';
 import { request } from '@/lib/request';
 import { useDebounce } from '@/hooks/useDebounce';
 
-async function loadCategories(kw: string, _nonce: number): Promise<{ data: Category[]; error: string | null }> {
+async function loadCategories(kw: string): Promise<{ data: Category[]; error: string | null }> {
   try {
     const res = await request.get<Category[]>('/categories', { keyword: kw });
     if (res.code === 200) return { data: res.data || [], error: null };
@@ -29,17 +29,31 @@ async function loadCategories(kw: string, _nonce: number): Promise<{ data: Categ
 }
 
 function CategoryTableRows({
-  promise,
+  categories,
+  error,
+  loading,
   deletingId,
   onEdit,
   onDelete,
 }: {
-  promise: Promise<{ data: Category[]; error: string | null }>;
+  categories: Category[];
+  error: string | null;
+  loading: boolean;
   deletingId: string | null;
   onEdit: (cat: Category) => void;
   onDelete: (cat: Category) => void;
 }) {
-  const { data: categories, error } = use(promise);
+  if (loading) {
+    return (
+      <Table.Row>
+        <Table.Cell colSpan={5}>
+          <div className="flex justify-center py-3">
+            <Spinner color="accent" aria-label="加载中" />
+          </div>
+        </Table.Cell>
+      </Table.Row>
+    );
+  }
 
   if (error) {
     return (
@@ -116,10 +130,25 @@ export default function AdminCategoryListPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
 
-  const promise = useMemo(
-    () => loadCategories(keywordDebounced.trim(), refreshKey),
-    [keywordDebounced, refreshKey],
-  );
+  const [listCategories, setListCategories] = useState<Category[]>([]);
+  const [listError, setListError] = useState<string | null>(null);
+  const [listLoading, setListLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      if (cancelled) return;
+      setListLoading(true);
+      const result = await loadCategories(keywordDebounced.trim());
+      if (cancelled) return;
+      setListCategories(result.data);
+      setListError(result.error);
+      setListLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [keywordDebounced, refreshKey]);
 
   const refresh = () => {
     startTransition(() => {
@@ -245,24 +274,14 @@ export default function AdminCategoryListPage() {
                 <Table.Column>操作</Table.Column>
               </Table.Header>
               <Table.Body>
-                <Suspense
-                  fallback={
-                    <Table.Row>
-                      <Table.Cell colSpan={5}>
-                        <div className="flex justify-center py-3">
-                          <Spinner color="accent" aria-label="加载中" />
-                        </div>
-                      </Table.Cell>
-                    </Table.Row>
-                  }
-                >
-                  <CategoryTableRows
-                    promise={promise}
-                    deletingId={deletingId}
-                    onEdit={openEdit}
-                    onDelete={openDelete}
-                  />
-                </Suspense>
+                <CategoryTableRows
+                  categories={listCategories}
+                  error={listError}
+                  loading={listLoading}
+                  deletingId={deletingId}
+                  onEdit={openEdit}
+                  onDelete={openDelete}
+                />
               </Table.Body>
             </Table.Content>
           </Table.ScrollContainer>
