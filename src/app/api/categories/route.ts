@@ -1,5 +1,5 @@
-import { fail, internalError, ok, zodFail } from '@/libs/api-response';
-import { requireAdmin } from '@/libs/route-auth';
+import { fail, internalError, ok, zodFail } from '@/lib/api-response';
+import { requireAdmin } from '@/lib/route-auth';
 import { CategoryCreateSchema, CategoryUpdateSchema, CategoryDeleteSchema } from '@/schemas/category';
 import { createCategory, deleteCategory, listCategories, updateCategory } from '@/services/category-service';
 import z from 'zod';

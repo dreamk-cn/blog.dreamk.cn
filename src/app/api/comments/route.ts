@@ -1,6 +1,6 @@
 import { ResponseCode } from "@/config/response-code";
-import { fail, internalError, ok, zodFail } from "@/libs/api-response";
-import { requireAdmin } from "@/libs/route-auth";
+import { fail, internalError, ok, zodFail } from "@/lib/api-response";
+import { requireAdmin } from "@/lib/route-auth";
 import {
   CommentAdminListSchema,
   CommentDeleteSchema,

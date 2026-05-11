@@ -1,8 +1,8 @@
 // /api/post
 import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
-import { fail, internalError, ok, zodFail } from "@/libs/api-response";
-import { requireAdmin } from "@/libs/route-auth";
+import { fail, internalError, ok, zodFail } from "@/lib/api-response";
+import { requireAdmin } from "@/lib/route-auth";
 import { PostCreateSchema, PostDeleteSchema, PostDetailSchema, PostUpdateSchema } from "@/schemas/post";
 import { createPost, deletePosts, getPostDetail, updatePost } from "@/services/post-service";
 import { NextRequest } from "next/server";

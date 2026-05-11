@@ -1,5 +1,5 @@
 import { auth } from "@/auth";
-import { forbidden, unauthorized } from "@/libs/api-response";
+import { forbidden, unauthorized } from "@/lib/api-response";
 
 export async function requireAdmin() {
   const session = await auth();

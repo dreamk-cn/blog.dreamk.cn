@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@/libs/prisma";
-import { internalError, ok, zodFail } from "@/libs/api-response";
+import { prisma } from "@/lib/prisma";
+import { internalError, ok, zodFail } from "@/lib/api-response";
 import z from "zod";
 
 const ViewSchema = z.object({

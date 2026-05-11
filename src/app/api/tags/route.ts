@@ -1,5 +1,5 @@
-import { fail, internalError, ok, zodFail } from '@/libs/api-response';
-import { requireAdmin } from '@/libs/route-auth';
+import { fail, internalError, ok, zodFail } from '@/lib/api-response';
+import { requireAdmin } from '@/lib/route-auth';
 import { TagCreateSchema, TagUpdateSchema, TagDeleteSchema } from '@/schemas/tag';
 import { createTag, deleteTag, listTags, updateTag } from '@/services/tag-service';
 import z from 'zod';

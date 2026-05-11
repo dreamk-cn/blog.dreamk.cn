@@ -14,7 +14,7 @@ import {
 } from '@heroui/react';
 import { SearchIcon } from '@/components/icons';
 import type { Tag } from '@prisma/client';
-import { request } from '@/libs/request';
+import { request } from '@/lib/request';
 import { useDebounce } from '@/hooks/useDebounce';
 
 export default function AdminTagListPage() {

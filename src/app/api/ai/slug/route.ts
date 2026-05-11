@@ -1,6 +1,6 @@
-import { internalError, ok, zodFail } from "@/libs/api-response";
-import { getDeepseekClient } from "@/libs/ai-client";
-import { requireAdmin } from "@/libs/route-auth";
+import { internalError, ok, zodFail } from "@/lib/api-response";
+import { getDeepseekClient } from "@/lib/ai-client";
+import { requireAdmin } from "@/lib/route-auth";
 import { NextRequest } from "next/server";
 import z from "zod";
 

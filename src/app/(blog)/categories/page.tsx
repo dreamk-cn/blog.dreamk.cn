@@ -1,7 +1,7 @@
 import NextLink from "next/link";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 import { contentConfig } from "@/config/content";
-import { prisma } from "@/libs/prisma";
+import { prisma } from "@/lib/prisma";
 
 type CategoryWithPostCount = {
   id: string;

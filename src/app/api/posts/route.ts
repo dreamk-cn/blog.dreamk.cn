@@ -1,5 +1,5 @@
 import { auth } from '@/auth';
-import { internalError, ok, zodFail } from '@/libs/api-response';
+import { internalError, ok, zodFail } from '@/lib/api-response';
 import { PostListSchema } from '@/schemas/post';
 import { listPosts } from '@/services/post-service';
 import { NextRequest } from 'next/server'

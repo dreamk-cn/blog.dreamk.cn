@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 import { contentConfig } from "@/config/content";
-import { prisma } from "@/libs/prisma";
+import { prisma } from "@/lib/prisma";
 
 type PostTagInput = { id?: string; name?: string; slug?: string };
 

@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import { prisma } from "@/libs/prisma";
+import { prisma } from "@/lib/prisma";
 
 function normalizeSlug(name: string, slug?: string) {
   return (slug || name).toLowerCase().replace(/\s+/g, "-");

@@ -1,8 +1,8 @@
-import { fail, internalError, ok, zodFail } from '@/libs/api-response'
+import { fail, internalError, ok, zodFail } from '@/lib/api-response'
 import { NextRequest } from 'next/server'
 import z from 'zod'
 import { UserUpdateStatusSchema, UserListQuerySchema } from '@/schemas/user'
-import { requireAdmin } from '@/libs/route-auth'
+import { requireAdmin } from '@/lib/route-auth'
 import { listUsers, updateUserStatus } from '@/services/user-service'
 
 // 获取用户列表（支持keyword、status筛选）

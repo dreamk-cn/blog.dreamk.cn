@@ -7,7 +7,7 @@ import { MobilePostToc, PostViewTracker } from "@/components/post/mobile-post-to
 import { PostTocActiveProvider } from "@/components/post/post-toc-active-context";
 import { PostTableOfContents } from "@/components/post/post-table-of-contents";
 import { estimateArticleCharCount, extractMarkdownToc } from "@/lib/markdown-toc";
-import { prisma } from "@/libs/prisma";
+import { prisma } from "@/lib/prisma";
 import { countApprovedCommentsByPostSlug, listApprovedCommentsBySlug } from "@/services/comment-service";
 
 const POST_COMMENT_ROOT_PAGE_SIZE = 20;

@@ -2,7 +2,7 @@ import { PostCard } from "@/components/post/post-card";
 import { ProfileSidebar } from "@/components/layouts/blog/profile-sidebar";
 import { HotPosts } from "@/components/post/hot-posts";
 import { contentConfig } from "@/config/content";
-import { prisma } from "@/libs/prisma";
+import { prisma } from "@/lib/prisma";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 import NextLink from "next/link";
 

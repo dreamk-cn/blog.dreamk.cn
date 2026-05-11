@@ -1,5 +1,5 @@
 import { Prisma, UserStatus } from "@prisma/client";
-import { prisma } from "@/libs/prisma";
+import { prisma } from "@/lib/prisma";
 
 export async function listUsers(params: { keyword?: string; status?: UserStatus }) {
   const keyword = params.keyword ?? "";

@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
-import { fail, internalError, ok, zodFail } from "@/libs/api-response";
+import { fail, internalError, ok, zodFail } from "@/lib/api-response";
 import { CommentCreateSchema, CommentListSchema, CommentReplyListSchema, CommentSelfDeleteSchema } from "@/schemas/comment";
 import {
   createComment,

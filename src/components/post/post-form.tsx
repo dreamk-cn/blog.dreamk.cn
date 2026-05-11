@@ -3,7 +3,7 @@
 import { toast, Button, Card, Chip, Description, FieldError, Form, Input, Label, Switch, TextArea, TextField } from "@heroui/react";
 import { Category, Post, PostStatus, Tag } from "@prisma/client";
 import { useState } from "react";
-import { request } from '@/libs/request';
+import { request } from '@/lib/request';
 import { useRouter } from 'next/navigation';
 import { StringSelect } from '@/components/admin/string-select';
 

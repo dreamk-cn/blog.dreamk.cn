@@ -1,7 +1,7 @@
-import { prisma } from "@/libs/prisma";
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { isEmail, isStrongPassword } from "@/utils/verify";
-import { fail, internalError, ok } from "@/libs/api-response";
+import { fail, internalError, ok } from "@/lib/api-response";
 
 export async function POST(request: Request) {
   try {

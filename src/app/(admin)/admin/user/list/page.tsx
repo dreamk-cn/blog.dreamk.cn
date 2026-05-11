@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button, InputGroup, Table, TextField, Label, Modal, Spinner, useOverlayState } from "@heroui/react";
 import { SearchIcon } from "@/components/icons";
 import type { User } from "@prisma/client";
-import { request } from "@/libs/request";
+import { request } from "@/lib/request";
 import { StringSelect } from "@/components/admin/string-select";
 import { useDebounce } from "@/hooks/useDebounce";
 

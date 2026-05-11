@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { request } from '@/libs/request';
+import { request } from '@/lib/request';
 import type { Post, Category, Tag } from '@prisma/client';
 import {
   Alert,

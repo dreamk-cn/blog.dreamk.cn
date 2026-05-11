@@ -1,4 +1,4 @@
-import { prisma } from "@/libs/prisma";
+import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 
 type LinkStatus = "PENDING" | "APPROVED" | "REJECTED" | "HIDDEN";

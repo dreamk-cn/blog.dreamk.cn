@@ -4,7 +4,7 @@ import { ArticleMarkdown } from "@/components/post/article-markdown";
 import { PostComments } from "@/components/post/post-comments";
 import { contentConfig } from "@/config/content";
 import { siteConfig } from "@/config/site";
-import { prisma } from "@/libs/prisma";
+import { prisma } from "@/lib/prisma";
 import { countApprovedCommentsByPostSlug, listApprovedCommentsBySlug } from "@/services/comment-service";
 
 const ABOUT_SLUG = contentConfig.pageSlugs.about;

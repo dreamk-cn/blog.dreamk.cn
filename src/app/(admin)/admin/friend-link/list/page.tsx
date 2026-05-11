@@ -2,7 +2,7 @@
 
 import { StringSelect } from "@/components/admin/string-select";
 import { SearchIcon } from "@/components/icons";
-import { request } from "@/libs/request";
+import { request } from "@/lib/request";
 import type { FriendLink, LinkStatus } from "@prisma/client";
 import {
   Button,

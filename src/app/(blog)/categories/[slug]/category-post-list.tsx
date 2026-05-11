@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PostCard } from "@/components/post/post-card";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 import { contentConfig } from "@/config/content";
-import { prisma } from "@/libs/prisma";
+import { prisma } from "@/lib/prisma";
 
 const PAGE_SIZE = 10;
 

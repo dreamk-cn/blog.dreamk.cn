@@ -3,7 +3,7 @@
 import { PostForm } from "@/components/post/post-form";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { request } from "@/libs/request";
+import { request } from "@/lib/request";
 import type { Post, Category, Tag } from "@prisma/client";
 
 export default function Post() {
