@@ -77,7 +77,7 @@ const mdBase: Components = {
     }
     return (
       <code
-        className={`rounded-md bg-default-100 px-1.5 py-0.5 font-mono text-[13px] text-primary dark:text-primary ${cls}`}
+        className={`rounded-md bg-foreground px-1.5 py-0.5 font-mono text-[13px] text-primary dark:text-primary ${cls}`}
         {...props}
       >
         {children}
@@ -177,7 +177,7 @@ export function ArticleMarkdown({ content }: { content: string }) {
 
   const merged: Components = {
     ...mdBase,
-    h2: attach("h2", "mt-12 scroll-mt-28 border-b border-default-200/80 pb-2 text-2xl font-bold tracking-tight text-text-base"),
+    h2: attach("h2", "mt-12 scroll-mt-28 pb-2 text-2xl font-bold tracking-tight text-text-base"),
     h3: attach("h3", "mt-10 scroll-mt-28 text-xl font-semibold tracking-tight text-text-base"),
     h4: attach("h4", "mt-8 scroll-mt-28 text-lg font-semibold text-text-base"),
     h5: attach("h5", "mt-6 scroll-mt-28 text-base font-semibold text-text-base"),
