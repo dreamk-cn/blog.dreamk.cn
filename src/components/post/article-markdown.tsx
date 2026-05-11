@@ -2,11 +2,29 @@
 
 import type { ComponentProps } from "react";
 import type { Components } from "react-markdown";
-import ReactMarkdown from "react-markdown";
+import { useMemo } from "react";
+import ReactMarkdown, { MarkdownHooks } from "react-markdown";
+import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
 const mdLink = "text-primary font-medium hover:underline underline-offset-2";
+
+const prettyCodeOptions = {
+  theme: {
+    light: "github-light",
+    dark: "github-dark-dimmed",
+  },
+  keepBackground: true,
+  bypassInlineCode: true,
+  defaultLang: "plaintext",
+} as const;
+
+function stringifyClassName(className: string | string[] | undefined): string {
+  if (typeof className === "string") return className;
+  if (Array.isArray(className)) return className.filter(Boolean).join(" ");
+  return "";
+}
 
 const mdBase: Components = {
   h1: ({ children, className, ...props }) => (
@@ -48,7 +66,8 @@ const mdBase: Components = {
     </a>
   ),
   code: ({ className, children, ...props }) => {
-    const isBlock = typeof className === "string" && className.includes("language-");
+    const cls = stringifyClassName(className);
+    const isBlock = cls.includes("language-");
     if (isBlock) {
       return (
         <code className={className} {...props}>
@@ -58,20 +77,49 @@ const mdBase: Components = {
     }
     return (
       <code
-        className={`rounded-md bg-default-100 px-1.5 py-0.5 font-mono text-[13px] text-primary dark:text-primary ${className ?? ""}`}
+        className={`rounded-md bg-default-100 px-1.5 py-0.5 font-mono text-[13px] text-primary dark:text-primary ${cls}`}
         {...props}
       >
         {children}
       </code>
     );
   },
-  pre: ({ children, className, ...props }) => (
-    <pre
-      className={`my-6 overflow-x-auto rounded-xl border border-default-200/80 bg-default-100/80 p-4 text-[13px] leading-6 dark:bg-default-50/10 ${className ?? ""}`}
+  pre: ({ children, className, ...props }) => {
+    const cls = stringifyClassName(className);
+    const p = props as { dataLanguage?: string };
+    /* rehype-pretty-code strips the `shiki` class from `pre`; rely on injected data-language */
+    const isPrettyBlock = typeof p.dataLanguage === "string";
+    if (isPrettyBlock) {
+      return (
+        <pre className={`m-0 overflow-x-auto rounded-none border-0 bg-transparent p-0 text-[13px] leading-6 ${cls}`} {...props}>
+          {children}
+        </pre>
+      );
+    }
+    return (
+      <pre
+        className={`overflow-x-auto rounded-xl border border-default-200/80 bg-default-100/80 p-4 text-[13px] leading-6 dark:bg-default-50/10 ${cls}`}
+        {...props}
+      >
+        {children}
+      </pre>
+    );
+  },
+  figure: ({ children, className, ...props }) => (
+    <figure
+      className={`my-6 overflow-hidden rounded-xl border border-default-200/80 dark:border-default-100/15 ${className ?? ""}`}
       {...props}
     >
       {children}
-    </pre>
+    </figure>
+  ),
+  figcaption: ({ children, className, ...props }) => (
+    <figcaption
+      className={`border-b border-default-200/80 bg-default-100/70 px-4 py-2 text-left text-xs font-medium text-default-600 dark:border-default-100/15 dark:bg-default-100/20 dark:text-default-400 ${className ?? ""}`}
+      {...props}
+    >
+      {children}
+    </figcaption>
   ),
   hr: ({ className, ...props }) => <hr className={`my-10 border-default-200/80 ${className ?? ""}`} {...props} />,
   table: ({ children, className, ...props }) => (
@@ -136,11 +184,29 @@ export function ArticleMarkdown({ content }: { content: string }) {
     h6: attach("h6", "mt-6 scroll-mt-28 text-sm font-semibold text-text-muted"),
   };
 
+  const body = content || "暂无正文内容";
+
+  const rehypeWithPretty = useMemo(
+    () => [rehypeSlug, [rehypePrettyCode, prettyCodeOptions] as [typeof rehypePrettyCode, typeof prettyCodeOptions]],
+    [],
+  );
+  const rehypeSlugOnly = useMemo(() => [rehypeSlug], []);
+  const remark = useMemo(() => [remarkGfm], []);
+
   return (
     <div className="article-md">
-      <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug]} components={merged}>
-        {content || "暂无正文内容"}
-      </ReactMarkdown>
+      <MarkdownHooks
+        remarkPlugins={remark}
+        rehypePlugins={rehypeWithPretty}
+        components={merged}
+        fallback={
+          <ReactMarkdown remarkPlugins={remark} rehypePlugins={rehypeSlugOnly} components={merged}>
+            {body}
+          </ReactMarkdown>
+        }
+      >
+        {body}
+      </MarkdownHooks>
     </div>
   );
 }

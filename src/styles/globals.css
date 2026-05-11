@@ -81,3 +81,34 @@ body {
   50% { background-position: 0 5%; }
   100% { background-position: 100% 10%; }
 }
+
+/* rehype-pretty-code + Shiki dual themes (align with next-themes `.dark`, not only prefers-color-scheme) */
+.article-md code[data-theme*=" "],
+.article-md code[data-theme*=" "] span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+
+.dark .article-md code[data-theme*=" "],
+.dark .article-md code[data-theme*=" "] span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+
+.article-md pre[data-theme*=" "] {
+  background-color: var(--shiki-light-bg);
+}
+
+.dark .article-md pre[data-theme*=" "] {
+  background-color: var(--shiki-dark-bg);
+}
+
+/* Grid lines + horizontal scroll (rehype-pretty-code default layout) */
+.article-md [data-rehype-pretty-code-figure] pre {
+  overflow-x: auto;
+  padding: 1rem 0;
+}
+
+.article-md [data-rehype-pretty-code-figure] pre [data-line] {
+  padding: 0 1rem;
+}
