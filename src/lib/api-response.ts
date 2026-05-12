@@ -21,7 +21,7 @@ export function zodFail(message = "参数错误") {
   return fail(ResponseCode.FAIL, message);
 }
 
-export function unauthorized(message = "请登录后在操作") {
+export function unauthorized(message = "请登录后再操作") {
   return fail(ResponseCode.UNAUTHORIZED, message);
 }
 
