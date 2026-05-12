@@ -345,15 +345,17 @@ export async function updateCommentStatus(input: { id: string; status: CommentSt
   const { id, status } = input;
   const exists = await prisma.comment.findUnique({
     where: { id },
-    select: { id: true },
+    select: { id: true, status: true },
   });
   if (!exists) {
     return null;
   }
-  return prisma.comment.update({
+  const previousStatus = exists.status;
+  const updated = await prisma.comment.update({
     where: { id },
     data: { status },
   });
+  return { updated, previousStatus };
 }
 
 export async function softDeleteComments(ids: string[]) {

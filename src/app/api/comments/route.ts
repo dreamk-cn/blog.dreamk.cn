@@ -6,6 +6,7 @@ import {
   CommentDeleteSchema,
   CommentUpdateStatusSchema,
 } from "@/schemas/comment";
+import { notifyParentOnCommentApproved } from "@/services/comment-notify";
 import { listComments, softDeleteComments, updateCommentStatus } from "@/services/comment-service";
 import { NextRequest } from "next/server";
 import z from "zod";
@@ -57,11 +58,16 @@ export async function PUT(request: NextRequest) {
 
     const json = await request.json();
     const { id, status } = CommentUpdateStatusSchema.parse(json ?? {});
-    const updated = await updateCommentStatus({ id, status });
-    if (!updated) {
+    const result = await updateCommentStatus({ id, status });
+    if (!result) {
       return fail(ResponseCode.FAIL, "评论不存在");
     }
-    return ok(updated, "更新评论状态成功");
+    if (result.previousStatus === "PENDING" && status === "APPROVED") {
+      void notifyParentOnCommentApproved(id).catch((err) => {
+        console.error("[notifyParentOnCommentApproved]", err);
+      });
+    }
+    return ok(result.updated, "更新评论状态成功");
   } catch (err) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误");

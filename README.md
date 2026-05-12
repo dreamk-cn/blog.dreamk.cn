@@ -78,3 +78,7 @@ docker compose down
 - `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET`（如启用 GitHub 登录）
 - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET`（如启用 Google 登录）
 - `ADMIN_EMAIL`
+
+## TODO
+
+- **评论通知去重**：在数据层记录评论是否已向站长 / 被回复者发送过邮件（例如布尔字段或时间戳），避免审核状态反复变更或发送失败重试时出现重复通知；当前对登录用户「待审再通过」已做部分规避，访客场景仍可完善。

@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
 import { fail, internalError, ok, zodFail } from "@/lib/api-response";
 import { CommentCreateSchema, CommentListSchema, CommentReplyListSchema, CommentSelfDeleteSchema } from "@/schemas/comment";
+import { notifyOnCommentCreated } from "@/services/comment-notify";
 import {
   createComment,
   listApprovedCommentsBySlug,
@@ -81,6 +82,10 @@ export async function POST(request: NextRequest) {
     if (!created) {
       return fail(ResponseCode.FAIL, "文章不存在或未发布");
     }
+
+    void notifyOnCommentCreated(created.id).catch((err) => {
+      console.error("[notifyOnCommentCreated]", err);
+    });
 
     return ok(
       {

@@ -10,7 +10,7 @@ importers:
     dependencies:
       '@auth/prisma-adapter':
         specifier: ^2.10.0
-        version: 2.10.0(@prisma/client@6.13.0(prisma@6.13.0(typescript@5.8.3))(typescript@5.8.3))
+        version: 2.10.0(@prisma/client@6.13.0(prisma@6.13.0(typescript@5.8.3))(typescript@5.8.3))(nodemailer@8.0.7)
       '@heroui/react':
         specifier: ^3.0.2
         version: 3.0.2(@react-spectrum/provider@3.11.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(@types/react-dom@19.1.6(@types/react@19.1.7))(@types/react@19.1.7)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(tailwindcss@4.1.8)
@@ -46,13 +46,16 @@ importers:
         version: 16.2.4(@babel/core@7.29.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       next-auth:
         specifier: 5.0.0-beta.29
-        version: 5.0.0-beta.29(next@16.2.4(@babel/core@7.29.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0)
+        version: 5.0.0-beta.29(next@16.2.4(@babel/core@7.29.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(nodemailer@8.0.7)(react@19.1.0)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       nextjs-toploader:
         specifier: ^3.9.17
         version: 3.9.17(next@16.2.4(@babel/core@7.29.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      nodemailer:
+        specifier: ^8.0.7
+        version: 8.0.7
       openai:
         specifier: ^6.34.0
         version: 6.34.0(zod@4.1.11)
@@ -93,6 +96,9 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.0.0
+      '@types/nodemailer':
+        specifier: ^8.0.0
+        version: 8.0.0
       '@types/react':
         specifier: ^19.1.7
         version: 19.1.7
@@ -1264,6 +1270,9 @@ packages:
 
   '@types/node@24.0.0':
     resolution: {integrity: sha512-yZQa2zm87aRVcqDyH5+4Hv9KYgSdgwX1rFnGvpbzMaC7YAljmhBET93TPiTd3ObwTL+gSpIzPKg5BqVxdCvxKg==}
+
+  '@types/nodemailer@8.0.0':
+    resolution: {integrity: sha512-fyf8jWULsCo0d0BuoQ75i6IeoHs47qcqxWc7yUdUcV0pOZGjUTTOvwdG1PRXUDqN/8A64yQdQdnA2pZgcdi+cA==}
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
@@ -2821,6 +2830,10 @@ packages:
   node-releases@2.0.37:
     resolution: {integrity: sha512-1h5gKZCF+pO/o3Iqt5Jp7wc9rH3eJJ0+nh/CIoiRwjRxde/hAHyLPXYN4V3CqKAbiZPSeJFSWHmJsbkicta0Eg==}
 
+  nodemailer@8.0.7:
+    resolution: {integrity: sha512-pkjE4mkBzQjdJT4/UmlKl3pX0rC9fZmjh7c6C9o7lv66Ac6w9WCnzPzhbPNxwZAzlF4mdq4CSWB5+FbK6FWCow==}
+    engines: {node: '>=6.0.0'}
+
   normalize-package-data@6.0.2:
     resolution: {integrity: sha512-V6gygoYb/5EmNI+MEGrWkC+e6+Rr7mTmfHrxDbLzxQogBkgzo76rkok0Am6thgSF7Mv2nLOajAJj5vDJZEFn7g==}
     engines: {node: ^16.14.0 || >=18.0.0}
@@ -3574,17 +3587,19 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.8
       '@jridgewell/trace-mapping': 0.3.25
 
-  '@auth/core@0.40.0':
+  '@auth/core@0.40.0(nodemailer@8.0.7)':
     dependencies:
       '@panva/hkdf': 1.2.1
       jose: 6.0.12
       oauth4webapi: 3.6.2
       preact: 10.24.3
       preact-render-to-string: 6.5.11(preact@10.24.3)
+    optionalDependencies:
+      nodemailer: 8.0.7
 
-  '@auth/prisma-adapter@2.10.0(@prisma/client@6.13.0(prisma@6.13.0(typescript@5.8.3))(typescript@5.8.3))':
+  '@auth/prisma-adapter@2.10.0(@prisma/client@6.13.0(prisma@6.13.0(typescript@5.8.3))(typescript@5.8.3))(nodemailer@8.0.7)':
     dependencies:
-      '@auth/core': 0.40.0
+      '@auth/core': 0.40.0(nodemailer@8.0.7)
       '@prisma/client': 6.13.0(prisma@6.13.0(typescript@5.8.3))(typescript@5.8.3)
     transitivePeerDependencies:
       - '@simplewebauthn/browser'
@@ -4754,6 +4769,10 @@ snapshots:
   '@types/node@24.0.0':
     dependencies:
       undici-types: 7.8.0
+
+  '@types/nodemailer@8.0.0':
+    dependencies:
+      '@types/node': 24.0.0
 
   '@types/normalize-package-data@2.4.4': {}
 
@@ -6586,11 +6605,13 @@ snapshots:
 
   natural-compare@1.4.0: {}
 
-  next-auth@5.0.0-beta.29(next@16.2.4(@babel/core@7.29.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react@19.1.0):
+  next-auth@5.0.0-beta.29(next@16.2.4(@babel/core@7.29.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(nodemailer@8.0.7)(react@19.1.0):
     dependencies:
-      '@auth/core': 0.40.0
+      '@auth/core': 0.40.0(nodemailer@8.0.7)
       next: 16.2.4(@babel/core@7.29.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react: 19.1.0
+    optionalDependencies:
+      nodemailer: 8.0.7
 
   next-themes@0.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
@@ -6639,6 +6660,8 @@ snapshots:
   node-fetch-native@1.6.7: {}
 
   node-releases@2.0.37: {}
+
+  nodemailer@8.0.7: {}
 
   normalize-package-data@6.0.2:
     dependencies:
