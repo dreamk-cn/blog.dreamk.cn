@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/config/site";
 import { ArticleMarkdown } from "@/components/post/article-markdown";
-import { PostComments } from "@/components/post/post-comments";
+import { PostComments } from "@/components/post/comment";
 import { MobilePostToc, PostViewTracker } from "@/components/post/mobile-post-toc";
 import { PostTocActiveProvider } from "@/components/post/post-toc-active-context";
 import { PostTableOfContents } from "@/components/post/post-table-of-contents";

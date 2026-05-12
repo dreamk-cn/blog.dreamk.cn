@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArticleMarkdown } from "@/components/post/article-markdown";
-import { PostComments } from "@/components/post/post-comments";
+import { PostComments } from "@/components/post/comment";
 import { contentConfig } from "@/config/content";
 import { siteConfig } from "@/config/site";
 import { prisma } from "@/lib/prisma";

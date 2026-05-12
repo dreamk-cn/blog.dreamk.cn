@@ -3,6 +3,7 @@ import {
   buildAdminNewReplyEmail,
   buildParentReplyReceivedEmail,
 } from "@/lib/comment-email-html";
+import { postUrlWithCommentAnchor } from "@/lib/comment-anchor";
 import { sendSmtpMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { isDev } from "@/utils/env";
@@ -69,7 +70,7 @@ export async function notifyOnCommentCreated(commentId: string): Promise<void> {
 
   const { row, parent } = loaded;
   const { post } = row;
-  const link = postUrl(post.slug);
+  const link = postUrlWithCommentAnchor(postUrl(post.slug), row.id);
   const bodyPreview = excerpt(row.content);
   const adminNorm = normEmail(adminEmail);
   const authorNorm = normEmail(row.user?.email);
@@ -150,7 +151,7 @@ export async function notifyParentOnCommentApproved(commentId: string): Promise<
   if (parent.userId && row.userId && parent.userId === row.userId) return;
 
   const { post } = row;
-  const link = postUrl(post.slug);
+  const link = postUrlWithCommentAnchor(postUrl(post.slug), row.id);
   const bodyPreview = excerpt(row.content);
 
   const parentMail = buildParentReplyReceivedEmail({

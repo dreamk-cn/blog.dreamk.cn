@@ -2,95 +2,15 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { Avatar, Button, Spinner, TextArea, toast } from "@heroui/react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-
-type CommentItem = {
-  id: string;
-  content: string;
-  parentId: string | null;
-  createdAt: string;
-  user: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  } | null;
-  replyTo: {
-    id: string;
-    name: string | null;
-    image: string | null;
-  } | null;
-  /** 仅顶层：该线程下已审核的回复总条数（含嵌套回复，扁平计数） */
-  totalReplyCount?: number;
-  replies: CommentItem[];
-};
-
-type ApiResponse<T> = {
-  code: number;
-  message: string;
-  data: T;
-};
-
-function isDescendantInList(
-  candidate: { parentId: string | null },
-  rootId: string,
-  map: Map<string, { parentId: string | null }>,
-) {
-  let cursor = candidate.parentId;
-  while (cursor) {
-    if (cursor === rootId) return true;
-    const parent = map.get(cursor);
-    if (!parent) return false;
-    cursor = parent.parentId;
-  }
-  return false;
-}
-
-function formatDateTime(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function getAvatarFallback(name?: string | null) {
-  const normalized = name?.trim();
-  if (!normalized) return "匿";
-  return normalized.slice(0, 1).toUpperCase();
-}
-
-type ServerCommentPayload = {
-  id: string;
-  content: string;
-  parentId: string | null;
-  createdAt: string;
-  user: CommentItem["user"];
-  replyTo: CommentItem["replyTo"];
-  totalReplyCount?: number;
-  replies: ServerCommentPayload[];
-};
-
-function mapServerCommentToItem(comment: ServerCommentPayload): CommentItem {
-  return {
-    id: comment.id,
-    content: comment.content,
-    parentId: comment.parentId,
-    createdAt: comment.createdAt,
-    user: comment.user,
-    replyTo: comment.replyTo,
-    totalReplyCount: comment.totalReplyCount,
-    replies: (comment.replies ?? []).map((reply) => ({
-      id: reply.id,
-      content: reply.content,
-      parentId: reply.parentId,
-      createdAt: reply.createdAt,
-      user: reply.user,
-      replyTo: reply.replyTo,
-      replies: [],
-    })),
-  };
-}
+import { Button, Spinner, TextArea, toast } from "@heroui/react";
+import type { ApiResponse } from "@/types/request";
+import { PostCommentItem } from "./post-comment-item";
+import type { CommentItem, ServerCommentPayload } from "./post-comments-types";
+import {
+  mapServerCommentToItem,
+  removeLoadedDescendantsFromReplies,
+} from "./post-comments-utils";
+import { useCommentDeepLink } from "./use-comment-deep-link";
 
 export function PostComments({
   slug,
@@ -200,6 +120,15 @@ export function PostComments({
     }
   };
 
+  const { flashCommentId } = useCommentDeepLink({
+    slug,
+    comments,
+    loadingMore,
+    loadingReplyRootId,
+    loadMoreComments,
+    loadMoreRepliesForRoot,
+  });
+
   const createDisplayComment = (comment: CommentItem): CommentItem => ({
     ...comment,
     replies: comment.replies || [],
@@ -211,20 +140,6 @@ export function PostComments({
       image: session?.user?.image || null,
     },
   });
-
-  const findComment = (id: string) => {
-    for (const item of comments) {
-      if (item.id === id) return { comment: item, rootId: item.id };
-      const reply = item.replies.find((r) => r.id === id);
-      if (reply) return { comment: reply, rootId: item.id };
-    }
-    return null;
-  };
-
-  const removeLoadedDescendantsFromReplies = (replies: CommentItem[], rootId: string) => {
-    const map = new Map(replies.map((item) => [item.id, { parentId: item.parentId }]));
-    return replies.filter((item) => item.id !== rootId && !isDescendantInList(item, rootId, map));
-  };
 
   const handleDeleteComment = async (comment: CommentItem, rootId: string) => {
     if (deletingCommentId) return;
@@ -368,8 +283,8 @@ export function PostComments({
               replySkip: "0",
               replyTake: String(Math.min(newTotal, 500)),
             });
-            const response = await fetch(`/api/post/comment?${params.toString()}`);
-            const refetch = (await response.json()) as ApiResponse<{
+            const refetchResponse = await fetch(`/api/post/comment?${params.toString()}`);
+            const refetch = (await refetchResponse.json()) as ApiResponse<{
               replies: ServerCommentPayload[];
               totalReplyCount: number;
             }>;
@@ -442,124 +357,11 @@ export function PostComments({
     }
   };
 
-  const renderComment = (comment: CommentItem, isReply = false) => (
-    <article
-      key={comment.id}
-      className={`rounded-xl border border-default-200/70 bg-default-50/50 px-4 py-4 dark:border-default-100/20 dark:bg-default-100/5 ${isReply ? "ml-6 mt-3" : ""}`}
-    >
-      <div className="mb-2 flex items-start justify-between gap-3 text-sm">
-        <div className="flex min-w-0 items-center gap-3">
-          <Avatar color="default" size="sm">
-            {comment.user?.image ? <Avatar.Image src={comment.user.image} alt="" /> : null}
-            <Avatar.Fallback>{getAvatarFallback(comment.user?.name)}</Avatar.Fallback>
-          </Avatar>
-          <span className="truncate font-medium text-text-base">
-            {comment.user?.name?.trim() || "匿名访客"}
-          </span>
-        </div>
-        <span className="shrink-0 text-text-muted">{formatDateTime(comment.createdAt)}</span>
-      </div>
-
-      <div className="prose prose-sm mt-2 max-w-none break-words prose-p:my-2 prose-pre:my-2 prose-code:text-xs dark:prose-invert">
-        {isReply && comment.replyTo?.name ? (
-          <p className="mb-2 text-xs text-primary">
-            @{comment.replyTo.name}
-          </p>
-        ) : null}
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.content}</ReactMarkdown>
-      </div>
-
-      <div className="mt-3 flex justify-end gap-2">
-        <Button
-          size="sm"
-          variant="ghost"
-          isDisabled={submitting || !!deletingCommentId}
-          onPress={() => {
-            const found = findComment(comment.id);
-            if (!found) return;
-            setReplyingTo({
-              id: found.comment.id,
-              name: found.comment.user?.name?.trim() || "匿名访客",
-              rootId: found.rootId,
-            });
-            setReplyContent("");
-          }}
-        >
-          回复
-        </Button>
-        {session?.user?.id && comment.user?.id === session.user.id ? (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-danger"
-            isDisabled={submitting || !!deletingCommentId}
-            onPress={() => {
-              const found = findComment(comment.id);
-              if (!found) return;
-              requestDeleteWithConfirm(found.comment, found.rootId);
-            }}
-          >
-            {deletingCommentId === comment.id ? <Spinner color="current" size="sm" /> : null}
-            {deletingCommentId === comment.id
-              ? "删除中..."
-              : confirmDeleteId === comment.id
-                ? "确认删除"
-                : "删除"}
-          </Button>
-        ) : null}
-      </div>
-
-      {replyingTo?.id === comment.id ? (
-        <div className="mt-3 space-y-2 rounded-lg border border-default-200/70 bg-content1 p-3 dark:border-default-100/20 dark:bg-content1/60">
-          <TextArea
-            className="w-full text-text-base"
-            value={replyContent}
-            onChange={(e) => setReplyContent(e.target.value)}
-            rows={3}
-            placeholder={`回复 ${replyingTo.name}...`}
-          />
-          <div className="flex justify-end gap-2">
-            <Button
-              size="sm"
-              variant="ghost"
-              onPress={() => {
-                setReplyingTo(null);
-                setReplyContent("");
-              }}
-            >
-              取消
-            </Button>
-            <Button size="sm" variant="primary" isDisabled={submitting} onPress={handleReplySubmit}>
-              {submitting ? "提交中..." : "提交回复"}
-            </Button>
-          </div>
-        </div>
-      ) : null}
-
-      {!isReply &&
-      (comment.replies.length > 0 || (comment.totalReplyCount ?? comment.replies.length) > 0) ? (
-        <div className="mt-2">
-          {comment.replies.map((reply) => renderComment(reply, true))}
-          {(comment.totalReplyCount ?? comment.replies.length) > comment.replies.length ? (
-            <div className="mt-3 flex justify-center">
-              <Button
-                size="sm"
-                variant="ghost"
-                isDisabled={loadingReplyRootId === comment.id}
-                onPress={() => loadMoreRepliesForRoot(comment.id)}
-              >
-                {loadingReplyRootId === comment.id ? <Spinner color="current" size="sm" /> : null}
-                {loadingReplyRootId === comment.id ? "加载中…" : "加载更多回复"}
-              </Button>
-            </div>
-          ) : null}
-        </div>
-      ) : null}
-    </article>
-  );
-
   return (
-    <section className="mt-8 rounded-2xl border border-default-200/70 bg-content1 p-6 shadow-[0_1px_2px_rgba(15,23,42,0.06)] dark:border-default-100/20 dark:bg-content1/60 dark:shadow-none sm:p-8">
+    <section
+      id="comments"
+      className="mt-8 rounded-2xl border border-default-200/70 bg-content1 p-6 shadow-[0_1px_2px_rgba(15,23,42,0.06)] dark:border-default-100/20 dark:bg-content1/60 dark:shadow-none sm:p-8"
+    >
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-text-base">评论区</h2>
         <span className="text-sm text-text-muted">{commentCountText}</span>
@@ -576,7 +378,7 @@ export function PostComments({
         />
         <div className="flex justify-end">
           <Button variant="primary" onPress={handleSubmit} isDisabled={submitting}>
-            {submitting ? <Spinner color="current" size="sm" /> : null }
+            {submitting ? <Spinner color="current" size="sm" /> : null}
             {submitting ? "提交中..." : "提交留言"}
           </Button>
         </div>
@@ -588,7 +390,37 @@ export function PostComments({
             还没有评论，欢迎成为第一个留言的人。
           </p>
         ) : (
-          comments.map((comment) => renderComment(comment))
+          comments.map((comment) => (
+            <PostCommentItem
+              key={comment.id}
+              comment={comment}
+              threadRootId={comment.id}
+              flashCommentId={flashCommentId}
+              submitting={submitting}
+              deletingCommentId={deletingCommentId}
+              confirmDeleteId={confirmDeleteId}
+              loadingReplyRootId={loadingReplyRootId}
+              sessionUserId={session?.user?.id}
+              replyingTo={replyingTo}
+              replyContent={replyContent}
+              onReplyContentChange={setReplyContent}
+              onReplyPress={(c, threadRootId) => {
+                setReplyingTo({
+                  id: c.id,
+                  name: c.user?.name?.trim() || "匿名访客",
+                  rootId: threadRootId,
+                });
+                setReplyContent("");
+              }}
+              onCancelReply={() => {
+                setReplyingTo(null);
+                setReplyContent("");
+              }}
+              onSubmitReply={handleReplySubmit}
+              onDeletePress={(c, threadRootId) => requestDeleteWithConfirm(c, threadRootId)}
+              onLoadMoreReplies={loadMoreRepliesForRoot}
+            />
+          ))
         )}
         {hasMoreRoots ? (
           <div className="flex justify-center pt-2">

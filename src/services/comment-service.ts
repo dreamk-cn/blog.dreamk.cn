@@ -207,6 +207,111 @@ export async function countApprovedCommentsByPostSlug(slug: string) {
   });
 }
 
+/** 邮件深链：定位某条已审核评论在分页中的位置（根楼层 + 楼内线序） */
+export async function getApprovedCommentAnchorMeta(slug: string, commentId: string) {
+  const post = await prisma.post.findFirst({
+    where: {
+      slug,
+      status: "PUBLISHED",
+    },
+    select: { id: true },
+  });
+  if (!post) {
+    return null;
+  }
+
+  const target = await prisma.comment.findFirst({
+    where: {
+      id: commentId,
+      postId: post.id,
+      status: "APPROVED",
+    },
+    select: { id: true, parentId: true },
+  });
+  if (!target) {
+    return null;
+  }
+
+  let rootId = target.id;
+  let currentId: string = target.id;
+  for (let depth = 0; depth < 64; depth += 1) {
+    const node: { id: string; parentId: string | null } | null = await prisma.comment.findFirst({
+      where: { id: currentId, postId: post.id },
+      select: { id: true, parentId: true },
+    });
+    if (!node) {
+      return null;
+    }
+    if (!node.parentId) {
+      rootId = node.id;
+      break;
+    }
+    currentId = node.parentId;
+  }
+
+  const isTargetRoot = target.id === rootId;
+
+  const roots = await prisma.comment.findMany({
+    where: {
+      postId: post.id,
+      status: "APPROVED",
+      parentId: null,
+    },
+    orderBy: { createdAt: "desc" },
+    select: { id: true },
+  });
+  const rootIndex = roots.findIndex((r) => r.id === rootId);
+  if (rootIndex === -1) {
+    return null;
+  }
+
+  const totalRootCount = roots.length;
+
+  let replyFlatIndex: number | null = null;
+  let totalReplyCount = 0;
+
+  if (!isTargetRoot) {
+    const rootRow = await prisma.comment.findFirst({
+      where: {
+        id: rootId,
+        postId: post.id,
+        status: "APPROVED",
+        parentId: null,
+      },
+      include: {
+        user: {
+          select: commentUserSelect,
+        },
+      },
+    });
+    if (!rootRow) {
+      return null;
+    }
+
+    const flat = await collectApprovedSubtreeForRoots(post.id, [rootRow]);
+    const commentMap = new Map(flat.map((item) => [item.id, item]));
+    const allReplies = flat
+      .filter((item) => item.parentId !== null && isDescendantOf(item, rootId, commentMap))
+      .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+
+    totalReplyCount = allReplies.length;
+    const idx = allReplies.findIndex((r) => r.id === target.id);
+    if (idx === -1) {
+      return null;
+    }
+    replyFlatIndex = idx;
+  }
+
+  return {
+    rootId,
+    rootIndex,
+    isTargetRoot,
+    replyFlatIndex,
+    totalRootCount,
+    totalReplyCount,
+  };
+}
+
 function isDescendantOf(
   comment: { id: string; parentId: string | null },
   rootId: string,
