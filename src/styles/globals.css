@@ -88,24 +88,24 @@ body {
   100% { background-position: 100% 10%; }
 }
 
-/* rehype-pretty-code + Shiki dual themes (align with next-themes `.dark`, not only prefers-color-scheme) */
-.article-md code[data-theme*=" "],
-.article-md code[data-theme*=" "] span {
-  color: var(--shiki-light);
+/*
+ * Shiki dual themes: token `<span>`s carry `--shiki-light` / `--shiki-dark` (no `color:` until we map them).
+ * Plaintext blocks often omit per-token vars — `color` still resolves from `pre` via inheritance.
+ * `!important` wins over Tailwind `text-*` on article ancestors (e.g. `text-text-base`).
+ */
+.article-md [data-rehype-pretty-code-figure] pre[data-theme*=" "] code [data-line] * {
+  color: var(--shiki-light) !important;
+}
+
+.dark .article-md [data-rehype-pretty-code-figure] pre[data-theme*=" "] code [data-line] * {
+  color: var(--shiki-dark) !important;
+}
+
+.article-md [data-rehype-pretty-code-figure] pre[data-theme*=" "] {
   background-color: var(--shiki-light-bg);
 }
 
-.dark .article-md code[data-theme*=" "],
-.dark .article-md code[data-theme*=" "] span {
-  color: var(--shiki-dark);
-  background-color: var(--shiki-dark-bg);
-}
-
-.article-md pre[data-theme*=" "] {
-  background-color: var(--shiki-light-bg);
-}
-
-.dark .article-md pre[data-theme*=" "] {
+.dark .article-md [data-rehype-pretty-code-figure] pre[data-theme*=" "] {
   background-color: var(--shiki-dark-bg);
 }
 

@@ -1,5 +1,11 @@
 import type { ComponentProps } from "react";
 import type { Components } from "react-markdown";
+
+/** react-markdown 传递 `node` 给自定义组件；永远不会转发到原生 DOM。 */
+function withoutNodeProps<T extends Record<string, unknown>>(props: T): Omit<T, "node"> {
+  const { node: _node, ...rest } = props as T & { node?: unknown };
+  return rest;
+}
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
@@ -78,13 +84,14 @@ const mdBase: Components = {
     </a>
   ),
   code: ({ className, children, ...props }) => {
+    const domProps = withoutNodeProps(props as Record<string, unknown>);
     const cls = stringifyClassName(className);
     /* Fenced blocks from remark have language-*; Shiki replaces with class shiki + data-language (no language- ) */
     const isBlock =
-      cls.includes("language-") || cls.split(/\s+/).includes("shiki") || isPrettyCodeBlockProps(props as Record<string, unknown>);
+      cls.includes("language-") || cls.split(/\s+/).includes("shiki") || isPrettyCodeBlockProps(domProps as Record<string, unknown>);
     if (isBlock) {
       return (
-        <code className={className} {...props}>
+        <code className={className} {...domProps}>
           {children}
         </code>
       );
@@ -92,20 +99,21 @@ const mdBase: Components = {
     return (
       <code
         className={`rounded-md bg-foreground px-1.5 py-0.5 font-mono text-[13px] text-primary dark:text-primary ${cls}`}
-        {...props}
+        {...domProps}
       >
         {children}
       </code>
     );
   },
   pre: ({ children, className, ...props }) => {
+    const domProps = withoutNodeProps(props as Record<string, unknown>);
     const cls = stringifyClassName(className);
-    const raw = props as Record<string, unknown>;
+    const raw = domProps as Record<string, unknown>;
     const isPrettyBlock =
       typeof raw["data-language"] === "string" || typeof raw.dataLanguage === "string";
     if (isPrettyBlock) {
       return (
-        <pre className={`m-0 overflow-x-auto rounded-none border-0 bg-transparent p-0 text-[13px] leading-6 ${cls}`} {...props}>
+        <pre className={`m-0 overflow-x-auto rounded-none border-0 bg-transparent p-0 text-[13px] leading-6 ${cls}`} {...domProps}>
           {children}
         </pre>
       );
@@ -113,7 +121,7 @@ const mdBase: Components = {
     return (
       <pre
         className={`overflow-x-auto rounded-xl border border-default-200/80 bg-default-100/80 p-4 text-[13px] leading-6 dark:bg-default-50/10 ${cls}`}
-        {...props}
+        {...domProps}
       >
         {children}
       </pre>
@@ -122,7 +130,7 @@ const mdBase: Components = {
   figure: ({ children, className, ...props }) => (
     <figure
       className={`my-6 overflow-hidden rounded-xl border border-default-200/80 dark:border-default-100/15 ${className ?? ""}`}
-      {...props}
+      {...withoutNodeProps(props as Record<string, unknown>)}
     >
       {children}
     </figure>
