@@ -19,7 +19,7 @@ function getTransporter() {
   });
 }
 
-export async function sendSmtpMail(params: { to: string; subject: string; text: string }) {
+export async function sendSmtpMail(params: { to: string; subject: string; text: string; html?: string }) {
   const transport = getTransporter();
   if (!transport) {
     return { ok: false as const, reason: "missing_smtp_config" };
@@ -36,6 +36,7 @@ export async function sendSmtpMail(params: { to: string; subject: string; text: 
       to: params.to,
       subject: params.subject,
       text: params.text,
+      ...(params.html ? { html: params.html } : {}),
     });
     return { ok: true as const };
   } catch (err) {

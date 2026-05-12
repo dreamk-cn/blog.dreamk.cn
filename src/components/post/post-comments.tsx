@@ -512,7 +512,7 @@ export function PostComments({
       {replyingTo?.id === comment.id ? (
         <div className="mt-3 space-y-2 rounded-lg border border-default-200/70 bg-content1 p-3 dark:border-default-100/20 dark:bg-content1/60">
           <TextArea
-            className="w-full"
+            className="w-full text-text-base"
             value={replyContent}
             onChange={(e) => setReplyContent(e.target.value)}
             rows={3}
@@ -567,7 +567,7 @@ export function PostComments({
 
       <div className="space-y-3">
         <TextArea
-          className="w-full"
+          className="w-full text-text-base"
           value={content}
           onChange={(e) => setContent(e.target.value)}
           rows={4}

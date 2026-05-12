@@ -1,3 +1,8 @@
+import {
+  buildAdminNewCommentEmail,
+  buildAdminNewReplyEmail,
+  buildParentReplyReceivedEmail,
+} from "@/lib/comment-email-html";
 import { sendSmtpMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { isDev } from "@/utils/env";
@@ -72,17 +77,35 @@ export async function notifyOnCommentCreated(commentId: string): Promise<void> {
 
   if (adminEmail && !skipAdminNotify) {
     const pendingNote = row.status === "PENDING" ? "（待审核）" : "";
+    const pending = row.status === "PENDING";
+    const author = authorLabel(row.user);
     if (!row.parentId) {
+      const { text, html } = buildAdminNewCommentEmail({
+        postTitle: post.title,
+        postUrl: link,
+        author,
+        preview: bodyPreview,
+        pending,
+      });
       await sendSmtpMail({
         to: adminEmail,
         subject: `[博客] 文章有新评论${pendingNote}`,
-        text: `文章：《${post.title}》\n链接：${link}\n\n评论者：${authorLabel(row.user)}\n内容：\n${bodyPreview}\n`,
+        text,
+        html,
       });
     } else {
+      const { text, html } = buildAdminNewReplyEmail({
+        postTitle: post.title,
+        postUrl: link,
+        author,
+        preview: bodyPreview,
+        pending,
+      });
       await sendSmtpMail({
         to: adminEmail,
         subject: `[博客] 评论有新回复${pendingNote}`,
-        text: `文章：《${post.title}》\n链接：${link}\n\n回复者：${authorLabel(row.user)}\n内容：\n${bodyPreview}\n`,
+        text,
+        html,
       });
     }
   }
@@ -95,10 +118,17 @@ export async function notifyOnCommentCreated(commentId: string): Promise<void> {
   if (!parentEmail) return;
   if (parent.userId && row.userId && parent.userId === row.userId) return;
 
+  const parentMail = buildParentReplyReceivedEmail({
+    postTitle: post.title,
+    postUrl: link,
+    replyAuthor: authorLabel(row.user),
+    preview: bodyPreview,
+  });
   await sendSmtpMail({
     to: parentEmail,
     subject: `[博客] 您在《${post.title}》下的评论收到了回复`,
-    text: `${authorLabel(row.user)} 回复了您：\n\n${bodyPreview}\n\n查看全文：${link}\n`,
+    text: parentMail.text,
+    html: parentMail.html,
   });
 }
 
@@ -123,9 +153,16 @@ export async function notifyParentOnCommentApproved(commentId: string): Promise<
   const link = postUrl(post.slug);
   const bodyPreview = excerpt(row.content);
 
+  const parentMail = buildParentReplyReceivedEmail({
+    postTitle: post.title,
+    postUrl: link,
+    replyAuthor: authorLabel(row.user),
+    preview: bodyPreview,
+  });
   await sendSmtpMail({
     to: parentEmail,
     subject: `[博客] 您在《${post.title}》下的评论收到了回复`,
-    text: `${authorLabel(row.user)} 回复了您：\n\n${bodyPreview}\n\n查看全文：${link}\n`,
+    text: parentMail.text,
+    html: parentMail.html,
   });
 }
