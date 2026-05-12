@@ -7,6 +7,7 @@ import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 import NextLink from "next/link";
 
 const HOME_RECENT_POSTS_LIMIT = 6;
+export const revalidate = 300;
 
 export default async function Home() {
   const [posts, hotPosts, categories, friendLinks] = await Promise.all([

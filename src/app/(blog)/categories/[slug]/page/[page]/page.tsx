@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { findCategoryBySlug, renderCategoryPostListPage } from "../../category-post-list";
 
+export const revalidate = 300;
+
 type PageProps = {
   params: Promise<{
     slug: string;

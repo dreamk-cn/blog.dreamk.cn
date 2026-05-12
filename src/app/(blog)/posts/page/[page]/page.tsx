@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { renderPostsListPage } from "../../posts-list";
 
+export const revalidate = 300;
+
 type PageProps = {
   params: Promise<{
     page: string;

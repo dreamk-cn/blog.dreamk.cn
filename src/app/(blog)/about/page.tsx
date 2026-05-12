@@ -11,8 +11,8 @@ const ABOUT_SLUG = contentConfig.pageSlugs.about;
 const ROOT_PAGE_SIZE = 20;
 const REPLY_PAGE_SIZE = 5;
 
-/** 内容来自数据库，避免构建期或无文章时被静态缓存成「尚未发布」页面 */
-export const dynamic = "force-dynamic";
+/** ISR：约 10 分钟重新生成，发布后最多延迟一小段时间可见（可按需改成 300/900） */
+export const revalidate = 600;
 
 function formatDateTime(date: Date | null) {
   if (!date) return "";

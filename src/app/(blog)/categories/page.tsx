@@ -3,6 +3,8 @@ import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 import { contentConfig } from "@/config/content";
 import { prisma } from "@/lib/prisma";
 
+export const revalidate = 300;
+
 type CategoryWithPostCount = {
   id: string;
   name: string;
