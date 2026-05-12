@@ -118,3 +118,8 @@ body {
 .article-md [data-rehype-pretty-code-figure] pre [data-line] {
   padding: 0 1rem;
 }
+
+/* Blockquote: Markdown 会将每行包裹在<p>标签中，且每个都带有 mb-5 样式 —— 去掉最后一个块的底部外边距 */
+.article-md blockquote > *:last-child {
+  margin-bottom: 0;
+}

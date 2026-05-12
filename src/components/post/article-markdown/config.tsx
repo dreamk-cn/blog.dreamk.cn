@@ -1,29 +1,41 @@
-"use client";
-
 import type { ComponentProps } from "react";
 import type { Components } from "react-markdown";
-import { useMemo } from "react";
-import ReactMarkdown, { MarkdownHooks } from "react-markdown";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
 const mdLink = "text-primary font-medium hover:underline underline-offset-2";
 
-const prettyCodeOptions = {
+export const prettyCodeOptions = {
   theme: {
     light: "github-light",
-    dark: "github-dark-dimmed",
+    dark: "one-dark-pro",
   },
   keepBackground: true,
   bypassInlineCode: true,
   defaultLang: "plaintext",
 } as const;
 
+export const articleRemarkPlugins = [remarkGfm];
+
+export const articleRehypePlugins: [
+  typeof rehypeSlug,
+  [typeof rehypePrettyCode, typeof prettyCodeOptions],
+] = [rehypeSlug, [rehypePrettyCode, prettyCodeOptions]];
+
+export const articleRehypeSlugOnly = [rehypeSlug];
+
 function stringifyClassName(className: string | string[] | undefined): string {
   if (typeof className === "string") return className;
   if (Array.isArray(className)) return className.filter(Boolean).join(" ");
   return "";
+}
+
+/** hast uses `data-language` / `data-theme`; React may expose hyphen or camelCase */
+function isPrettyCodeBlockProps(props: Record<string, unknown>): boolean {
+  const lang = props["data-language"] ?? props.dataLanguage;
+  const theme = props["data-theme"] ?? props.dataTheme;
+  return typeof lang === "string" || typeof theme === "string";
 }
 
 const mdBase: Components = {
@@ -67,7 +79,9 @@ const mdBase: Components = {
   ),
   code: ({ className, children, ...props }) => {
     const cls = stringifyClassName(className);
-    const isBlock = cls.includes("language-");
+    /* Fenced blocks from remark have language-*; Shiki replaces with class shiki + data-language (no language- ) */
+    const isBlock =
+      cls.includes("language-") || cls.split(/\s+/).includes("shiki") || isPrettyCodeBlockProps(props as Record<string, unknown>);
     if (isBlock) {
       return (
         <code className={className} {...props}>
@@ -86,9 +100,9 @@ const mdBase: Components = {
   },
   pre: ({ children, className, ...props }) => {
     const cls = stringifyClassName(className);
-    const p = props as { dataLanguage?: string };
-    /* rehype-pretty-code strips the `shiki` class from `pre`; rely on injected data-language */
-    const isPrettyBlock = typeof p.dataLanguage === "string";
+    const raw = props as Record<string, unknown>;
+    const isPrettyBlock =
+      typeof raw["data-language"] === "string" || typeof raw.dataLanguage === "string";
     if (isPrettyBlock) {
       return (
         <pre className={`m-0 overflow-x-auto rounded-none border-0 bg-transparent p-0 text-[13px] leading-6 ${cls}`} {...props}>
@@ -164,7 +178,7 @@ const mdBase: Components = {
   ),
 };
 
-export function ArticleMarkdown({ content }: { content: string }) {
+export function createArticleMarkdownComponents(): Components {
   const attach = (Tag: "h2" | "h3" | "h4" | "h5" | "h6", classes: string) =>
     function Heading({ children, className, ...props }: ComponentProps<typeof Tag>) {
       const Comp = Tag;
@@ -175,7 +189,7 @@ export function ArticleMarkdown({ content }: { content: string }) {
       );
     };
 
-  const merged: Components = {
+  return {
     ...mdBase,
     h2: attach("h2", "mt-12 scroll-mt-28 pb-2 text-2xl font-bold tracking-tight text-text-base"),
     h3: attach("h3", "mt-10 scroll-mt-28 text-xl font-semibold tracking-tight text-text-base"),
@@ -183,30 +197,4 @@ export function ArticleMarkdown({ content }: { content: string }) {
     h5: attach("h5", "mt-6 scroll-mt-28 text-base font-semibold text-text-base"),
     h6: attach("h6", "mt-6 scroll-mt-28 text-sm font-semibold text-text-muted"),
   };
-
-  const body = content || "暂无正文内容";
-
-  const rehypeWithPretty = useMemo(
-    () => [rehypeSlug, [rehypePrettyCode, prettyCodeOptions] as [typeof rehypePrettyCode, typeof prettyCodeOptions]],
-    [],
-  );
-  const rehypeSlugOnly = useMemo(() => [rehypeSlug], []);
-  const remark = useMemo(() => [remarkGfm], []);
-
-  return (
-    <div className="article-md">
-      <MarkdownHooks
-        remarkPlugins={remark}
-        rehypePlugins={rehypeWithPretty}
-        components={merged}
-        fallback={
-          <ReactMarkdown remarkPlugins={remark} rehypePlugins={rehypeSlugOnly} components={merged}>
-            {body}
-          </ReactMarkdown>
-        }
-      >
-        {body}
-      </MarkdownHooks>
-    </div>
-  );
 }

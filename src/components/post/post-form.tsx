@@ -21,7 +21,7 @@ import { useRouter } from "next/navigation";
 import { request, type HttpError } from "@/lib/request";
 import { normalizeSlug } from "@/lib/slug";
 import { StringSelect } from "@/components/admin/string-select";
-import { ArticleMarkdown } from "@/components/post/article-markdown";
+import { ArticleMarkdownClient } from "@/components/post/article-markdown";
 
 interface PostDetail extends Post {
   tags: Tag[];
@@ -518,7 +518,7 @@ export function PostForm({
                 />
               ) : (
                 <div className="min-h-[420px] rounded-md border border-border bg-background p-4">
-                  <ArticleMarkdown content={formData.content} />
+                  <ArticleMarkdownClient content={formData.content} />
                 </div>
               )}
               {errors.content ? <FieldError>{errors.content}</FieldError> : null}
