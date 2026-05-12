@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/config/site";
 import { ArticleMarkdown } from "@/components/post/article-markdown";
@@ -23,7 +24,7 @@ function formatDateTime(date: Date | null) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-async function getPostBySlug(slug: string) {
+const getPublishedPostBySlug = cache(async (slug: string) => {
   return prisma.post.findFirst({
     where: {
       slug,
@@ -35,26 +36,14 @@ async function getPostBySlug(slug: string) {
       user: { select: { name: true } },
     },
   });
-}
+});
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await prisma.post.findFirst({
-    where: {
-      slug,
-      status: "PUBLISHED",
-    },
-    select: {
-      title: true,
-      excerpt: true,
-    },
-  });
+  const post = await getPublishedPostBySlug(slug);
 
   if (!post) {
-    return {
-      title: "文章不存在",
-      description: "该文章可能已被删除或暂未发布",
-    };
+    notFound();
   }
 
   return {
@@ -65,8 +54,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PostDetail({ params }: PageProps) {
   const { slug } = await params;
-  const [post, commentBundle, totalApprovedCommentCount] = await Promise.all([
-    getPostBySlug(slug),
+  const post = await getPublishedPostBySlug(slug);
+
+  if (!post) {
+    notFound();
+  }
+
+  const [commentBundle, totalApprovedCommentCount] = await Promise.all([
     listApprovedCommentsBySlug(slug, {
       rootSkip: 0,
       rootTake: POST_COMMENT_ROOT_PAGE_SIZE,
@@ -76,10 +70,6 @@ export default async function PostDetail({ params }: PageProps) {
     countApprovedCommentsByPostSlug(slug),
   ]);
   const { comments, totalRootCount } = commentBundle;
-
-  if (!post) {
-    notFound();
-  }
 
   const content = post.content || "";
   const toc = extractMarkdownToc(content);
