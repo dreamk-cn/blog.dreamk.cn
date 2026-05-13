@@ -3,9 +3,10 @@ import { toast } from '@heroui/react';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { ApiResponse } from '@/types/request';
 import { isClient } from '@/utils';
+import { getSiteOrigin } from '@/lib/site-url';
 
 // 基础URL配置
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? (isDev ? 'http://localhost:3000' : 'https://blog.dreamk.cn');
+const BASE_URL = getSiteOrigin();
 
 // 请求配置接口
 export interface RequestConfig extends AxiosRequestConfig {
