@@ -1,0 +1,16 @@
+---
+description: Service 层与 Prisma 访问约定
+globs: src/services/**/*.ts
+alwaysApply: false
+---
+
+# Service 层约定
+
+- Service 负责业务规则、查询拼装和状态流转，不负责 HTTP 细节、页面跳转或 UI 文案。
+- 入参优先使用对象参数，便于扩展；返回值语义清晰，常见模式是 `data`、`null`、`{ error }` 或结构化结果。
+- Prisma 查询尽量集中在 service；page/route 只有非常简单且稳定的读取场景才可就地查询。
+- 独立查询使用 `Promise.all`，需要一致性的更新使用事务或先查后改的明确流程。
+- 显式区分前台与后台可见数据，例如 `isAdmin`、`status`、`excluded slugs` 这类条件不要省略。
+- 需要复用的查询片段提成私有 helper，避免复制大段 `where` / `include` 结构。
+- 不在 service 中引入 `NextRequest`、`NextResponse`、`request` 或 React 组件。
+- 例：文章不存在返回 `null`，评论审核返回 `{ updated, previousStatus }` 这类结构化结果，交由上层决定响应。

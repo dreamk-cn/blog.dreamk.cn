@@ -1,0 +1,16 @@
+---
+description: Prisma schema 与数据模型约定
+globs: prisma/schema.prisma
+alwaysApply: false
+---
+
+# Prisma Schema 约定
+
+- 模型命名保持领域语义清晰，状态字段优先使用 enum，不用魔法字符串散落到业务层。
+- 新增字段时同时考虑长度、默认值、可空性和索引，不只关注“能存进去”。
+- 关系字段要明确 `onDelete` 策略，避免删除用户、文章、评论时出现意外级联。
+- 用户可见数据优先保留状态流转，如 `PENDING / APPROVED / DELETED`，不要轻易改成直接硬删除。
+- 常用于筛选、排序、路由访问的字段补充索引，例如 `slug`、`status`、外键和时间字段。
+- 注释重点写业务约束和使用约定，例如特殊 slug、缓存 key 命名空间、审核语义。
+- 修改 schema 后，要同步检查 `src/services`、`src/schemas`、API route 和前台展示是否需要一起调整。
+- 例：如果给评论通知补充去重字段，应同时更新审核流和发信逻辑，而不是只改 schema。

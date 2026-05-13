@@ -1,0 +1,16 @@
+---
+description: API Route 编码与响应约定
+globs: src/app/api/**/*.ts
+alwaysApply: false
+---
+
+# API Route 约定
+
+- Route 只做 4 件事：解析请求、Zod 校验、权限校验、调用 service。
+- 统一复用 `src/lib/api-response.ts` 的 `ok`、`fail`、`zodFail`、`unauthorized`、`forbidden`、`internalError`，避免直接拼 `NextResponse.json`。
+- 管理员写操作优先使用 `requireAdmin()`；需要区分游客/登录态时再调用 `auth()`。
+- 查询参数和请求体校验优先放在 `src/schemas`，不要把大段校验逻辑散落在 route 文件里。
+- `catch` 中先处理 `z.ZodError`，再处理 Prisma 已知错误或业务错误，最后兜底 `internalError()`。
+- 保持响应结构稳定：`code`、`message`、`data`，不要为单个接口发明新格式。
+- 不在 route 中写复杂 Prisma 查询；涉及组合查询、状态流转、树结构处理时下沉到 `src/services`。
+- 例：文章、评论、友链接口都应继续由 route 负责校验和权限，service 负责真正的数据读写。

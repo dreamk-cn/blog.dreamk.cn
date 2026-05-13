@@ -1,0 +1,16 @@
+---
+description: Next.js App Router 与 React 组件约定
+globs: src/**/*.tsx
+alwaysApply: false
+---
+
+# React / Next.js 约定
+
+- 默认优先写 Server Component；只有在使用 hooks、浏览器 API、事件交互或第三方 client-only 组件时才加 `'use client'`。
+- `src/app` 下的 page/layout 负责路由和数据编排，复杂交互下沉到 `src/components`。
+- 页面级数据优先服务端获取；可独立并发的数据使用 `Promise.all`，并按需设置 `revalidate`。
+- `generateMetadata`、`notFound()`、`redirect()` 等 App Router 能力优先使用官方模式，不手写替代逻辑。
+- UI 统一沿用 `HeroUI + Tailwind`，优先复用现有 token/class 命名，如 `text-text-base`、`border-border`、`bg-background`。
+- 新增组件时保持“展示组件”和“数据/副作用逻辑”分离；重复逻辑优先抽成 hook 或 helper。
+- 表单、弹窗、列表交互优先延续现有组件组合方式，不混入另一套 UI 体系。
+- 例：文章详情页继续保持服务端查数据，评论交互放进 `PostComments` 这类客户端组件，而不是整页改成 client component。
