@@ -96,7 +96,7 @@ model Post {
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
 
-  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User              @relation(fields: [userId], references: [id], onDelete: NoAction)
   userId    String
 
   category    Category?       @relation(fields: [categoryId], references: [id], onDelete: SetNull)
@@ -107,10 +107,11 @@ model Post {
 
 
   @@index([status])
-  @@index([slug])
   @@index([userId])
   @@index([categoryId])
   @@index([publishedAt])
+  @@index([status, publishedAt, createdAt])
+  @@index([categoryId, status, publishedAt])
 }
 
 enum PostStatus {
@@ -126,8 +127,6 @@ model Category {
   posts     Post[]    // 所有属于该分类的文章
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
-
-  @@index([slug])
 }
 
 model Tag {
@@ -137,9 +136,6 @@ model Tag {
   posts Post[]
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
-
-
-  @@index([slug])
 }
 
 model Comment {
@@ -165,6 +161,7 @@ model Comment {
   @@index([postId])
   @@index([status])
   @@index([userId])
+  @@index([postId, status, parentId, createdAt])
 }
 
 enum CommentStatus {
@@ -187,6 +184,7 @@ model FriendLink {
   updatedAt DateTime          @updatedAt
 
   @@index([status])
+  @@index([status, sortOrder, createdAt])
 }
 
 enum LinkStatus {

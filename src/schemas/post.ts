@@ -69,3 +69,22 @@ export const PostUpdateSchema = PostCreateSchema.extend({
 export const PostDeleteSchema = z.object({
   ids: zValue(z.array(z.string()).default([])),
 })
+
+export const PostViewSchema = z.object({
+  slug: zValue(z.string().trim().min(1, "slug不能为空")),
+})
+
+export const GenerateSlugSchema = z.object({
+  title: zValue(z.string().trim().min(1, "标题不能为空").max(255)),
+  content: zValue(z.string().trim().max(20000).optional()),
+})
+
+export const GenerateExcerptSchema = z.object({
+  content: zValue(
+    z
+      .string()
+      .trim()
+      .min(20, "正文内容太短，无法生成摘要")
+      .max(20000, "正文内容过长，请精简后重试"),
+  ),
+})

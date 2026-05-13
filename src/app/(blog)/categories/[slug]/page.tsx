@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { findCategoryBySlug, renderCategoryPostListPage } from "./category-post-list";
+import { renderCategoryPostListPage } from "./category-post-list";
+import { findCategoryBySlug } from "@/services/category-service";
 
 export const revalidate = 300;
 

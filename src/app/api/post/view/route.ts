@@ -1,28 +1,15 @@
 import { NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { internalError, ok, zodFail } from "@/lib/api-response";
+import { PostViewSchema } from "@/schemas/post";
+import { incrementPostView } from "@/services/post-service";
 import z from "zod";
-
-const ViewSchema = z.object({
-  slug: z.string().min(1, "slug不能为空"),
-});
 
 export async function POST(request: NextRequest) {
   try {
     const json = await request.json();
-    const { slug } = ViewSchema.parse(json ?? {});
+    const { slug } = PostViewSchema.parse(json ?? {});
 
-    await prisma.post.updateMany({
-      where: {
-        slug,
-        status: "PUBLISHED",
-      },
-      data: {
-        viewCount: {
-          increment: 1,
-        },
-      },
-    });
+    await incrementPostView(slug);
 
     return ok(null, "ok");
   } catch (err) {

@@ -4,8 +4,8 @@ import { ArticleMarkdown } from "@/components/post/article-markdown";
 import { PostComments } from "@/components/post/comment";
 import { contentConfig } from "@/config/content";
 import { siteConfig } from "@/config/site";
-import { prisma } from "@/lib/prisma";
 import { countApprovedCommentsByPostSlug, listApprovedCommentsBySlug } from "@/services/comment-service";
+import { getPublishedPostBySlug, getPublishedPostMetadataBySlug } from "@/services/post-service";
 
 const ABOUT_SLUG = contentConfig.pageSlugs.about;
 const ROOT_PAGE_SIZE = 20;
@@ -21,19 +21,7 @@ function formatDateTime(date: Date | null) {
 }
 
 async function getAboutPost() {
-  return prisma.post.findFirst({
-    where: {
-      slug: ABOUT_SLUG,
-      status: "PUBLISHED",
-    },
-    include: {
-      user: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
+  return getPublishedPostBySlug(ABOUT_SLUG);
 }
 
 type AboutPageData =
@@ -71,16 +59,7 @@ async function getAboutPageDataSafe(): Promise<AboutPageData> {
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const post = await prisma.post.findFirst({
-      where: {
-        slug: ABOUT_SLUG,
-        status: "PUBLISHED",
-      },
-      select: {
-        title: true,
-        excerpt: true,
-      },
-    });
+    const post = await getPublishedPostMetadataBySlug(ABOUT_SLUG);
 
     if (!post) {
       return {

@@ -94,3 +94,17 @@ export async function deleteFriendLink(id: string) {
   await prisma.friendLink.delete({ where: { id } });
   return { data: null };
 }
+
+export async function listApprovedFriendLinks() {
+  return prisma.friendLink.findMany({
+    where: {
+      status: "APPROVED",
+    },
+    orderBy: [{ sortOrder: "desc" }, { createdAt: "desc" }],
+    select: {
+      id: true,
+      name: true,
+      url: true,
+    },
+  });
+}

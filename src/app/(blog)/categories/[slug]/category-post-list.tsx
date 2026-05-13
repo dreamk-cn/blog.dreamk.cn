@@ -2,8 +2,7 @@ import NextLink from "next/link";
 import { notFound } from "next/navigation";
 import { PostCard } from "@/components/post/post-card";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
-import { contentConfig } from "@/config/content";
-import { prisma } from "@/lib/prisma";
+import { getPublicCategoryPostListPage } from "@/services/category-service";
 
 const PAGE_SIZE = 10;
 
@@ -23,48 +22,17 @@ function buildPageNumbers(currentPage: number, totalPages: number) {
     .sort((a, b) => a - b);
 }
 
-export async function findCategoryBySlug(slug: string) {
-  return prisma.category.findUnique({
-    where: { slug },
-    select: {
-      id: true,
-      name: true,
-      slug: true,
-    },
-  });
-}
-
 export async function renderCategoryPostListPage(slug: string, requestedPage: number) {
-  const category = await findCategoryBySlug(slug);
-
-  if (!category) {
+  const pageData = await getPublicCategoryPostListPage({
+    slug,
+    page: requestedPage,
+    pageSize: PAGE_SIZE,
+  });
+  if (!pageData) {
     notFound();
   }
 
-  const safePage = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
-
-  const baseWhere = {
-    status: "PUBLISHED" as const,
-    slug: {
-      notIn: [...contentConfig.excludedPostSlugsForPublicFeed],
-    },
-    categoryId: category.id,
-  };
-
-  const total = await prisma.post.count({ where: baseWhere });
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const currentPage = Math.min(safePage, totalPages);
-  const skip = (currentPage - 1) * PAGE_SIZE;
-
-  const posts = await prisma.post.findMany({
-    include: {
-      tags: true,
-    },
-    where: baseWhere,
-    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-    skip,
-    take: PAGE_SIZE,
-  });
+  const { category, posts, total, totalPages, currentPage } = pageData;
 
   const pageNumbers = buildPageNumbers(currentPage, totalPages);
   const hasPrev = currentPage > 1;

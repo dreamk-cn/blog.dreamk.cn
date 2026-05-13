@@ -1,74 +1,21 @@
 import { PostCard } from "@/components/post/post-card";
 import { ProfileSidebar } from "@/components/layouts/blog/profile-sidebar";
 import { HotPosts } from "@/components/post/hot-posts";
-import { contentConfig } from "@/config/content";
-import { prisma } from "@/lib/prisma";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 import NextLink from "next/link";
+import { listPublicCategories } from "@/services/category-service";
+import { listApprovedFriendLinks } from "@/services/friend-link-service";
+import { listHotPublicPosts, listRecentPublicPosts } from "@/services/post-service";
 
 const HOME_RECENT_POSTS_LIMIT = 6;
 export const revalidate = 300;
 
 export default async function Home() {
   const [posts, hotPosts, categories, friendLinks] = await Promise.all([
-    prisma.post.findMany({
-      include: {
-        tags: true
-      },
-      where: {
-        status: 'PUBLISHED',
-        slug: {
-          notIn: [...contentConfig.excludedPostSlugsForPublicFeed],
-        },
-      },
-      orderBy: {
-        publishedAt: 'desc',
-      },
-      take: HOME_RECENT_POSTS_LIMIT,
-    }),
-    prisma.post.findMany({
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        viewCount: true,
-      },
-      where: {
-        status: 'PUBLISHED',
-        slug: {
-          notIn: [...contentConfig.excludedPostSlugsForPublicFeed],
-        },
-      },
-      orderBy: {
-        viewCount: 'desc',
-      },
-      take: 8,
-    }),
-    prisma.category.findMany({
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-      take: 16,
-    }),
-    prisma.friendLink.findMany({
-      where: {
-        status: "APPROVED",
-      },
-      orderBy: [
-        { sortOrder: "desc" },
-        { createdAt: "desc" },
-      ],
-      select: {
-        id: true,
-        name: true,
-        url: true,
-      },
-    }),
+    listRecentPublicPosts(HOME_RECENT_POSTS_LIMIT),
+    listHotPublicPosts(8),
+    listPublicCategories(16),
+    listApprovedFriendLinks(),
   ]);
 
   const profileSidebarEl = <ProfileSidebar categories={categories} friendLinks={friendLinks} />;

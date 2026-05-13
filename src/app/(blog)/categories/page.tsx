@@ -1,58 +1,11 @@
 import NextLink from "next/link";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
-import { contentConfig } from "@/config/content";
-import { prisma } from "@/lib/prisma";
+import { listPublicCategoriesWithPostCount } from "@/services/category-service";
 
 export const revalidate = 300;
 
-type CategoryWithPostCount = {
-  id: string;
-  name: string;
-  slug: string;
-  postCount: number;
-};
-
 export default async function Categories() {
-  const [categories, groupedPostCounts] = await Promise.all([
-    prisma.category.findMany({
-      select: {
-        id: true,
-        name: true,
-        slug: true,
-      },
-    }),
-    prisma.post.groupBy({
-      by: ["categoryId"],
-      where: {
-        status: "PUBLISHED",
-        slug: {
-          notIn: [...contentConfig.excludedPostSlugsForPublicFeed],
-        },
-        categoryId: {
-          not: null,
-        },
-      },
-      _count: {
-        _all: true,
-      },
-    }),
-  ]);
-
-  const postCountMap = new Map(
-    groupedPostCounts
-      .filter((item) => item.categoryId)
-      .map((item) => [item.categoryId as string, item._count._all]),
-  );
-
-  const list: CategoryWithPostCount[] = categories
-    .map((category) => ({
-      ...category,
-      postCount: postCountMap.get(category.id) ?? 0,
-    }))
-    .sort((a, b) => {
-      if (b.postCount !== a.postCount) return b.postCount - a.postCount;
-      return a.name.localeCompare(b.name, "zh-CN");
-    });
+  const list = await listPublicCategoriesWithPostCount();
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4">

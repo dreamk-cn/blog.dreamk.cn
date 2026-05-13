@@ -1,8 +1,7 @@
 import NextLink from "next/link";
 import { PostCard } from "@/components/post/post-card";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
-import { contentConfig } from "@/config/content";
-import { prisma } from "@/lib/prisma";
+import { listPublicPostsPage } from "@/services/post-service";
 
 const PAGE_SIZE = 10;
 
@@ -29,53 +28,11 @@ function buildPageNumbers(currentPage: number, totalPages: number) {
 }
 
 export async function renderPostsListPage(requestedPage: number, keyword?: string) {
-  const safePage = Number.isFinite(requestedPage) && requestedPage > 0 ? Math.floor(requestedPage) : 1;
   const normalizedKeyword = keyword?.trim() ?? "";
-
-  const baseWhere = {
-    status: "PUBLISHED" as const,
-    slug: {
-      notIn: [...contentConfig.excludedPostSlugsForPublicFeed],
-    },
-    ...(normalizedKeyword
-      ? {
-          OR: [
-            {
-              title: {
-                contains: normalizedKeyword,
-                mode: "insensitive" as const,
-              },
-            },
-            {
-              excerpt: {
-                contains: normalizedKeyword,
-                mode: "insensitive" as const,
-              },
-            },
-            {
-              content: {
-                contains: normalizedKeyword,
-                mode: "insensitive" as const,
-              },
-            },
-          ],
-        }
-      : {}),
-  };
-
-  const total = await prisma.post.count({ where: baseWhere });
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const currentPage = Math.min(safePage, totalPages);
-  const skip = (currentPage - 1) * PAGE_SIZE;
-
-  const posts = await prisma.post.findMany({
-    include: {
-      tags: true,
-    },
-    where: baseWhere,
-    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-    skip,
-    take: PAGE_SIZE,
+  const { posts, total, totalPages, currentPage } = await listPublicPostsPage({
+    page: requestedPage,
+    pageSize: PAGE_SIZE,
+    keyword: normalizedKeyword,
   });
 
   const pageNumbers = buildPageNumbers(currentPage, totalPages);

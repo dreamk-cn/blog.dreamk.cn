@@ -9,9 +9,39 @@ const commentUserSelect = {
   image: true,
 } as const;
 
+const approvedCommentInclude = {
+  user: {
+    select: commentUserSelect,
+  },
+} satisfies Prisma.CommentInclude;
+
 type FlatApprovedComment = Prisma.CommentGetPayload<{
   include: { user: { select: typeof commentUserSelect } };
 }>;
+
+async function getPublishedPostIdBySlug(slug: string) {
+  const post = await prisma.post.findFirst({
+    where: {
+      slug,
+      status: "PUBLISHED",
+    },
+    select: { id: true },
+  });
+
+  return post?.id ?? null;
+}
+
+async function loadApprovedRootComment(postId: string, rootId: string) {
+  return prisma.comment.findFirst({
+    where: {
+      id: rootId,
+      postId,
+      status: "APPROVED",
+      parentId: null,
+    },
+    include: approvedCommentInclude,
+  });
+}
 
 function buildThreadedRootsFromFlat(
   comments: FlatApprovedComment[],
@@ -86,15 +116,8 @@ export async function listApprovedCommentsBySlug(
   slug: string,
   options?: { rootSkip?: number; rootTake?: number; replySkip?: number; replyTake?: number },
 ) {
-  const post = await prisma.post.findFirst({
-    where: {
-      slug,
-      status: "PUBLISHED",
-    },
-    select: { id: true },
-  });
-
-  if (!post) {
+  const postId = await getPublishedPostIdBySlug(slug);
+  if (!postId) {
     return { comments: [], totalRootCount: 0 };
   }
 
@@ -105,7 +128,7 @@ export async function listApprovedCommentsBySlug(
 
   const totalRootCount = await prisma.comment.count({
     where: {
-      postId: post.id,
+      postId,
       status: "APPROVED",
       parentId: null,
     },
@@ -113,25 +136,21 @@ export async function listApprovedCommentsBySlug(
 
   const rootRows = await prisma.comment.findMany({
     where: {
-      postId: post.id,
+      postId,
       status: "APPROVED",
       parentId: null,
     },
     orderBy: { createdAt: "desc" },
     skip: rootSkip,
     take: rootTake,
-    include: {
-      user: {
-        select: commentUserSelect,
-      },
-    },
+    include: approvedCommentInclude,
   });
 
   if (rootRows.length === 0) {
     return { comments: [], totalRootCount };
   }
 
-  const flat = await collectApprovedSubtreeForRoots(post.id, rootRows);
+  const flat = await collectApprovedSubtreeForRoots(postId, rootRows);
   const rootIdsInOrder = rootRows.map((r) => r.id);
   const comments = buildThreadedRootsFromFlat(flat, rootIdsInOrder, { skip: replySkip, take: replyTake });
 
@@ -143,37 +162,17 @@ export async function listApprovedRepliesForRootSlug(
   rootId: string,
   options: { skip: number; take: number },
 ) {
-  const post = await prisma.post.findFirst({
-    where: {
-      slug,
-      status: "PUBLISHED",
-    },
-    select: { id: true },
-  });
-
-  if (!post) {
+  const postId = await getPublishedPostIdBySlug(slug);
+  if (!postId) {
     return null;
   }
 
-  const rootRow = await prisma.comment.findFirst({
-    where: {
-      id: rootId,
-      postId: post.id,
-      status: "APPROVED",
-      parentId: null,
-    },
-    include: {
-      user: {
-        select: commentUserSelect,
-      },
-    },
-  });
-
+  const rootRow = await loadApprovedRootComment(postId, rootId);
   if (!rootRow) {
     return null;
   }
 
-  const flat = await collectApprovedSubtreeForRoots(post.id, [rootRow]);
+  const flat = await collectApprovedSubtreeForRoots(postId, [rootRow]);
   const commentMap = new Map(flat.map((item) => [item.id, item]));
 
   const allReplies = flat
@@ -209,21 +208,15 @@ export async function countApprovedCommentsByPostSlug(slug: string) {
 
 /** 邮件深链：定位某条已审核评论在分页中的位置（根楼层 + 楼内线序） */
 export async function getApprovedCommentAnchorMeta(slug: string, commentId: string) {
-  const post = await prisma.post.findFirst({
-    where: {
-      slug,
-      status: "PUBLISHED",
-    },
-    select: { id: true },
-  });
-  if (!post) {
+  const postId = await getPublishedPostIdBySlug(slug);
+  if (!postId) {
     return null;
   }
 
   const target = await prisma.comment.findFirst({
     where: {
       id: commentId,
-      postId: post.id,
+      postId,
       status: "APPROVED",
     },
     select: { id: true, parentId: true },
@@ -233,10 +226,14 @@ export async function getApprovedCommentAnchorMeta(slug: string, commentId: stri
   }
 
   let rootId = target.id;
-  let currentId: string = target.id;
+  let currentId = target.parentId;
   for (let depth = 0; depth < 64; depth += 1) {
+    if (!currentId) {
+      rootId = target.id;
+      break;
+    }
     const node: { id: string; parentId: string | null } | null = await prisma.comment.findFirst({
-      where: { id: currentId, postId: post.id },
+      where: { id: currentId, postId },
       select: { id: true, parentId: true },
     });
     if (!node) {
@@ -253,7 +250,7 @@ export async function getApprovedCommentAnchorMeta(slug: string, commentId: stri
 
   const roots = await prisma.comment.findMany({
     where: {
-      postId: post.id,
+      postId,
       status: "APPROVED",
       parentId: null,
     },
@@ -271,24 +268,12 @@ export async function getApprovedCommentAnchorMeta(slug: string, commentId: stri
   let totalReplyCount = 0;
 
   if (!isTargetRoot) {
-    const rootRow = await prisma.comment.findFirst({
-      where: {
-        id: rootId,
-        postId: post.id,
-        status: "APPROVED",
-        parentId: null,
-      },
-      include: {
-        user: {
-          select: commentUserSelect,
-        },
-      },
-    });
+    const rootRow = await loadApprovedRootComment(postId, rootId);
     if (!rootRow) {
       return null;
     }
 
-    const flat = await collectApprovedSubtreeForRoots(post.id, [rootRow]);
+    const flat = await collectApprovedSubtreeForRoots(postId, [rootRow]);
     const commentMap = new Map(flat.map((item) => [item.id, item]));
     const allReplies = flat
       .filter((item) => item.parentId !== null && isDescendantOf(item, rootId, commentMap))
@@ -341,17 +326,8 @@ export async function createComment(input: {
   status: CommentStatus;
 }) {
   const { slug, content, parentId, userId, userIp, userAgent, status } = input;
-  const post = await prisma.post.findFirst({
-    where: {
-      slug,
-      status: "PUBLISHED",
-    },
-    select: {
-      id: true,
-    },
-  });
-
-  if (!post) {
+  const postId = await getPublishedPostIdBySlug(slug);
+  if (!postId) {
     return null;
   }
 
@@ -359,7 +335,7 @@ export async function createComment(input: {
     const parent = await prisma.comment.findFirst({
       where: {
         id: parentId,
-        postId: post.id,
+        postId,
         status: "APPROVED",
       },
       select: { id: true },
@@ -372,7 +348,7 @@ export async function createComment(input: {
   const created = await prisma.comment.create({
     data: {
       content,
-      postId: post.id,
+      postId,
       parentId: parentId || null,
       userId: userId || null,
       userIp: userIp || null,

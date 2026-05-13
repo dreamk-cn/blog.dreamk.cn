@@ -8,8 +8,8 @@ import { MobilePostToc, PostViewTracker } from "@/components/post/mobile-post-to
 import { PostTocActiveProvider } from "@/components/post/post-toc-active-context";
 import { PostTableOfContents } from "@/components/post/post-table-of-contents";
 import { estimateArticleCharCount, extractMarkdownToc } from "@/lib/markdown-toc";
-import { prisma } from "@/lib/prisma";
 import { countApprovedCommentsByPostSlug, listApprovedCommentsBySlug } from "@/services/comment-service";
+import { getPublishedPostBySlug } from "@/services/post-service";
 
 const POST_COMMENT_ROOT_PAGE_SIZE = 20;
 const POST_COMMENT_REPLY_PAGE_SIZE = 5;
@@ -25,23 +25,11 @@ function formatDateTime(date: Date | null) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
-const getPublishedPostBySlug = cache(async (slug: string) => {
-  return prisma.post.findFirst({
-    where: {
-      slug,
-      status: "PUBLISHED",
-    },
-    include: {
-      tags: true,
-      category: true,
-      user: { select: { name: true } },
-    },
-  });
-});
+const getCachedPublishedPostBySlug = cache(getPublishedPostBySlug);
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getPublishedPostBySlug(slug);
+  const post = await getCachedPublishedPostBySlug(slug);
 
   if (!post) {
     notFound();
@@ -55,7 +43,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PostDetail({ params }: PageProps) {
   const { slug } = await params;
-  const post = await getPublishedPostBySlug(slug);
+  const post = await getCachedPublishedPostBySlug(slug);
 
   if (!post) {
     notFound();
