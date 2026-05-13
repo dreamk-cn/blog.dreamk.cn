@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
     const userId = session?.user?.id || undefined;
     const status = userId ? "APPROVED" : "PENDING";
 
+    // 匿名用户评论限制，防止恶意刷评论
     if (!userId) {
       const ip = getRequestIp(request);
       const rate = await consumeAnonymousCommentRateLimit(ip);

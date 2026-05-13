@@ -1,10 +1,11 @@
 import { getCacheStore } from "./create-cache-store";
 
-const KEY_PREFIX = "ratelimit:comment:anon:v1:";
+/** 与后台「清除匿名评论限流」快捷操作共用此前缀 */
+export const ANON_COMMENT_RATE_CACHE_KEY_PREFIX = "ratelimit:comment:anon:v1:";
 
 function anonCommentRateKey(ip: string | null): string {
   const safe = ip?.trim() || "unknown";
-  return `${KEY_PREFIX}${safe}`;
+  return `${ANON_COMMENT_RATE_CACHE_KEY_PREFIX}${safe}`;
 }
 
 function readMaxPerWindow(): number {

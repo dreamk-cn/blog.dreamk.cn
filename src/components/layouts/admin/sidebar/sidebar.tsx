@@ -29,6 +29,7 @@ export const SidebarWrapper = () => {
       "/admin/tag/list",
       "/admin/category/list",
       "/admin/friend-link/list",
+      "/admin/cache",
       "/admin/user/list",
     ],
     []
@@ -103,9 +104,10 @@ export const SidebarWrapper = () => {
                 href="/admin/friend-link/list"
               />
               <SidebarItem
-                isActive={pathname === "/caches"}
+                isActive={pathname === "/admin/cache"}
                 title="缓存"
                 icon={<DatabaseIcon />}
+                href="/admin/cache"
               />
             </SidebarMenu>
             <SidebarItem

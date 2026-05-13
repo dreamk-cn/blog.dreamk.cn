@@ -1,8 +1,8 @@
 import { Prisma } from "@prisma/client";
 import type { PrismaClient } from "@prisma/client";
-import type { CacheStore, CacheSetOptions } from "./cache-store";
+import type { CacheStore, CacheSetOptions, CacheStoreAdmin } from "./cache-store";
 
-export class PrismaAppCache implements CacheStore {
+export class PrismaAppCache implements CacheStore, CacheStoreAdmin {
   constructor(private readonly db: PrismaClient) {}
 
   async get(key: string): Promise<string | null> {
@@ -55,5 +55,63 @@ export class PrismaAppCache implements CacheStore {
     const raw = rows[0]?.value ?? "1";
     const n = Number.parseInt(raw, 10);
     return Number.isFinite(n) ? n : 1;
+  }
+
+  async listEntries(params: { pageNo: number; pageSize: number; keyword?: string }) {
+    const { pageNo, pageSize, keyword } = params;
+    const safePage = Math.max(1, pageNo);
+    const safeSize = Math.min(100, Math.max(1, pageSize));
+    const skip = (safePage - 1) * safeSize;
+
+    const kw = keyword?.trim();
+    const where = kw
+      ? {
+          key: { contains: kw, mode: "insensitive" as const },
+        }
+      : {};
+
+    const [total, list] = await Promise.all([
+      this.db.appCache.count({ where }),
+      this.db.appCache.findMany({
+        where,
+        orderBy: { updatedAt: "desc" },
+        skip,
+        take: safeSize,
+        select: {
+          key: true,
+          value: true,
+          expiresAt: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+    ]);
+
+    return { list, total };
+  }
+
+  async deleteEntry(key: string): Promise<{ deleted: 0 | 1 }> {
+    try {
+      await this.db.appCache.delete({ where: { key } });
+      return { deleted: 1 };
+    } catch {
+      return { deleted: 0 };
+    }
+  }
+
+  async deleteByPrefix(prefix: string): Promise<{ deleted: number }> {
+    const result = await this.db.appCache.deleteMany({
+      where: { key: { startsWith: prefix } },
+    });
+    return { deleted: result.count };
+  }
+
+  async purgeExpiredEntries(): Promise<{ deleted: number }> {
+    const result = await this.db.appCache.deleteMany({
+      where: {
+        expiresAt: { not: null, lt: new Date() },
+      },
+    });
+    return { deleted: result.count };
   }
 }
