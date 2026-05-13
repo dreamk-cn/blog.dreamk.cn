@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
-import { fail, internalError, ok, zodFail } from "@/lib/api-response";
+import { consumeAnonymousCommentRateLimit } from "@/lib/cache";
+import { fail, internalError, ok, tooManyRequests, zodFail } from "@/lib/api-response";
 import { CommentCreateSchema, CommentListSchema, CommentReplyListSchema, CommentSelfDeleteSchema } from "@/schemas/comment";
 import { notifyOnCommentCreated } from "@/services/comment-notify";
 import {
@@ -68,6 +69,17 @@ export async function POST(request: NextRequest) {
     const session = await auth();
     const userId = session?.user?.id || undefined;
     const status = userId ? "APPROVED" : "PENDING";
+
+    if (!userId) {
+      const ip = getRequestIp(request);
+      const rate = await consumeAnonymousCommentRateLimit(ip);
+      if (!rate.ok) {
+        return tooManyRequests(
+          `匿名留言过于频繁，每 ${rate.windowSec} 秒最多 ${rate.limit} 条，请稍后再试`,
+          rate.retryAfterSec,
+        );
+      }
+    }
 
     const created = await createComment({
       slug,

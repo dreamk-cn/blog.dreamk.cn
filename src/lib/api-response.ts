@@ -29,6 +29,24 @@ export function forbidden(message = "您没有操作权限") {
   return fail(ResponseCode.FORBIDDEN, message);
 }
 
+export function tooManyRequests(
+  message = ResponseMessage[ResponseCode.TOO_MANY_REQUESTS],
+  retryAfterSec?: number,
+) {
+  const headers = new Headers();
+  if (retryAfterSec != null && retryAfterSec > 0) {
+    headers.set("Retry-After", String(Math.ceil(retryAfterSec)));
+  }
+  return NextResponse.json(
+    {
+      code: ResponseCode.TOO_MANY_REQUESTS,
+      message,
+      data: null,
+    },
+    { status: ResponseCode.TOO_MANY_REQUESTS, headers },
+  );
+}
+
 export function internalError(message = "服务器内部错误") {
   return fail(ResponseCode.INTERNAL_SERVER_ERROR, message);
 }

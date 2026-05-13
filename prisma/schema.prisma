@@ -196,16 +196,18 @@ enum LinkStatus {
   HIDDEN    // 隐藏
 }
 
-// 缓存表
-// model KeyValue {
-//   key       String            @unique
-//   value     String            @unique
-//   expiresAt DateTime?         
+/// 应用层键值缓存（PostgreSQL 实现；后期可换 Redis 等，通过适配器切换）
+/// 约定：key 建议带命名空间前缀，如 `ratelimit:ip:1.2.3.4`、`session:xyz`
+/// value 存 JSON 字符串或纯文本；expiresAt 为空表示永不过期（慎用）
+model AppCache {
+  key       String    @id @db.VarChar(512)
+  value     String    @db.Text
+  expiresAt DateTime?
 
-//   createdAt DateTime          @default(now())
-//   updatedAt DateTime          @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
-//   @@index([expiresAt])
-// }
+  @@index([expiresAt])
+}
 
 // todo:后期扩展通知表
