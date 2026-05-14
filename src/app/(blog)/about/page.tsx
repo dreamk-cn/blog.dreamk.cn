@@ -4,6 +4,7 @@ import { ArticleMarkdown } from "@/components/post/article-markdown";
 import { PostComments } from "@/components/post/comment";
 import { contentConfig } from "@/config/content";
 import { siteConfig } from "@/config/site";
+import { buildCanonical } from "@/lib/seo";
 import { countApprovedCommentsByPostSlug, listApprovedCommentsBySlug } from "@/services/comment-service";
 import { getPublishedPostBySlug, getPublishedPostMetadataBySlug } from "@/services/post-service";
 
@@ -65,17 +66,20 @@ export async function generateMetadata(): Promise<Metadata> {
       return {
         title: "关于",
         description: siteConfig.description,
+      alternates: buildCanonical("/about"),
       };
     }
 
     return {
       title: post.title,
       description: post.excerpt || siteConfig.description,
+    alternates: buildCanonical("/about"),
     };
   } catch {
     return {
       title: "关于",
       description: siteConfig.description,
+    alternates: buildCanonical("/about"),
     };
   }
 }

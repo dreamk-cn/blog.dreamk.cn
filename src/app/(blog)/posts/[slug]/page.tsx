@@ -8,6 +8,13 @@ import { MobilePostToc, PostViewTracker } from "@/components/post/mobile-post-to
 import { PostTocActiveProvider } from "@/components/post/post-toc-active-context";
 import { PostTableOfContents } from "@/components/post/post-table-of-contents";
 import { estimateArticleCharCount, extractMarkdownToc } from "@/lib/markdown-toc";
+import {
+  buildArticleJsonLd,
+  buildBreadcrumbJsonLd,
+  buildCanonical,
+  normalizeMetaDescription,
+  stringifyJsonLd,
+} from "@/lib/seo";
 import { countApprovedCommentsByPostSlug, listApprovedCommentsBySlug } from "@/services/comment-service";
 import { getPublishedPostBySlug } from "@/services/post-service";
 
@@ -27,6 +34,20 @@ function formatDateTime(date: Date | null) {
 
 const getCachedPublishedPostBySlug = cache(getPublishedPostBySlug);
 
+function buildPostDescription(post: NonNullable<Awaited<ReturnType<typeof getPublishedPostBySlug>>>) {
+  if (post.excerpt?.trim()) {
+    return normalizeMetaDescription(post.excerpt);
+  }
+
+  const parts = [
+    post.title,
+    post.category?.name ? `分类：${post.category.name}` : null,
+    `作者：${post.user?.name?.trim() || siteConfig.name}`,
+  ].filter(Boolean);
+
+  return normalizeMetaDescription(parts.join("，"));
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await getCachedPublishedPostBySlug(slug);
@@ -37,7 +58,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: post.title,
-    description: post.excerpt || "博客文章详情",
+    description: buildPostDescription(post),
+    alternates: buildCanonical(`/posts/${encodeURIComponent(post.slug)}`),
   };
 }
 
@@ -65,9 +87,38 @@ export default async function PostDetail({ params }: PageProps) {
   const charCount = estimateArticleCharCount(content);
   const published = post.publishedAt ?? post.createdAt;
   const authorName = post.user?.name?.trim() || siteConfig.name;
+  const description = buildPostDescription(post);
+  const articleJsonLd = buildArticleJsonLd({
+    title: post.title,
+    description,
+    path: `/posts/${encodeURIComponent(post.slug)}`,
+    authorName,
+    publishedAt: published,
+    modifiedAt: post.updatedAt ?? published,
+    categoryName: post.category?.name,
+    coverUrl: post.coverUrl,
+    tags: post.tags.map((tag) => tag.name),
+  });
+  const breadcrumbItems = [
+    { name: "首页", path: "/" },
+    { name: "文章", path: "/posts" },
+    ...(post.category
+      ? [{ name: post.category.name, path: `/categories/${encodeURIComponent(post.category.slug)}` }]
+      : []),
+    { name: post.title, path: `/posts/${encodeURIComponent(post.slug)}` },
+  ];
+  const breadcrumbJsonLd = buildBreadcrumbJsonLd(breadcrumbItems);
 
   return (
     <div className="min-h-full bg-gradient-to-b from-foreground/60 via-background to-background text-text-base">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: stringifyJsonLd(articleJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: stringifyJsonLd(breadcrumbJsonLd) }}
+      />
       <div className="mx-auto max-w-7xl px-4 pb-20 pt-6 sm:px-6 lg:px-8 lg:pt-10">
         <PostTocActiveProvider items={toc}>
           <PostViewTracker slug={slug} />

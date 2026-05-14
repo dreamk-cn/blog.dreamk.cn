@@ -3,7 +3,7 @@ export type SiteConfig = typeof siteConfig;
 export const siteConfig = {
   name: "Dreamk",
   avatar: "/avatar.jpg",
-  description: "Dreamk's Blog",
+  description: "Dreamk 的个人技术博客，记录 Web 开发、Next.js、React 与设计实践。",
   navItems: [
     {
       label: "首页",

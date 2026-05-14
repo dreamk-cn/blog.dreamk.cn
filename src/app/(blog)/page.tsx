@@ -1,14 +1,22 @@
+import type { Metadata } from "next";
 import { PostCard } from "@/components/post/post-card";
 import { ProfileSidebar } from "@/components/layouts/blog/profile-sidebar";
 import { HotPosts } from "@/components/post/hot-posts";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 import NextLink from "next/link";
+import { siteConfig } from "@/config/site";
+import { buildCanonical } from "@/lib/seo";
 import { listPublicCategories } from "@/services/category-service";
 import { listApprovedFriendLinks } from "@/services/friend-link-service";
 import { listHotPublicPosts, listRecentPublicPosts } from "@/services/post-service";
 
 const HOME_RECENT_POSTS_LIMIT = 6;
 export const revalidate = 300;
+
+export const metadata: Metadata = {
+  description: siteConfig.description,
+  alternates: buildCanonical("/"),
+};
 
 export default async function Home() {
   const [posts, hotPosts, categories, friendLinks] = await Promise.all([

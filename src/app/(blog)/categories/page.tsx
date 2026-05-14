@@ -1,8 +1,16 @@
+import type { Metadata } from "next";
 import NextLink from "next/link";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
+import { buildCanonical } from "@/lib/seo";
 import { listPublicCategoriesWithPostCount } from "@/services/category-service";
 
 export const revalidate = 300;
+
+export const metadata: Metadata = {
+  title: "分类",
+  description: "浏览 Dreamk 博客的全部分类，按主题快速找到相关文章。",
+  alternates: buildCanonical("/categories"),
+};
 
 export default async function Categories() {
   const list = await listPublicCategoriesWithPostCount();

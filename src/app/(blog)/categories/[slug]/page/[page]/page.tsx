@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { buildCanonical } from "@/lib/seo";
 import { renderCategoryPostListPage } from "../../category-post-list";
 import { findCategoryBySlug } from "@/services/category-service";
 
@@ -21,6 +22,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: "分类不存在",
       description: "该分类可能已被删除或不存在",
+      alternates: buildCanonical(`/categories/${encodeURIComponent(slug)}/page/${encodeURIComponent(page)}`),
     };
   }
 
@@ -28,12 +30,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return {
       title: `${category.name} 分类`,
       description: `浏览 ${category.name} 分类下的文章`,
+      alternates: buildCanonical(`/categories/${encodeURIComponent(category.slug)}`),
     };
   }
 
   return {
     title: `${category.name} 分类 - 第 ${pageNo} 页`,
     description: `浏览 ${category.name} 分类文章第 ${pageNo} 页`,
+    alternates: buildCanonical(`/categories/${encodeURIComponent(category.slug)}/page/${pageNo}`),
   };
 }
 
