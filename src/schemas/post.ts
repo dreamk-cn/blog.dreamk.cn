@@ -40,6 +40,7 @@ export const PostCreateSchema = z.object({
   content: zValue(z.string().min(1)),
   excerpt: zValue(z.string().min(1)),
   status: zValue(z.enum<PostStatus[]>(['ARCHIVED', 'DRAFT', 'PUBLISHED']).default('PUBLISHED')),
+  publishedAt: zValue(z.coerce.date().optional()),
   featured: zValue(z.boolean().default(false)),
   coverUrl: zValue(z.url('封面图片URL格式不正确').max(100, '封面图片URL不能超过100个字符').optional()),
   categoryId: zValue(z.string().optional()),

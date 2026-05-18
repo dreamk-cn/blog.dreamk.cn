@@ -26,6 +26,17 @@ type SortBy = 'createdAt' | 'updatedAt' | 'title';
 type SortOrder = 'asc' | 'desc';
 type Status = 'ALL' | 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 
+function formatPublishedAt(date: Date | null | undefined) {
+  if (!date) return '-';
+  return new Date(date).toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
 export default function Posts() {
   const router = useRouter();
   const pathname = usePathname();
@@ -258,6 +269,7 @@ export default function Posts() {
                 <Table.Column>标签</Table.Column>
                 <Table.Column>状态</Table.Column>
                 <Table.Column>置顶</Table.Column>
+                <Table.Column>发布日期</Table.Column>
                 <Table.Column>创建时间</Table.Column>
                 <Table.Column>更新时间</Table.Column>
                 <Table.Column className="text-center">操作</Table.Column>
@@ -265,7 +277,7 @@ export default function Posts() {
               <Table.Body>
                 {loading ? (
                   <Table.Row>
-                    <Table.Cell colSpan={8}>
+                    <Table.Cell colSpan={9}>
                       <div className="flex justify-center py-3">
                         <Spinner color="accent" aria-label="加载中" />
                       </div>
@@ -273,7 +285,7 @@ export default function Posts() {
                   </Table.Row>
                 ) : items.length === 0 ? (
                   <Table.Row>
-                    <Table.Cell colSpan={8}>
+                    <Table.Cell colSpan={9}>
                       <span className="text-default-400">暂无数据</span>
                     </Table.Cell>
                   </Table.Row>
@@ -329,6 +341,9 @@ export default function Posts() {
                         >
                           <Chip.Label>{item.featured ? '是' : '否'}</Chip.Label>
                         </Chip>
+                      </Table.Cell>
+                      <Table.Cell className="text-xs text-text-base">
+                        {item.status === 'PUBLISHED' ? formatPublishedAt(item.publishedAt) : '-'}
                       </Table.Cell>
                       <Table.Cell className="text-xs text-text-base">{new Date(item.createdAt).toLocaleString()}</Table.Cell>
                       <Table.Cell className="text-xs text-text-base">{new Date(item.updatedAt).toLocaleString()}</Table.Cell>

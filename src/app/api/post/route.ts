@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const json = await request.json()
 
     const parsed = PostCreateSchema.parse(json ?? {})
-    const { title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags } = parsed
+    const { title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags, publishedAt } = parsed
 
     const newPost = await createPost({
       userId,
@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
       coverUrl: coverUrl || undefined,
       categoryId: categoryId || undefined,
       tags,
+      publishedAt,
     });
 
     return ok(newPost, "创建文章成功")
@@ -98,7 +99,7 @@ export async function PUT(request: NextRequest) {
 
     const json = await request.json()
     const parsed = PostUpdateSchema.parse(json ?? {})
-    const { id, title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags } = parsed
+    const { id, title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags, publishedAt } = parsed
 
     const updatedPost = await updatePost({
       id,
@@ -111,6 +112,7 @@ export async function PUT(request: NextRequest) {
       coverUrl: coverUrl || undefined,
       categoryId: categoryId || undefined,
       tags,
+      publishedAt,
     });
 
     if (!updatedPost) {

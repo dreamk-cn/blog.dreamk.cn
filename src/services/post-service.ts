@@ -219,6 +219,16 @@ export async function listPosts(params: {
   return { posts, total };
 }
 
+function resolvePublishedAt(
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED",
+  publishedAt: Date | undefined,
+  existingPublishedAt: Date | null = null,
+) {
+  if (status !== "PUBLISHED") return null;
+  if (publishedAt) return publishedAt;
+  return existingPublishedAt ?? new Date();
+}
+
 export async function createPost(input: {
   userId: string;
   title: string;
@@ -230,8 +240,9 @@ export async function createPost(input: {
   coverUrl?: string;
   categoryId?: string;
   tags: PostTagInput[];
+  publishedAt?: Date;
 }) {
-  const { userId, title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags } = input;
+  const { userId, title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags, publishedAt } = input;
 
   return prisma.post.create({
     data: {
@@ -242,7 +253,7 @@ export async function createPost(input: {
       excerpt,
       featured,
       coverUrl,
-      publishedAt: status === "PUBLISHED" ? new Date() : null,
+      publishedAt: resolvePublishedAt(status, publishedAt),
       user: { connect: { id: userId } },
       ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
       ...(tags.length > 0 ? { tags: { connectOrCreate: toTagConnectOrCreate(tags) } } : {}),
@@ -261,15 +272,14 @@ export async function updatePost(input: {
   coverUrl?: string;
   categoryId?: string;
   tags: PostTagInput[];
+  publishedAt?: Date;
 }) {
-  const { id, title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags } = input;
+  const { id, title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags, publishedAt } = input;
   const existingPost = await prisma.post.findUnique({
     where: { id },
     include: { tags: true },
   });
   if (!existingPost) return null;
-
-  const shouldSetPublishedAt = status === "PUBLISHED" && !existingPost.publishedAt;
 
   return prisma.post.update({
     where: { id },
@@ -281,9 +291,7 @@ export async function updatePost(input: {
       status,
       featured,
       coverUrl,
-      ...(status === "PUBLISHED"
-        ? { publishedAt: shouldSetPublishedAt ? new Date() : existingPost.publishedAt }
-        : { publishedAt: null }),
+      publishedAt: resolvePublishedAt(status, publishedAt, existingPost.publishedAt),
       categoryId,
       tags: {
         disconnect: existingPost.tags.map((tag) => ({ id: tag.id })),

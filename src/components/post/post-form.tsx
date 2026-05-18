@@ -22,6 +22,7 @@ import { request, type HttpError } from "@/lib/request";
 import { normalizeSlug } from "@/lib/slug";
 import { StringSelect } from "@/components/admin/string-select";
 import { ArticleMarkdownClient } from "@/components/post/article-markdown";
+import { nowPublishedAtValue, PublishedAtPicker } from "@/components/post/published-at-picker";
 
 interface PostDetail extends Post {
   tags: Tag[];
@@ -40,9 +41,10 @@ type PostFormData = {
   featured: boolean;
   tags: FormTag[];
   coverUrl: string;
+  publishedAt: string;
 };
 
-type FormErrors = Partial<Record<"title" | "slug" | "content" | "excerpt" | "coverUrl", string>>;
+type FormErrors = Partial<Record<"title" | "slug" | "content" | "excerpt" | "coverUrl" | "publishedAt", string>>;
 
 const emptyFormData: PostFormData = {
   title: "",
@@ -54,7 +56,13 @@ const emptyFormData: PostFormData = {
   featured: false,
   tags: [],
   coverUrl: "",
+  publishedAt: "",
 };
+
+function toDatetimeLocalValue(date: Date) {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
 
 function createExcerptFromContent(content: string, maxLength = 160) {
   const plainText = content
@@ -83,6 +91,7 @@ function formDataFromArticle(article?: PostDetail): PostFormData {
     featured: article.featured || false,
     tags: article.tags || [],
     coverUrl: article.coverUrl || "",
+    publishedAt: article.publishedAt ? toDatetimeLocalValue(new Date(article.publishedAt)) : "",
   };
 }
 
@@ -127,6 +136,13 @@ function validateForm(formData: PostFormData): FormErrors {
     }
     if (formData.coverUrl.trim().length > 100) {
       errors.coverUrl = "封面图片 URL 不能超过 100 个字符";
+    }
+  }
+  if (formData.status === "PUBLISHED") {
+    if (!formData.publishedAt.trim()) {
+      errors.publishedAt = "发布日期不能为空";
+    } else if (Number.isNaN(new Date(formData.publishedAt).getTime())) {
+      errors.publishedAt = "发布日期格式不正确";
     }
   }
 
@@ -197,8 +213,21 @@ export function PostForm({
   }, [baseline, formData]);
 
   function updateField<K extends keyof PostFormData>(key: K, value: PostFormData[K]) {
-    setFormData((prev) => ({ ...prev, [key]: value }));
-    if (key === "title" || key === "slug" || key === "content" || key === "excerpt" || key === "coverUrl") {
+    setFormData((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "status" && value === "PUBLISHED" && !next.publishedAt.trim()) {
+        next.publishedAt = nowPublishedAtValue();
+      }
+      return next;
+    });
+    if (
+      key === "title" ||
+      key === "slug" ||
+      key === "content" ||
+      key === "excerpt" ||
+      key === "coverUrl" ||
+      key === "publishedAt"
+    ) {
       setErrors((prev) => ({ ...prev, [key]: undefined }));
     }
   }
@@ -304,11 +333,16 @@ export function PostForm({
   }
 
   async function handleSubmit(statusOverride?: PostStatus) {
+    const nextStatus = statusOverride ?? formData.status;
     const nextFormData = {
       ...formData,
       slug: normalizeSlug(formData.slug),
-      status: statusOverride ?? formData.status,
+      status: nextStatus,
       coverUrl: formData.coverUrl.trim(),
+      publishedAt:
+        nextStatus === "PUBLISHED" && !formData.publishedAt.trim()
+          ? nowPublishedAtValue()
+          : formData.publishedAt,
     };
     const validationErrors = validateForm(nextFormData);
 
@@ -322,18 +356,26 @@ export function PostForm({
     setLoading(true);
 
     try {
+      const { publishedAt: publishedAtLocal, ...restFormData } = nextFormData;
       const submitData = {
-        ...nextFormData,
+        ...restFormData,
         excerpt: nextFormData.excerpt.trim() || createExcerptFromContent(nextFormData.content),
         tags: nextFormData.tags.map((tag) => ({
           id: tag.id.startsWith("temp-") ? undefined : tag.id,
           name: tag.name,
           slug: normalizeSlug(tag.slug || tag.name, 50),
         })),
+        ...(nextFormData.status === "PUBLISHED" && publishedAtLocal.trim()
+          ? { publishedAt: new Date(publishedAtLocal).toISOString() }
+          : {}),
       };
 
       if (onSubmit) {
-        onSubmit(submitData);
+        const { publishedAt: publishedAtIso, ...rest } = submitData;
+        onSubmit({
+          ...rest,
+          ...(publishedAtIso ? { publishedAt: new Date(publishedAtIso) } : {}),
+        });
         return;
       }
 
@@ -479,6 +521,15 @@ export function PostForm({
                 { id: "ARCHIVED", label: "已归档" },
               ]}
             />
+
+            {formData.status === "PUBLISHED" ? (
+              <PublishedAtPicker
+                value={formData.publishedAt}
+                onChange={(value) => updateField("publishedAt", value)}
+                isInvalid={!!errors.publishedAt}
+                errorMessage={errors.publishedAt}
+              />
+            ) : null}
 
             <TextField isInvalid={!!errors.excerpt} className="md:col-span-2">
               <Label className="text-text-muted">文章摘要</Label>
