@@ -4,7 +4,7 @@ import { PostForm } from "@/components/post/post-form";
 import { useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { request } from "@/lib/request";
-import type { Post, Category, Tag } from "@prisma/client";
+import type { Post, Category, Tag } from "@/generated/prisma";
 
 export default function Post() {
   const searchParams = useSearchParams();

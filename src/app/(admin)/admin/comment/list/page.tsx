@@ -2,7 +2,7 @@
 
 import { StringSelect } from "@/components/admin/string-select";
 import { request } from "@/lib/request";
-import type { Comment, Post, User } from "@prisma/client";
+import type { Comment, Post, User } from "@/generated/prisma";
 import { Alert, Button, Chip, Input, Label, Pagination, Spinner, Table, TextField } from "@heroui/react";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";

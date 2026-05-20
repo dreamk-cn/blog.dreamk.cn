@@ -4,7 +4,7 @@ import { Avatar, Card, Separator } from "@heroui/react";
 import NextLink from "next/link";
 import { siteConfig } from "@/config/site";
 import { ClientChip } from "@/components/ui/heroui-client";
-import type { Category } from "@prisma/client";
+import type { Category } from "@/generated/prisma";
 import { getTagColor } from "@/lib/tag-color";
 
 type FriendLinkItem = {

@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 
 function normalizeSlug(name: string, slug?: string) {

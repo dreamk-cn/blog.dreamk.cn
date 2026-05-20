@@ -15,7 +15,7 @@ import {
   TextField,
   Tabs,
 } from "@heroui/react";
-import { Category, Post, PostStatus, Tag } from "@prisma/client";
+import { Category, Post, PostStatus, Tag } from "@/generated/prisma";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { request, type HttpError } from "@/lib/request";

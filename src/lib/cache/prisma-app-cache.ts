@@ -1,5 +1,5 @@
-import { Prisma } from "@prisma/client";
-import type { PrismaClient } from "@prisma/client";
+import { Prisma } from "@/generated/prisma";
+import type { PrismaClient } from "@/generated/prisma";
 import type { CacheStore, CacheSetOptions, CacheStoreAdmin } from "./cache-store";
 
 export class PrismaAppCache implements CacheStore, CacheStoreAdmin {

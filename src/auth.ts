@@ -1,5 +1,6 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import type { UserStatus } from "@prisma/client";
+import type { PrismaClient as AuthPrismaClient } from "@prisma/client";
+import type { UserStatus } from "@/generated/prisma";
 import NextAuth from "next-auth";
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
@@ -12,7 +13,7 @@ function isUserBlocked(status: UserStatus) {
 }
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma as AuthPrismaClient),
   providers: [
     CredentialsProvider({
       id: 'dreamk-credentials',

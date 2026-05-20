@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { Prisma, UserStatus } from "@prisma/client";
+import { Prisma, UserStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import type { RegisterInput } from "@/schemas/auth";
 

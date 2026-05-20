@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma";
 import { contentConfig } from "@/config/content";
 import { getDeepseekClient } from "@/lib/ai-client";
 import { prisma } from "@/lib/prisma";

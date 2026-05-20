@@ -4,7 +4,7 @@ import { ClientChip } from "../ui/heroui-client";
 import { getTagColor } from "@/lib/tag-color";
 import NextLink from "next/link";
 import { Card } from "@heroui/react";
-import type { Post, Tag } from "@prisma/client";
+import type { Post, Tag } from "@/generated/prisma";
 
 type PostWithTags = Post & { tags: Tag[] };
 

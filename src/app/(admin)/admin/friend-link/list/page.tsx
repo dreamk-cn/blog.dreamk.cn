@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { StringSelect } from "@/components/admin/string-select";
 import { SearchIcon } from "@/components/icons";
 import { request } from "@/lib/request";
-import type { FriendLink, LinkStatus } from "@prisma/client";
+import type { FriendLink, LinkStatus } from "@/generated/prisma";
 import {
   Button,
   Input,

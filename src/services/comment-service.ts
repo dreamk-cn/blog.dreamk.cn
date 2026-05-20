@@ -1,4 +1,4 @@
-import { $Enums, type Prisma } from "@prisma/client";
+import { $Enums, type Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 
 type CommentStatus = $Enums.CommentStatus;

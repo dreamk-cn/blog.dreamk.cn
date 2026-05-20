@@ -14,7 +14,7 @@ import {
   useOverlayState,
 } from '@heroui/react';
 import { SearchIcon } from '@/components/icons';
-import type { Tag } from '@prisma/client';
+import type { Tag } from '@/generated/prisma';
 import { request } from '@/lib/request';
 import { useDebounce } from '@/hooks/useDebounce';
 

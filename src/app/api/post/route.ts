@@ -5,7 +5,7 @@ import { fail, internalError, ok, zodFail } from "@/lib/api-response";
 import { requireAdmin } from "@/lib/route-auth";
 import { PostCreateSchema, PostDeleteSchema, PostDetailSchema, PostUpdateSchema } from "@/schemas/post";
 import { createPost, deletePosts, getPostDetail, updatePost } from "@/services/post-service";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma";
 import { NextRequest } from "next/server";
 import z from "zod";
 

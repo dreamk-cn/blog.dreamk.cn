@@ -1,6 +1,6 @@
 import z from "zod";
 import zValue from ".";
-import { $Enums } from "@prisma/client";
+import { $Enums } from "@/generated/prisma";
 import { SearchPageSchema } from "./page";
 
 type PostStatus = $Enums.PostStatus;
