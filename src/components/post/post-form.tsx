@@ -19,6 +19,7 @@ import { Category, Post, PostStatus, Tag } from "@/generated/prisma";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { request, type HttpError } from "@/lib/request";
+import { isValidCoverSrc } from "@/lib/post-cover";
 import { normalizeSlug } from "@/lib/slug";
 import { StringSelect } from "@/components/admin/string-select";
 import { ArticleMarkdownClient } from "@/components/post/article-markdown";
@@ -130,13 +131,10 @@ function validateForm(formData: PostFormData): FormErrors {
     errors.content = "内容不能为空";
   }
   if (formData.coverUrl.trim()) {
-    try {
-      new URL(formData.coverUrl.trim());
-    } catch {
-      errors.coverUrl = "封面图片 URL 格式不正确";
-    }
-    if (formData.coverUrl.trim().length > 100) {
-      errors.coverUrl = "封面图片 URL 不能超过 100 个字符";
+    if (!isValidCoverSrc(formData.coverUrl)) {
+      errors.coverUrl = "封面须以 / 开头，或为 http(s):// 链接";
+    } else if (formData.coverUrl.trim().length > 1024) {
+      errors.coverUrl = "封面图片 URL 不能超过 1024 个字符";
     }
   }
   if (formData.status === "PUBLISHED") {
@@ -554,7 +552,7 @@ export function PostForm({
             <div className="md:col-span-2 space-y-3">
               <TextField isInvalid={!!errors.coverUrl}>
                 <Label className="text-text-muted">封面图片 URL</Label>
-                <Description>可选；留空则展示占位图。后续可改为 OSS 地址，长度需控制在 100 个字符内</Description>
+                <Description>可选；留空则展示占位图。支持 OSS 等长链接，最长 1024 个字符</Description>
                 <Input className="text-text-base" value={formData.coverUrl} onChange={(event) => updateField("coverUrl", event.target.value)} />
                 {errors.coverUrl ? <FieldError>{errors.coverUrl}</FieldError> : null}
               </TextField>

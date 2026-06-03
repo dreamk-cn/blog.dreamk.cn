@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Post" ALTER COLUMN "coverUrl" SET DATA TYPE VARCHAR(1024);
