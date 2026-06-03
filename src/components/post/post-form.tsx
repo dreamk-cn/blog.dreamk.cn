@@ -22,6 +22,7 @@ import { request, type HttpError } from "@/lib/request";
 import { normalizeSlug } from "@/lib/slug";
 import { StringSelect } from "@/components/admin/string-select";
 import { ArticleMarkdownClient } from "@/components/post/article-markdown";
+import { PostCover } from "@/components/post/post-cover";
 import { nowPublishedAtValue, PublishedAtPicker } from "@/components/post/published-at-picker";
 
 interface PostDetail extends Post {
@@ -550,12 +551,23 @@ export function PostForm({
               {errors.excerpt ? <FieldError>{errors.excerpt}</FieldError> : null}
             </TextField>
 
-            <TextField isInvalid={!!errors.coverUrl} className="md:col-span-2">
-              <Label className="text-text-muted">封面图片 URL</Label>
-              <Description>可选，长度需控制在 100 个字符内</Description>
-              <Input className="text-text-base" value={formData.coverUrl} onChange={(event) => updateField("coverUrl", event.target.value)} />
-              {errors.coverUrl ? <FieldError>{errors.coverUrl}</FieldError> : null}
-            </TextField>
+            <div className="md:col-span-2 space-y-3">
+              <TextField isInvalid={!!errors.coverUrl}>
+                <Label className="text-text-muted">封面图片 URL</Label>
+                <Description>可选；留空则展示占位图。后续可改为 OSS 地址，长度需控制在 100 个字符内</Description>
+                <Input className="text-text-base" value={formData.coverUrl} onChange={(event) => updateField("coverUrl", event.target.value)} />
+                {errors.coverUrl ? <FieldError>{errors.coverUrl}</FieldError> : null}
+              </TextField>
+              <div className="overflow-hidden rounded-xl border border-border bg-foreground">
+                <p className="border-b border-border px-3 py-2 text-xs text-text-muted">封面预览</p>
+                <PostCover
+                  coverUrl={formData.coverUrl}
+                  alt={formData.title || "文章封面"}
+                  variant="card"
+                  className="rounded-none"
+                />
+              </div>
+            </div>
 
             <TextField isRequired isInvalid={!!errors.content} className="md:col-span-2">
               <Label className="text-text-muted">文章内容</Label>

@@ -1,6 +1,7 @@
 "use client";
 
 import { ClientChip } from "../ui/heroui-client";
+import { PostCover } from "@/components/post/post-cover";
 import { getTagColor } from "@/lib/tag-color";
 import NextLink from "next/link";
 import { Card } from "@heroui/react";
@@ -18,11 +19,16 @@ function formatDate(date: Date | null) {
 }
 
 export function PostCard({ post }: { post: PostWithTags }) {
+  const postHref = `/posts/${post.slug}`;
+
   return (
-    <Card className="p-1 shadow-sm transition-shadow hover:shadow-md">
+    <Card className="group overflow-hidden p-0 shadow-sm transition-shadow hover:shadow-md">
+      <NextLink href={postHref} className="block">
+        <PostCover coverUrl={post.coverUrl} alt={post.title} variant="card" />
+      </NextLink>
       <Card.Header className="flex-col items-start px-5 pb-0 pt-4">
         <NextLink
-          href={`/posts/${post.slug}`}
+          href={postHref}
           className="line-clamp-1 text-2xl/normal font-semibold tracking-tight text-text-base transition-colors hover:text-primary"
         >
           {post.title}

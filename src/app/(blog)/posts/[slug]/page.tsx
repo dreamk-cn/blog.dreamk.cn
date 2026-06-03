@@ -3,6 +3,7 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/config/site";
 import { ArticleMarkdown } from "@/components/post/article-markdown";
+import { PostCover } from "@/components/post/post-cover";
 import { PostComments } from "@/components/post/comment";
 import { MobilePostToc, PostViewTracker } from "@/components/post/mobile-post-toc";
 import { PostTocActiveProvider } from "@/components/post/post-toc-active-context";
@@ -12,6 +13,7 @@ import {
   buildArticleJsonLd,
   buildBreadcrumbJsonLd,
   buildCanonical,
+  getMetadataBase,
   normalizeMetaDescription,
   stringifyJsonLd,
 } from "@/lib/seo";
@@ -56,10 +58,19 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     notFound();
   }
 
+  const cover = post.coverUrl?.trim();
+
   return {
     title: post.title,
     description: buildPostDescription(post),
     alternates: buildCanonical(`/posts/${encodeURIComponent(post.slug)}`),
+    ...(cover
+      ? {
+          openGraph: {
+            images: [{ url: cover.startsWith("http") ? cover : new URL(cover, getMetadataBase()).toString() }],
+          },
+        }
+      : {}),
   };
 }
 
@@ -125,7 +136,14 @@ export default async function PostDetail({ params }: PageProps) {
           <MobilePostToc items={toc} />
           <div className="mx-auto max-w-3xl">
             <div>
-              <article className="rounded-2xl border border-border bg-background shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+              <article className="overflow-hidden rounded-2xl border border-border bg-background shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
+                <PostCover
+                  coverUrl={post.coverUrl}
+                  alt={post.title}
+                  variant="hero"
+                  priority
+                  className="rounded-none border-b border-border"
+                />
                 <div className="border-b border-border px-6 py-8 sm:px-10 sm:py-10">
                   <h1 className="text-3xl font-bold leading-tight tracking-tight text-text-base sm:text-4xl">{post.title}</h1>
 
