@@ -1,9 +1,9 @@
 import OSS from "ali-oss";
 import { randomBytes } from "crypto";
-import { isDev } from "@/utils/env";
 
 export function getOssPrefix() {
-  return isDev ? "blog-dev" : "blog";
+  const prefix = requireOssEnv("OSS_PREFIX");
+  return prefix.replace(/^\/+|\/+$/g, "");
 }
 
 const MIME_TO_EXT: Record<string, string> = {
