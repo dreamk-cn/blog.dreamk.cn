@@ -19,7 +19,9 @@ function ossRemotePattern() {
 const ossPattern = ossRemotePattern();
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@prisma/client", "prisma", "ali-oss"],
+  serverExternalPackages: ["@prisma/client", "ali-oss"],
+  // 兜底方案，但是.next 文件夹会非常大
+  // output: 'standalone',
   images: {
     remotePatterns: [
       {

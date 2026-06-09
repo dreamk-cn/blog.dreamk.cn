@@ -1,6 +1,5 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import type { PrismaClient as AuthPrismaClient } from "@prisma/client";
-import type { UserStatus } from "@/generated/prisma";
+import type { PrismaClient as AuthPrismaClient, UserStatus } from "@/generated/prisma";
 import NextAuth from "next-auth";
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
