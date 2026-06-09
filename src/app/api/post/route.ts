@@ -63,7 +63,19 @@ export async function POST(request: NextRequest) {
     const json = await request.json()
 
     const parsed = PostCreateSchema.parse(json ?? {})
-    const { title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags, publishedAt } = parsed
+    const {
+      title,
+      slug,
+      content,
+      excerpt,
+      status,
+      featured,
+      coverMediaFileIds,
+      contentMediaFileIds,
+      categoryId,
+      tags,
+      publishedAt,
+    } = parsed
 
     const newPost = await createPost({
       userId,
@@ -73,11 +85,16 @@ export async function POST(request: NextRequest) {
       excerpt,
       status,
       featured,
-      coverUrl: coverUrl || undefined,
+      coverMediaFileIds,
+      contentMediaFileIds,
       categoryId: categoryId || undefined,
       tags,
       publishedAt,
     });
+
+    if (newPost && "error" in newPost && newPost.error) {
+      return fail(ResponseCode.FAIL, newPost.error)
+    }
 
     return ok(newPost, "创建文章成功")
   } catch(err) {
@@ -99,7 +116,20 @@ export async function PUT(request: NextRequest) {
 
     const json = await request.json()
     const parsed = PostUpdateSchema.parse(json ?? {})
-    const { id, title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags, publishedAt } = parsed
+    const {
+      id,
+      title,
+      slug,
+      content,
+      excerpt,
+      status,
+      featured,
+      coverMediaFileIds,
+      contentMediaFileIds,
+      categoryId,
+      tags,
+      publishedAt,
+    } = parsed
 
     const updatedPost = await updatePost({
       id,
@@ -109,7 +139,8 @@ export async function PUT(request: NextRequest) {
       excerpt,
       status,
       featured,
-      coverUrl: coverUrl || undefined,
+      coverMediaFileIds,
+      contentMediaFileIds,
       categoryId: categoryId || undefined,
       tags,
       publishedAt,
@@ -117,6 +148,10 @@ export async function PUT(request: NextRequest) {
 
     if (!updatedPost) {
       return fail(ResponseCode.FAIL, "文章不存在")
+    }
+
+    if ("error" in updatedPost && updatedPost.error) {
+      return fail(ResponseCode.FAIL, updatedPost.error)
     }
 
     return ok(updatedPost, "更新文章成功")

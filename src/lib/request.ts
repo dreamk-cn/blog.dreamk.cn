@@ -64,6 +64,11 @@ class HttpClient {
     // 请求拦截器
     this.instance.interceptors.request.use(
       (config) => {
+        // FormData 须由浏览器自动设置 multipart/form-data 及 boundary
+        if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+          config.headers.setContentType(false);
+        }
+
         // 添加时间戳
         config.headers['X-Request-Time'] = new Date().toISOString();
         
@@ -324,14 +329,17 @@ class HttpClient {
    * @returns Promise
    */
   async upload<T>(url: string, formData: FormData, config?: RequestConfig): Promise<ApiResponse<T>> {
+    const { headers: extraHeaders, ...restConfig } = config ?? {};
     return this.request<T>({
       method: 'POST',
       url,
       data: formData,
+      timeout: 60000,
+      ...restConfig,
       headers: {
-        'Content-Type': 'multipart/form-data',
+        ...extraHeaders,
+        'Content-Type': false,
       },
-      ...config,
     });
   }
 

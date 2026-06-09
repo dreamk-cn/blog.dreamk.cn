@@ -13,7 +13,7 @@ function isUserBlocked(status: UserStatus) {
 }
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma as AuthPrismaClient),
+  adapter: PrismaAdapter(prisma as unknown as AuthPrismaClient),
   providers: [
     CredentialsProvider({
       id: 'dreamk-credentials',

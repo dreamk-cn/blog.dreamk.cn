@@ -17,7 +17,7 @@ type ArticleJsonLdInput = {
   publishedAt: Date;
   modifiedAt: Date;
   categoryName?: string | null;
-  coverUrl?: string | null;
+  coverUrls?: string[];
   tags?: string[];
 };
 
@@ -118,6 +118,8 @@ export function buildArticleJsonLd(input: ArticleJsonLdInput): JsonLd {
     inLanguage: "zh-CN",
     ...(input.categoryName ? { articleSection: input.categoryName } : {}),
     ...(keywords.length > 0 ? { keywords: keywords.join(", ") } : {}),
-    ...(input.coverUrl ? { image: [toAbsoluteUrl(input.coverUrl)] } : {}),
+    ...(input.coverUrls && input.coverUrls.length > 0
+      ? { image: input.coverUrls.map((url) => toAbsoluteUrl(url)) }
+      : {}),
   };
 }

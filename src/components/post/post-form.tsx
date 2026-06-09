@@ -16,19 +16,35 @@ import {
   Tabs,
 } from "@heroui/react";
 import { Category, Post, PostStatus, Tag } from "@/generated/prisma";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { request, type HttpError } from "@/lib/request";
-import { isValidCoverSrc } from "@/lib/post-cover";
 import { normalizeSlug } from "@/lib/slug";
 import { StringSelect } from "@/components/admin/string-select";
 import { ArticleMarkdownClient } from "@/components/post/article-markdown";
-import { PostCover } from "@/components/post/post-cover";
+import { PostCoverManager, type CoverPreviewItem } from "@/components/post/post-cover-manager";
 import { nowPublishedAtValue, PublishedAtPicker } from "@/components/post/published-at-picker";
+import { ImageUploader, type UploadedMedia } from "@/components/ui/image-uploader";
+import { ExternalMediaInput } from "@/components/ui/external-media-input";
+
+type CoverMediaRelation = {
+  sortOrder: number;
+  mediaFile: {
+    id: string;
+    url: string;
+  };
+};
 
 interface PostDetail extends Post {
   tags: Tag[];
   category: Category | null;
+  coverMedia?: CoverMediaRelation[];
+  contentMedia?: Array<{
+    mediaFile: {
+      id: string;
+      url: string;
+    };
+  }>;
 }
 
 type FormTag = Pick<Tag, "id" | "name" | "slug">;
@@ -42,11 +58,14 @@ type PostFormData = {
   categoryId?: string;
   featured: boolean;
   tags: FormTag[];
-  coverUrl: string;
+  coverItems: CoverPreviewItem[];
+  contentMediaFileIds: string[];
   publishedAt: string;
 };
 
-type FormErrors = Partial<Record<"title" | "slug" | "content" | "excerpt" | "coverUrl" | "publishedAt", string>>;
+type FormErrors = Partial<Record<"title" | "slug" | "content" | "excerpt" | "publishedAt" | "categoryId", string>>;
+
+const NO_CATEGORY_ID = "__none__";
 
 const emptyFormData: PostFormData = {
   title: "",
@@ -57,7 +76,8 @@ const emptyFormData: PostFormData = {
   categoryId: undefined,
   featured: false,
   tags: [],
-  coverUrl: "",
+  coverItems: [],
+  contentMediaFileIds: [],
   publishedAt: "",
 };
 
@@ -92,7 +112,14 @@ function formDataFromArticle(article?: PostDetail): PostFormData {
     categoryId: article.categoryId || undefined,
     featured: article.featured || false,
     tags: article.tags || [],
-    coverUrl: article.coverUrl || "",
+    coverItems: (article.coverMedia ?? [])
+      .slice()
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((item) => ({
+        id: item.mediaFile.id,
+        url: item.mediaFile.url,
+      })),
+    contentMediaFileIds: (article.contentMedia ?? []).map((item) => item.mediaFile.id),
     publishedAt: article.publishedAt ? toDatetimeLocalValue(new Date(article.publishedAt)) : "",
   };
 }
@@ -115,7 +142,7 @@ function readLocalDraft(articleId: string | undefined, draftKey: string) {
   }
 }
 
-function validateForm(formData: PostFormData): FormErrors {
+function validateForm(formData: PostFormData, categories: Partial<Category>[]): FormErrors {
   const errors: FormErrors = {};
   const slug = normalizeSlug(formData.slug);
 
@@ -130,12 +157,12 @@ function validateForm(formData: PostFormData): FormErrors {
   if (!formData.content.trim()) {
     errors.content = "内容不能为空";
   }
-  if (formData.coverUrl.trim()) {
-    if (!isValidCoverSrc(formData.coverUrl)) {
-      errors.coverUrl = "封面须以 / 开头，或为 http(s):// 链接";
-    } else if (formData.coverUrl.trim().length > 1024) {
-      errors.coverUrl = "封面图片 URL 不能超过 1024 个字符";
-    }
+  if (
+    formData.categoryId &&
+    categories.length > 0 &&
+    !categories.some((category) => category.id === formData.categoryId)
+  ) {
+    errors.categoryId = "所选分类不存在，请重新选择";
   }
   if (formData.status === "PUBLISHED") {
     if (!formData.publishedAt.trim()) {
@@ -146,6 +173,16 @@ function validateForm(formData: PostFormData): FormErrors {
   }
 
   return errors;
+}
+
+function sanitizeCategoryId(
+  categoryId: string | undefined,
+  categories: Partial<Category>[],
+) {
+  if (!categoryId?.trim()) return undefined;
+  if (categories.length === 0) return categoryId;
+  const exists = categories.some((category) => category.id === categoryId);
+  return exists ? categoryId : undefined;
 }
 
 export function PostForm({
@@ -175,6 +212,7 @@ export function PostForm({
   const [generatingSlug, setGeneratingSlug] = useState(false);
   const [previewMode, setPreviewMode] = useState<"write" | "preview">("write");
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (article?.id) return;
@@ -182,12 +220,15 @@ export function PostForm({
     const timer = window.setTimeout(() => {
       const draft = readLocalDraft(article?.id, draftKey);
       if (!draft) return;
-      setFormData(draft);
+      setFormData({
+        ...draft,
+        categoryId: sanitizeCategoryId(draft.categoryId, categories),
+      });
       setLastSavedAt("已恢复本地草稿");
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [article?.id, draftKey]);
+  }, [article?.id, categories, draftKey]);
 
   useEffect(() => {
     if (!isFormDirty(formData, baseline)) return;
@@ -224,7 +265,6 @@ export function PostForm({
       key === "slug" ||
       key === "content" ||
       key === "excerpt" ||
-      key === "coverUrl" ||
       key === "publishedAt"
     ) {
       setErrors((prev) => ({ ...prev, [key]: undefined }));
@@ -331,19 +371,45 @@ export function PostForm({
     }
   }
 
+  function insertContentImage(media: UploadedMedia, altText?: string) {
+    const alt = altText?.trim() || "image";
+    const snippet = `\n![${alt}](${media.url})\n`;
+    const textarea = contentRef.current;
+
+    if (textarea) {
+      const start = textarea.selectionStart ?? formData.content.length;
+      const end = textarea.selectionEnd ?? start;
+      const nextContent = `${formData.content.slice(0, start)}${snippet}${formData.content.slice(end)}`;
+      updateField("content", nextContent);
+      window.requestAnimationFrame(() => {
+        textarea.focus();
+        const cursor = start + snippet.length;
+        textarea.setSelectionRange(cursor, cursor);
+      });
+    } else {
+      updateField("content", `${formData.content}${snippet}`);
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      contentMediaFileIds: prev.contentMediaFileIds.includes(media.id)
+        ? prev.contentMediaFileIds
+        : [...prev.contentMediaFileIds, media.id],
+    }));
+  }
+
   async function handleSubmit(statusOverride?: PostStatus) {
     const nextStatus = statusOverride ?? formData.status;
     const nextFormData = {
       ...formData,
       slug: normalizeSlug(formData.slug),
       status: nextStatus,
-      coverUrl: formData.coverUrl.trim(),
       publishedAt:
         nextStatus === "PUBLISHED" && !formData.publishedAt.trim()
           ? nowPublishedAtValue()
           : formData.publishedAt,
     };
-    const validationErrors = validateForm(nextFormData);
+    const validationErrors = validateForm(nextFormData, categories);
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -355,9 +421,16 @@ export function PostForm({
     setLoading(true);
 
     try {
-      const { publishedAt: publishedAtLocal, ...restFormData } = nextFormData;
+      const {
+        publishedAt: publishedAtLocal,
+        coverItems,
+        contentMediaFileIds,
+        ...restFormData
+      } = nextFormData;
       const submitData = {
         ...restFormData,
+        coverMediaFileIds: coverItems.map((item) => item.id),
+        contentMediaFileIds,
         excerpt: nextFormData.excerpt.trim() || createExcerptFromContent(nextFormData.content),
         tags: nextFormData.tags.map((tag) => ({
           id: tag.id.startsWith("temp-") ? undefined : tag.id,
@@ -402,7 +475,7 @@ export function PostForm({
   }
 
   const categoryOptions = [
-    { id: "", label: "选择文章分类" },
+    { id: NO_CATEGORY_ID, label: "选择文章分类" },
     ...categories
       .filter((category): category is Category & { id: string } => Boolean(category.id))
       .map((category) => ({ id: category.id, label: category.name ?? "" })),
@@ -504,8 +577,10 @@ export function PostForm({
             <StringSelect
               className="w-full"
               label="文章分类"
-              selectedId={formData.categoryId ?? ""}
-              onSelectionChange={(id) => updateField("categoryId", id || undefined)}
+              selectedId={formData.categoryId ?? NO_CATEGORY_ID}
+              onSelectionChange={(id) =>
+                updateField("categoryId", id === NO_CATEGORY_ID ? undefined : id)
+              }
               options={categoryOptions}
             />
 
@@ -549,34 +624,41 @@ export function PostForm({
               {errors.excerpt ? <FieldError>{errors.excerpt}</FieldError> : null}
             </TextField>
 
-            <div className="md:col-span-2 space-y-3">
-              <TextField isInvalid={!!errors.coverUrl}>
-                <Label className="text-text-muted">封面图片 URL</Label>
-                <Description>可选；留空则展示占位图。支持 OSS 等长链接，最长 1024 个字符</Description>
-                <Input className="text-text-base" value={formData.coverUrl} onChange={(event) => updateField("coverUrl", event.target.value)} />
-                {errors.coverUrl ? <FieldError>{errors.coverUrl}</FieldError> : null}
-              </TextField>
-              <div className="overflow-hidden rounded-xl border border-border bg-foreground">
-                <p className="border-b border-border px-3 py-2 text-xs text-text-muted">封面预览</p>
-                <PostCover
-                  coverUrl={formData.coverUrl}
-                  alt={formData.title || "文章封面"}
-                  variant="card"
-                  className="rounded-none"
-                />
-              </div>
+            <div className="md:col-span-2">
+              <PostCoverManager
+                items={formData.coverItems}
+                disabled={loading}
+                onChange={(items) => updateField("coverItems", items)}
+              />
             </div>
 
             <TextField isRequired isInvalid={!!errors.content} className="md:col-span-2">
               <Label className="text-text-muted">文章内容</Label>
-              <Description>支持 Markdown 语法</Description>
+              <Description>支持 Markdown 语法；可上传或登记外链插图并自动插入</Description>
               {previewMode === "write" ? (
-                <TextArea
-                  className="min-h-[420px] text-text-base"
-                  rows={18}
-                  value={formData.content}
-                  onChange={(event) => updateField("content", event.target.value)}
-                />
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    <ImageUploader
+                      category="images"
+                      label="上传插图"
+                      disabled={loading}
+                      onUploaded={(media) => insertContentImage(media)}
+                    />
+                    <ExternalMediaInput
+                      category="images"
+                      label="插入外链"
+                      disabled={loading}
+                      onRegistered={(media) => insertContentImage(media)}
+                    />
+                  </div>
+                  <TextArea
+                    ref={contentRef}
+                    className="min-h-[420px] w-full text-text-base"
+                    rows={18}
+                    value={formData.content}
+                    onChange={(event) => updateField("content", event.target.value)}
+                  />
+                </div>
               ) : (
                 <div className="min-h-[420px] rounded-md border border-border bg-background p-4">
                   <ArticleMarkdownClient content={formData.content} />

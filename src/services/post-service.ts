@@ -3,6 +3,12 @@ import { contentConfig } from "@/config/content";
 import { getDeepseekClient } from "@/lib/ai-client";
 import { prisma } from "@/lib/prisma";
 import { normalizeSlug } from "@/lib/slug";
+import {
+  postContentMediaInclude,
+  postCoverMediaInclude,
+  syncPostContentMedia,
+  syncPostCoverMedia,
+} from "@/services/media-file-service";
 
 type PostTagInput = { id?: string; name?: string; slug?: string };
 
@@ -63,11 +69,14 @@ export function buildPublicPostWhere(keyword?: string): Prisma.PostWhereInput {
   };
 }
 
+const postListInclude = {
+  tags: true,
+  coverMedia: postCoverMediaInclude,
+} satisfies Prisma.PostInclude;
+
 export async function listRecentPublicPosts(limit: number) {
   return prisma.post.findMany({
-    include: {
-      tags: true,
-    },
+    include: postListInclude,
     where: buildPublicPostWhere(),
     orderBy: {
       publishedAt: "desc",
@@ -101,9 +110,7 @@ export async function listPublicPostsPage(params: { page: number; pageSize: numb
   const skip = (currentPage - 1) * params.pageSize;
 
   const posts = await prisma.post.findMany({
-    include: {
-      tags: true,
-    },
+    include: postListInclude,
     where,
     orderBy: publicPostOrderBy,
     skip,
@@ -128,6 +135,7 @@ export async function getPublishedPostBySlug(slug: string) {
       tags: true,
       category: true,
       user: { select: { name: true } },
+      coverMedia: postCoverMediaInclude,
     },
   });
 }
@@ -162,6 +170,8 @@ export async function getPostDetail(params: { id?: string; slug?: string; status
     include: {
       tags: true,
       category: true,
+      coverMedia: postCoverMediaInclude,
+      contentMedia: postContentMediaInclude,
     },
   };
 
@@ -182,6 +192,7 @@ export async function listPosts(params: {
     include: {
       category: true,
       tags: true,
+      coverMedia: postCoverMediaInclude,
     },
     where: {
       ...(!isAdmin
@@ -229,6 +240,22 @@ function resolvePublishedAt(
   return existingPublishedAt ?? new Date();
 }
 
+async function resolveCategoryId(categoryId?: string) {
+  const trimmed = categoryId?.trim();
+  if (!trimmed) return { id: undefined as string | undefined };
+
+  const category = await prisma.category.findUnique({
+    where: { id: trimmed },
+    select: { id: true },
+  });
+
+  if (!category) {
+    return { error: "所选分类不存在，请重新选择" as const };
+  }
+
+  return { id: trimmed };
+}
+
 export async function createPost(input: {
   userId: string;
   title: string;
@@ -237,14 +264,31 @@ export async function createPost(input: {
   excerpt: string;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   featured: boolean;
-  coverUrl?: string;
+  coverMediaFileIds?: string[];
+  contentMediaFileIds?: string[];
   categoryId?: string;
   tags: PostTagInput[];
   publishedAt?: Date;
 }) {
-  const { userId, title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags, publishedAt } = input;
+  const {
+    userId,
+    title,
+    slug,
+    content,
+    excerpt,
+    status,
+    featured,
+    coverMediaFileIds = [],
+    contentMediaFileIds = [],
+    categoryId,
+    tags,
+    publishedAt,
+  } = input;
 
-  return prisma.post.create({
+  const resolvedCategory = await resolveCategoryId(categoryId);
+  if ("error" in resolvedCategory) return resolvedCategory;
+
+  const post = await prisma.post.create({
     data: {
       title,
       slug,
@@ -252,13 +296,20 @@ export async function createPost(input: {
       content,
       excerpt,
       featured,
-      coverUrl,
       publishedAt: resolvePublishedAt(status, publishedAt),
       user: { connect: { id: userId } },
-      ...(categoryId ? { category: { connect: { id: categoryId } } } : {}),
+      ...(resolvedCategory.id ? { category: { connect: { id: resolvedCategory.id } } } : {}),
       ...(tags.length > 0 ? { tags: { connectOrCreate: toTagConnectOrCreate(tags) } } : {}),
     },
   });
+
+  const coverResult = await syncPostCoverMedia(post.id, coverMediaFileIds);
+  if ("error" in coverResult) return { error: coverResult.error as string };
+
+  const contentResult = await syncPostContentMedia(post.id, contentMediaFileIds);
+  if ("error" in contentResult) return { error: contentResult.error as string };
+
+  return getPostDetail({ id: post.id, isAdmin: true });
 }
 
 export async function updatePost(input: {
@@ -269,19 +320,36 @@ export async function updatePost(input: {
   excerpt: string;
   status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
   featured: boolean;
-  coverUrl?: string;
+  coverMediaFileIds?: string[];
+  contentMediaFileIds?: string[];
   categoryId?: string;
   tags: PostTagInput[];
   publishedAt?: Date;
 }) {
-  const { id, title, slug, content, excerpt, status, featured, coverUrl, categoryId, tags, publishedAt } = input;
+  const {
+    id,
+    title,
+    slug,
+    content,
+    excerpt,
+    status,
+    featured,
+    coverMediaFileIds = [],
+    contentMediaFileIds = [],
+    categoryId,
+    tags,
+    publishedAt,
+  } = input;
   const existingPost = await prisma.post.findUnique({
     where: { id },
     include: { tags: true },
   });
   if (!existingPost) return null;
 
-  return prisma.post.update({
+  const resolvedCategory = await resolveCategoryId(categoryId);
+  if ("error" in resolvedCategory) return resolvedCategory;
+
+  await prisma.post.update({
     where: { id },
     data: {
       title,
@@ -290,19 +358,22 @@ export async function updatePost(input: {
       excerpt,
       status,
       featured,
-      coverUrl,
       publishedAt: resolvePublishedAt(status, publishedAt, existingPost.publishedAt),
-      categoryId,
+      ...(categoryId !== undefined ? { categoryId: resolvedCategory.id ?? null } : {}),
       tags: {
         disconnect: existingPost.tags.map((tag) => ({ id: tag.id })),
         connectOrCreate: toTagConnectOrCreate(tags),
       },
     },
-    include: {
-      tags: true,
-      category: true,
-    },
   });
+
+  const coverResult = await syncPostCoverMedia(id, coverMediaFileIds);
+  if ("error" in coverResult) return { error: coverResult.error as string };
+
+  const contentResult = await syncPostContentMedia(id, contentMediaFileIds);
+  if ("error" in contentResult) return { error: contentResult.error as string };
+
+  return getPostDetail({ id, isAdmin: true });
 }
 
 export async function deletePosts(ids: string[]) {

@@ -1,15 +1,32 @@
 import type { NextConfig } from "next";
 
+function ossRemotePattern() {
+  const ossUrl = process.env.OSS_URL?.trim();
+  if (!ossUrl) return null;
+
+  try {
+    const { protocol, hostname } = new URL(ossUrl);
+    if (!hostname) return null;
+    return {
+      protocol: protocol.replace(":", "") as "http" | "https",
+      hostname,
+    };
+  } catch {
+    return null;
+  }
+}
+
+const ossPattern = ossRemotePattern();
+
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["@prisma/client", "prisma"],
+  serverExternalPackages: ["@prisma/client", "prisma", "ali-oss"],
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "avatars.githubusercontent.com",
       },
-      // 接入 OSS 后在此追加 bucket 域名，例如：
-      // { protocol: "https", hostname: "your-bucket.oss-cn-hangzhou.aliyuncs.com" },
+      ...(ossPattern ? [ossPattern] : []),
     ],
   },
 };

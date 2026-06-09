@@ -1,5 +1,11 @@
-/** 本地占位图；无 coverUrl 或无效预览输入时使用 */
+/** 本地占位图；无封面或无效输入时使用 */
 export const POST_COVER_PLACEHOLDER_PATH = "/images/post-cover-placeholder.svg";
+
+export type CoverMediaItem = {
+  mediaFile: {
+    url: string;
+  };
+};
 
 /** next/image 可接受的 src：以 / 开头的站内路径，或 http(s) 绝对地址 */
 export function isValidCoverSrc(value?: string | null): boolean {
@@ -16,6 +22,16 @@ export function isValidCoverSrc(value?: string | null): boolean {
   } catch {
     return false;
   }
+}
+
+export function getCoverUrls(coverMedia?: CoverMediaItem[] | null) {
+  return (coverMedia ?? [])
+    .map((item) => item.mediaFile.url?.trim())
+    .filter((url): url is string => Boolean(url && isValidCoverSrc(url)));
+}
+
+export function getPrimaryCoverUrl(coverMedia?: CoverMediaItem[] | null) {
+  return getCoverUrls(coverMedia)[0] ?? null;
 }
 
 export function resolvePostCoverSrc(coverUrl?: string | null) {

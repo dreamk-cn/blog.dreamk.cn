@@ -29,6 +29,7 @@ model User {
   sessions      Session[]
   posts         Post[]
   comments      Comment[]
+  mediaFiles    MediaFile[]
  
   createdAt DateTime            @default(now())
   updatedAt DateTime            @updatedAt
@@ -93,7 +94,6 @@ model Post {
   status      PostStatus      @default(DRAFT) // 草稿 / 发布 / 删除
   featured    Boolean         @default(false) // 是否推荐/置顶
   viewCount   Int             @default(0) // 浏览量
-  coverUrl    String?         @db.VarChar(1024)
   publishedAt DateTime?       @default(now())
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
@@ -105,8 +105,9 @@ model Post {
   categoryId  String?
 
   tags        Tag[] // 多对多标签
-  comments    Comment[] 
-
+  comments    Comment[]
+  coverMedia  PostCoverMedia[]
+  contentMedia PostContentMedia[]
 
   @@index([status])
   @@index([userId])
@@ -208,6 +209,75 @@ model AppCache {
   updatedAt DateTime  @updatedAt
 
   @@index([expiresAt])
+}
+
+enum MediaSource {
+  UPLOAD
+  EXTERNAL
+}
+
+enum MediaCategory {
+  ASSET
+  COVER
+  CONTENT
+}
+
+enum MediaStatus {
+  ACTIVE
+  DELETED
+}
+
+/// 媒体资产（本地上传 OSS 或外链登记）
+model MediaFile {
+  id           String        @id @default(cuid())
+  source       MediaSource
+  key          String?       @unique @db.VarChar(512)
+  url          String        @db.VarChar(1024)
+  originalName String?       @db.VarChar(255)
+  mimeType     String?       @db.VarChar(100)
+  size         Int?
+  category     MediaCategory @default(ASSET)
+  status       MediaStatus   @default(ACTIVE)
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: NoAction)
+  userId       String
+
+  coverUsages   PostCoverMedia[]
+  contentUsages PostContentMedia[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([source, category, status, createdAt])
+}
+
+/// 文章封面（多图有序，sortOrder 0 为首图）
+model PostCoverMedia {
+  postId      String
+  mediaFileId String
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  mediaFile MediaFile @relation(fields: [mediaFileId], references: [id], onDelete: Cascade)
+
+  @@id([postId, mediaFileId])
+  @@index([postId, sortOrder])
+  @@index([mediaFileId])
+}
+
+/// 文章正文插图引用
+model PostContentMedia {
+  postId      String
+  mediaFileId String
+  createdAt   DateTime @default(now())
+
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  mediaFile MediaFile @relation(fields: [mediaFileId], references: [id], onDelete: Cascade)
+
+  @@id([postId, mediaFileId])
+  @@index([mediaFileId])
 }
 
 // todo:后期扩展通知表

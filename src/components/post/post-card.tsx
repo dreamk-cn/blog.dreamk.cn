@@ -5,9 +5,13 @@ import { PostCover } from "@/components/post/post-cover";
 import { getTagColor } from "@/lib/tag-color";
 import NextLink from "next/link";
 import { Card } from "@heroui/react";
+import { getPrimaryCoverUrl, type CoverMediaItem } from "@/lib/post-cover";
 import type { Post, Tag } from "@/generated/prisma";
 
-type PostWithTags = Post & { tags: Tag[] };
+type PostWithTags = Post & {
+  tags: Tag[];
+  coverMedia?: CoverMediaItem[];
+};
 
 function formatDate(date: Date | null) {
   if (!date) return "";
@@ -24,7 +28,7 @@ export function PostCard({ post }: { post: PostWithTags }) {
   return (
     <Card className="group overflow-hidden p-0 shadow-sm transition-shadow hover:shadow-md">
       <NextLink href={postHref} className="block">
-        <PostCover coverUrl={post.coverUrl} alt={post.title} variant="card" />
+        <PostCover coverUrl={getPrimaryCoverUrl(post.coverMedia)} alt={post.title} variant="card" />
       </NextLink>
       <Card.Header className="flex-col items-start px-5 pb-0 pt-4">
         <NextLink

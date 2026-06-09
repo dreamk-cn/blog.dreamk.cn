@@ -3,7 +3,8 @@ import { cache } from "react";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/config/site";
 import { ArticleMarkdown } from "@/components/post/article-markdown";
-import { PostCover } from "@/components/post/post-cover";
+import { PostCoverGallery } from "@/components/post/post-cover-gallery";
+import { getCoverUrls } from "@/lib/post-cover";
 import { PostComments } from "@/components/post/comment";
 import { MobilePostToc, PostViewTracker } from "@/components/post/mobile-post-toc";
 import { PostTocActiveProvider } from "@/components/post/post-toc-active-context";
@@ -58,16 +59,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     notFound();
   }
 
-  const cover = post.coverUrl?.trim();
+  const coverUrls = getCoverUrls(post.coverMedia);
 
   return {
     title: post.title,
     description: buildPostDescription(post),
     alternates: buildCanonical(`/posts/${encodeURIComponent(post.slug)}`),
-    ...(cover
+    ...(coverUrls.length > 0
       ? {
           openGraph: {
-            images: [{ url: cover.startsWith("http") ? cover : new URL(cover, getMetadataBase()).toString() }],
+            images: coverUrls.map((cover) => ({
+              url: cover.startsWith("http") ? cover : new URL(cover, getMetadataBase()).toString(),
+            })),
           },
         }
       : {}),
@@ -107,7 +110,7 @@ export default async function PostDetail({ params }: PageProps) {
     publishedAt: published,
     modifiedAt: post.updatedAt ?? published,
     categoryName: post.category?.name,
-    coverUrl: post.coverUrl,
+    coverUrls: getCoverUrls(post.coverMedia),
     tags: post.tags.map((tag) => tag.name),
   });
   const breadcrumbItems = [
@@ -137,8 +140,8 @@ export default async function PostDetail({ params }: PageProps) {
           <div className="mx-auto max-w-3xl">
             <div>
               <article className="overflow-hidden rounded-2xl border border-border bg-background shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
-                <PostCover
-                  coverUrl={post.coverUrl}
+                <PostCoverGallery
+                  coverMedia={post.coverMedia}
                   alt={post.title}
                   variant="hero"
                   priority

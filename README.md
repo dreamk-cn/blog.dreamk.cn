@@ -233,6 +233,20 @@ docker compose down
 
 用于后台生成文章摘要和 slug；未配置时对应功能不可用。
 
+### 阿里云 OSS（媒体上传）
+
+上传封面与正文插图需要配置以下变量（文件存储在 Bucket 的 `blog/` 前缀下，便于多项目共用）：
+
+- `OSS_ACCESS_KEY_ID`
+- `OSS_ACCESS_KEY_SECRET`
+- `OSS_ENDPOINT`：如 `oss-cn-hangzhou.aliyuncs.com`
+- `OSS_BUCKET`
+- `OSS_REGION`
+- `OSS_URL`：公开访问域名（CDN 或 Bucket 域名，不含末尾 `/`）
+- `OSS_MAX_FILE_SIZE_MB`：可选，默认 `5`
+
+Bucket 需允许 `blog/` 路径公共读（或通过 CDN 回源）。媒体元数据保存在 PostgreSQL `MediaFile` 表，支持本地上传与外链登记，文章通过 `PostCoverMedia`（多封面有序）与 `PostContentMedia`（正文插图）建立引用。
+
 ### 缓存与限流
 
 - `CACHE_DRIVER`：默认 `postgres`
