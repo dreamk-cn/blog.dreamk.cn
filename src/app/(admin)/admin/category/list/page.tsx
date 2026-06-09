@@ -232,7 +232,7 @@ export default function AdminCategoryListPage() {
   };
 
   return (
-    <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
+    <div className="space-y-4 p-4 text-text-base bg-canvas h-full">
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-wrap items-end gap-2">
           <InputGroup className="max-w-sm">
@@ -291,7 +291,7 @@ export default function AdminCategoryListPage() {
       <Modal state={createModal}>
         <Modal.Backdrop>
           <Modal.Container>
-            <Modal.Dialog className="bg-foreground inset-ring-primary inset-ring-2">
+            <Modal.Dialog className="bg-canvas inset-ring-primary inset-ring-2">
               <Modal.Header>
                 <Modal.Heading className="text-text-base">新增分类</Modal.Heading>
               </Modal.Header>
@@ -335,7 +335,7 @@ export default function AdminCategoryListPage() {
       <Modal state={editModal}>
         <Modal.Backdrop>
           <Modal.Container>
-            <Modal.Dialog className="bg-foreground inset-ring-primary inset-ring-2">
+            <Modal.Dialog className="bg-canvas inset-ring-primary inset-ring-2">
               <Modal.Header>
                 <Modal.Heading className="text-text-base">编辑分类</Modal.Heading>
               </Modal.Header>

@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
       coverMediaFileIds,
       contentMediaFileIds,
       categoryId,
+      category,
       tags,
       publishedAt,
     } = parsed
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest) {
       coverMediaFileIds,
       contentMediaFileIds,
       categoryId: categoryId || undefined,
+      category,
       tags,
       publishedAt,
     });
@@ -127,6 +129,7 @@ export async function PUT(request: NextRequest) {
       coverMediaFileIds,
       contentMediaFileIds,
       categoryId,
+      category,
       tags,
       publishedAt,
     } = parsed
@@ -142,6 +145,7 @@ export async function PUT(request: NextRequest) {
       coverMediaFileIds,
       contentMediaFileIds,
       categoryId: categoryId || undefined,
+      category,
       tags,
       publishedAt,
     });

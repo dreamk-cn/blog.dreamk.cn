@@ -20,7 +20,7 @@ export function HotPosts({ posts }: { posts: HotPost[] }) {
         {posts.map((post, index) => (
           <div
             key={post.id}
-            className="group flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-foreground"
+            className="group flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-canvas"
           >
             <span className="w-8 shrink-0 text-center text-2xl leading-none font-light text-text-sub">
               {String(index + 1).padStart(2, "0")}

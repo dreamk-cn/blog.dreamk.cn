@@ -14,6 +14,7 @@ import {
   TextArea,
   TextField,
   Tabs,
+  InputGroup,
 } from "@heroui/react";
 import { Category, Post, PostStatus, Tag } from "@/generated/prisma";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -22,7 +23,9 @@ import { request, type HttpError } from "@/lib/request";
 import { normalizeSlug } from "@/lib/slug";
 import { StringSelect } from "@/components/admin/string-select";
 import { ArticleMarkdownClient } from "@/components/post/article-markdown";
+import { PostCategoryPicker, type FormCategory } from "@/components/post/post-category-picker";
 import { PostCoverManager, type CoverPreviewItem } from "@/components/post/post-cover-manager";
+import { PostTagPicker, type FormTag } from "@/components/post/post-tag-picker";
 import { nowPublishedAtValue, PublishedAtPicker } from "@/components/post/published-at-picker";
 import { ImageUploader, type UploadedMedia } from "@/components/ui/image-uploader";
 import { ExternalMediaInput } from "@/components/ui/external-media-input";
@@ -47,15 +50,13 @@ interface PostDetail extends Post {
   }>;
 }
 
-type FormTag = Pick<Tag, "id" | "name" | "slug">;
-
 type PostFormData = {
   title: string;
   slug: string;
   excerpt: string;
   content: string;
   status: PostStatus;
-  categoryId?: string;
+  category: FormCategory | null;
   featured: boolean;
   tags: FormTag[];
   coverItems: CoverPreviewItem[];
@@ -63,9 +64,7 @@ type PostFormData = {
   publishedAt: string;
 };
 
-type FormErrors = Partial<Record<"title" | "slug" | "content" | "excerpt" | "publishedAt" | "categoryId", string>>;
-
-const NO_CATEGORY_ID = "__none__";
+type FormErrors = Partial<Record<"title" | "slug" | "content" | "excerpt" | "publishedAt" | "category", string>>;
 
 const emptyFormData: PostFormData = {
   title: "",
@@ -73,7 +72,7 @@ const emptyFormData: PostFormData = {
   excerpt: "",
   content: "",
   status: "DRAFT",
-  categoryId: undefined,
+  category: null,
   featured: false,
   tags: [],
   coverItems: [],
@@ -109,7 +108,13 @@ function formDataFromArticle(article?: PostDetail): PostFormData {
     excerpt: article.excerpt || "",
     content: article.content || "",
     status: article.status || "DRAFT",
-    categoryId: article.categoryId || undefined,
+    category: article.category
+      ? {
+          id: article.category.id,
+          name: article.category.name,
+          slug: article.category.slug,
+        }
+      : null,
     featured: article.featured || false,
     tags: article.tags || [],
     coverItems: (article.coverMedia ?? [])
@@ -158,11 +163,13 @@ function validateForm(formData: PostFormData, categories: Partial<Category>[]): 
     errors.content = "内容不能为空";
   }
   if (
-    formData.categoryId &&
+    formData.category &&
+    !formData.category.isNew &&
+    !formData.category.id.startsWith("temp-cat-") &&
     categories.length > 0 &&
-    !categories.some((category) => category.id === formData.categoryId)
+    !categories.some((category) => category.id === formData.category?.id)
   ) {
-    errors.categoryId = "所选分类不存在，请重新选择";
+    errors.category = "所选分类不存在，请重新选择";
   }
   if (formData.status === "PUBLISHED") {
     if (!formData.publishedAt.trim()) {
@@ -175,14 +182,15 @@ function validateForm(formData: PostFormData, categories: Partial<Category>[]): 
   return errors;
 }
 
-function sanitizeCategoryId(
-  categoryId: string | undefined,
+function sanitizeCategory(
+  category: FormCategory | null | undefined,
   categories: Partial<Category>[],
-) {
-  if (!categoryId?.trim()) return undefined;
-  if (categories.length === 0) return categoryId;
-  const exists = categories.some((category) => category.id === categoryId);
-  return exists ? categoryId : undefined;
+): FormCategory | null {
+  if (!category) return null;
+  if (category.isNew || category.id.startsWith("temp-cat-")) return category;
+  if (categories.length === 0) return category;
+  const exists = categories.some((item) => item.id === category.id);
+  return exists ? category : null;
 }
 
 export function PostForm({
@@ -205,7 +213,6 @@ export function PostForm({
   const draftKey = `admin-post-draft:${article?.id ?? "create"}`;
 
   const [formData, setFormData] = useState<PostFormData>(baseline);
-  const [newTag, setNewTag] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [loading, setLoading] = useState(false);
   const [generatingExcerpt, setGeneratingExcerpt] = useState(false);
@@ -222,7 +229,7 @@ export function PostForm({
       if (!draft) return;
       setFormData({
         ...draft,
-        categoryId: sanitizeCategoryId(draft.categoryId, categories),
+        category: sanitizeCategory(draft.category, categories),
       });
       setLastSavedAt("已恢复本地草稿");
     }, 0);
@@ -271,45 +278,8 @@ export function PostForm({
     }
   }
 
-  function handleTagSelect(tag: Tag) {
-    setFormData((prev) => {
-      const tagExists = prev.tags.some((t) => t.id === tag.id);
-      if (tagExists) {
-        return {
-          ...prev,
-          tags: prev.tags.filter((t) => t.id !== tag.id),
-        };
-      }
-      return {
-        ...prev,
-        tags: [...prev.tags, tag],
-      };
-    });
-  }
-
-  function handleAddNewTag() {
-    const trimmed = newTag.trim();
-    if (!trimmed) return;
-
-    const lower = trimmed.toLowerCase();
-    const inCatalog = tags.some((tag) => tag.name?.toLowerCase() === lower);
-    const alreadySelected = formData.tags.some((tag) => tag.name?.toLowerCase() === lower);
-    if (inCatalog || alreadySelected) {
-      toast("标签已存在");
-      return;
-    }
-
-    const newTagObject: FormTag = {
-      id: `temp-${Date.now()}`,
-      name: trimmed,
-      slug: normalizeSlug(trimmed, 50),
-    };
-
-    setFormData((prev) => ({
-      ...prev,
-      tags: [...prev.tags, newTagObject],
-    }));
-    setNewTag("");
+  function handleTagChange(tags: FormTag[]) {
+    setFormData((prev) => ({ ...prev, tags }));
   }
 
   async function handleGenerateSlug() {
@@ -425,13 +395,25 @@ export function PostForm({
         publishedAt: publishedAtLocal,
         coverItems,
         contentMediaFileIds,
+        category,
         ...restFormData
       } = nextFormData;
+      const isNewCategory = category?.isNew || category?.id.startsWith("temp-cat-");
       const submitData = {
         ...restFormData,
         coverMediaFileIds: coverItems.map((item) => item.id),
         contentMediaFileIds,
         excerpt: nextFormData.excerpt.trim() || createExcerptFromContent(nextFormData.content),
+        ...(category
+          ? isNewCategory
+            ? {
+                category: {
+                  name: category.name,
+                  slug: normalizeSlug(category.slug || category.name, 100),
+                },
+              }
+            : { categoryId: category.id }
+          : {}),
         tags: nextFormData.tags.map((tag) => ({
           id: tag.id.startsWith("temp-") ? undefined : tag.id,
           name: tag.name,
@@ -474,16 +456,10 @@ export function PostForm({
     }
   }
 
-  const categoryOptions = [
-    { id: NO_CATEGORY_ID, label: "选择文章分类" },
-    ...categories
-      .filter((category): category is Category & { id: string } => Boolean(category.id))
-      .map((category) => ({ id: category.id, label: category.name ?? "" })),
-  ];
-
-  const selectedTagIds = new Set(formData.tags.map((tag) => tag.id));
   const charCount = formData.content.replace(/\s/g, "").length;
   const readMinutes = Math.max(1, Math.ceil(charCount / 500));
+  const statusLabel =
+    formData.status === "PUBLISHED" ? "已发布" : formData.status === "ARCHIVED" ? "已归档" : "草稿";
   const submitText = loading
     ? "提交中..."
     : article?.id
@@ -493,123 +469,246 @@ export function PostForm({
         : "保存文章";
 
   return (
-    <Card className={`mx-auto w-full bg-foreground ${className}`}>
-      <Card.Header className="border-b rounded-2xl border-border bg-background/70 px-5 py-4">
-        <div className="flex w-full flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-semibold leading-7 text-text-base sm:text-xl">
-                {article?.id ? "编辑文章" : "创建文章"}
-              </h2>
-              <span className="rounded-md bg-default-100 px-2 py-0.5 text-xs font-medium text-text-muted">
-                {formData.status === "PUBLISHED" ? "发布" : formData.status === "ARCHIVED" ? "归档" : "草稿"}
-              </span>
+    <div className={`mx-auto flex w-full flex-col ${className ?? ""}`}>
+      <Card className="sticky top-4 z-10 mb-3 overflow-hidden rounded-2xl border border-border bg-background/95 shadow-sm backdrop-blur-sm">
+        <Card.Content className="px-2">
+          <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:gap-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-xl font-semibold text-text-base sm:text-2xl">
+                  {article?.id ? "编辑文章" : "创建文章"}
+                </h1>
+                <Chip variant="soft" size="sm" color={formData.status === "PUBLISHED" ? "success" : "default"}>
+                  <Chip.Label>{statusLabel}</Chip.Label>
+                </Chip>
+              </div>
+              <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-text-muted">
+                <span>{charCount} 字</span>
+                <span aria-hidden="true">·</span>
+                <span>约 {readMinutes} 分钟阅读</span>
+                {lastSavedAt ? (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span>{lastSavedAt}</span>
+                  </>
+                ) : null}
+              </div>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-text-muted">
-              <span className="rounded-md border border-border bg-foreground px-2.5 py-1">{charCount} 字</span>
-              <span className="rounded-md border border-border bg-foreground px-2.5 py-1">约 {readMinutes} 分钟阅读</span>
-              {lastSavedAt ? (
-                <span className="rounded-md border border-border bg-foreground px-2.5 py-1">{lastSavedAt}</span>
+            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+              {onCancel ? (
+                <Button variant="ghost" onPress={onCancel} isDisabled={loading}>
+                  取消
+                </Button>
               ) : null}
+              <Button
+                type="button"
+                variant="secondary"
+                isDisabled={loading}
+                onPress={() => void handleSubmit("DRAFT")}
+              >
+                保存草稿
+              </Button>
+              <Button type="submit" variant="primary" isDisabled={loading} isPending={loading}>
+                {submitText}
+              </Button>
             </div>
           </div>
-          <Tabs
-            className="w-full sm:w-[180px]"
-            selectedKey={previewMode}
-            onSelectionChange={(key) => setPreviewMode(String(key) === "preview" ? "preview" : "write")}
-          >
-            <Tabs.ListContainer>
-              <Tabs.List aria-label="Options">
-                <Tabs.Tab id="write" className="text-text-base">
-                  编辑
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-                <Tabs.Tab id="preview" className="text-text-base">
-                  预览
-                  <Tabs.Indicator />
-                </Tabs.Tab>
-              </Tabs.List>
-            </Tabs.ListContainer>
-          </Tabs>
-        </div>
-      </Card.Header>
+        </Card.Content>
+      </Card>
 
       <Form
+        className="flex min-h-0 flex-1 flex-col"
         onSubmit={(event) => {
           event.preventDefault();
           void handleSubmit();
         }}
       >
-        <Card.Content className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <TextField isRequired isInvalid={!!errors.title}>
-              <Label className="text-text-muted">文章标题</Label>
-              <Description>用于后台识别和前台文章标题展示</Description>
-              <Input className="text-text-base" value={formData.title} onChange={(event) => updateField("title", event.target.value)} />
-              {errors.title ? <FieldError>{errors.title}</FieldError> : null}
-            </TextField>
+        <div className="grid flex-1 grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+          <div className="space-y-4">
+            <Card className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+              <Card.Content className="space-y-4 p-5 sm:p-6">
+                <TextField isRequired isInvalid={!!errors.title}>
+                  <Label className="sr-only">文章标题</Label>
+                  <Input
+                    className="border-none bg-transparent px-0 text-2xl font-semibold text-text-base shadow-none placeholder:text-text-sub sm:text-3xl"
+                    placeholder="输入文章标题…"
+                    value={formData.title}
+                    onChange={(event) => updateField("title", event.target.value)}
+                  />
+                  {errors.title ? <FieldError>{errors.title}</FieldError> : null}
+                </TextField>
 
-            <TextField isRequired isInvalid={!!errors.slug}>
-              <Label className="text-text-muted">Slug</Label>
-              <Description>用于生成文章 URL，只允许小写字母、数字和连字符</Description>
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                <Input
-                  className="text-text-base flex-1"
-                  value={formData.slug}
-                  onBlur={() => updateField("slug", normalizeSlug(formData.slug))}
-                  onChange={(event) => updateField("slug", event.target.value)}
+                <TextField isRequired isInvalid={!!errors.slug}>
+                  <Label className="text-sm text-text-muted">Slug</Label>
+                  <Description className="text-xs">用于生成文章 URL</Description>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <InputGroup
+                      className="flex-1 font-mono text-sm text-text-base"
+                    >
+                      <InputGroup.Input
+                        value={formData.slug}
+                        onBlur={() => updateField("slug", normalizeSlug(formData.slug))}
+                        onChange={(event) => updateField("slug", event.target.value)}
+                        placeholder="article-slug"
+                      />
+                      <InputGroup.Suffix className="p-0">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          onPress={handleGenerateSlug}
+                          isDisabled={loading || generatingSlug}
+                          isPending={generatingSlug}
+                        >
+                          {generatingSlug ? "生成中…" : "AI 生成"}
+                        </Button>
+                      </InputGroup.Suffix>
+                    </InputGroup>
+                  </div>
+                  {errors.slug ? <FieldError>{errors.slug}</FieldError> : null}
+                </TextField>
+              </Card.Content>
+            </Card>
+
+            <Card className="overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
+              <Card.Header className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+                <Label className="text-sm font-medium text-text-base">正文</Label>
+                <div className="flex flex-wrap items-center gap-2">
+                  {previewMode === "write" ? (
+                    <>
+                      <ImageUploader
+                        category="images"
+                        label="上传插图"
+                        disabled={loading}
+                        onUploaded={(media) => insertContentImage(media)}
+                      />
+                      <ExternalMediaInput
+                        category="images"
+                        label="插入外链"
+                        disabled={loading}
+                        onRegistered={(media) => insertContentImage(media)}
+                      />
+                    </>
+                  ) : null}
+                  <Tabs
+                    className="w-full sm:w-[168px]"
+                    selectedKey={previewMode}
+                    onSelectionChange={(key) =>
+                      setPreviewMode(String(key) === "preview" ? "preview" : "write")
+                    }
+                  >
+                    <Tabs.ListContainer>
+                      <Tabs.List aria-label="正文编辑模式">
+                        <Tabs.Tab id="write" className="text-text-base">
+                          编辑
+                          <Tabs.Indicator />
+                        </Tabs.Tab>
+                        <Tabs.Tab id="preview" className="text-text-base">
+                          预览
+                          <Tabs.Indicator />
+                        </Tabs.Tab>
+                      </Tabs.List>
+                    </Tabs.ListContainer>
+                  </Tabs>
+                </div>
+              </Card.Header>
+
+              <Card.Content className="p-0">
+                <TextField isRequired isInvalid={!!errors.content}>
+                  <Label className="sr-only">文章内容</Label>
+                  {previewMode === "write" ? (
+                    <TextArea
+                      ref={contentRef}
+                      className="min-h-[min(70vh,640px)] w-full resize-y rounded-none border-0 bg-transparent px-4 py-4 font-mono text-sm leading-relaxed text-text-base shadow-none sm:px-5"
+                      placeholder="在此编写 Markdown 正文…"
+                      rows={24}
+                      value={formData.content}
+                      onChange={(event) => updateField("content", event.target.value)}
+                    />
+                  ) : (
+                    <div className="min-h-[min(70vh,640px)] overflow-auto px-4 py-4 sm:px-5">
+                      {formData.content.trim() ? (
+                        <ArticleMarkdownClient content={formData.content} />
+                      ) : (
+                        <p className="py-12 text-center text-sm text-text-muted">暂无内容，切换至编辑模式开始写作</p>
+                      )}
+                    </div>
+                  )}
+                  {errors.content ? (
+                    <div className="border-t border-border px-4 py-2 sm:px-5">
+                      <FieldError>{errors.content}</FieldError>
+                    </div>
+                  ) : null}
+                </TextField>
+              </Card.Content>
+            </Card>
+          </div>
+
+          <aside className="space-y-4 lg:sticky lg:top-4 lg:self-start">
+            <Card className="rounded-2xl border border-border bg-background shadow-sm">
+              <Card.Header className="border-b border-border px-4 py-3">
+                <h2 className="text-sm font-semibold text-text-base">发布设置</h2>
+              </Card.Header>
+              <Card.Content className="space-y-4 p-4">
+                <StringSelect
+                  className="w-full"
+                  label="文章状态"
+                  selectedId={formData.status}
+                  onSelectionChange={(id) => updateField("status", id as PostStatus)}
+                  options={[
+                    { id: "DRAFT", label: "草稿" },
+                    { id: "PUBLISHED", label: "已发布" },
+                    { id: "ARCHIVED", label: "已归档" },
+                  ]}
                 />
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  className="shrink-0 sm:self-auto"
-                  onPress={handleGenerateSlug}
-                  isDisabled={loading || generatingSlug}
-                  isPending={generatingSlug}
-                >
-                  {generatingSlug ? "生成中..." : "AI 生成 Slug"}
-                </Button>
-              </div>
-              {errors.slug ? <FieldError>{errors.slug}</FieldError> : null}
-            </TextField>
 
-            <StringSelect
-              className="w-full"
-              label="文章分类"
-              selectedId={formData.categoryId ?? NO_CATEGORY_ID}
-              onSelectionChange={(id) =>
-                updateField("categoryId", id === NO_CATEGORY_ID ? undefined : id)
-              }
-              options={categoryOptions}
-            />
+                <PostCategoryPicker
+                  categories={categories}
+                  value={formData.category}
+                  onChange={(category) => setFormData((prev) => ({ ...prev, category }))}
+                  disabled={loading}
+                  isInvalid={!!errors.category}
+                  errorMessage={errors.category}
+                />
 
-            <StringSelect
-              className="w-full"
-              label="文章状态"
-              selectedId={formData.status}
-              onSelectionChange={(id) => updateField("status", id as PostStatus)}
-              options={[
-                { id: "DRAFT", label: "草稿" },
-                { id: "PUBLISHED", label: "已发布" },
-                { id: "ARCHIVED", label: "已归档" },
-              ]}
-            />
+                {formData.status === "PUBLISHED" ? (
+                  <PublishedAtPicker
+                    value={formData.publishedAt}
+                    onChange={(value) => updateField("publishedAt", value)}
+                    isInvalid={!!errors.publishedAt}
+                    errorMessage={errors.publishedAt}
+                  />
+                ) : null}
 
-            {formData.status === "PUBLISHED" ? (
-              <PublishedAtPicker
-                value={formData.publishedAt}
-                onChange={(value) => updateField("publishedAt", value)}
-                isInvalid={!!errors.publishedAt}
-                errorMessage={errors.publishedAt}
-              />
-            ) : null}
+                <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-canvas px-3 py-2.5">
+                  <span className="text-sm text-text-base">置顶文章</span>
+                  <Switch
+                    isSelected={formData.featured}
+                    onChange={(value) => updateField("featured", value)}
+                  >
+                    <Switch.Control>
+                      <Switch.Thumb />
+                    </Switch.Control>
+                  </Switch>
+                </div>
+              </Card.Content>
+            </Card>
 
-            <TextField isInvalid={!!errors.excerpt} className="md:col-span-2">
-              <Label className="text-text-muted">文章摘要</Label>
-              <Description>可手动编辑；留空提交时会根据正文自动截取</Description>
-              <TextArea className="text-text-base" rows={2} value={formData.excerpt} onChange={(event) => updateField("excerpt", event.target.value)} />
-              <div className="mt-2 flex justify-end">
+            <Card className="rounded-2xl border border-border bg-background shadow-sm">
+              <Card.Header className="border-b border-border px-4 py-3">
+                <h2 className="text-sm font-semibold text-text-base">封面</h2>
+              </Card.Header>
+              <Card.Content className="p-4">
+                <PostCoverManager
+                  items={formData.coverItems}
+                  disabled={loading}
+                  onChange={(items) => updateField("coverItems", items)}
+                />
+              </Card.Content>
+            </Card>
+
+            <Card className="rounded-2xl border border-border bg-background shadow-sm">
+              <Card.Header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
+                <h2 className="text-sm font-semibold text-text-base">摘要</h2>
                 <Button
                   type="button"
                   size="sm"
@@ -618,123 +717,37 @@ export function PostForm({
                   isDisabled={loading || generatingExcerpt}
                   isPending={generatingExcerpt}
                 >
-                  {generatingExcerpt ? "生成中..." : "AI 生成摘要"}
+                  {generatingExcerpt ? "生成中…" : "AI 生成"}
                 </Button>
-              </div>
-              {errors.excerpt ? <FieldError>{errors.excerpt}</FieldError> : null}
-            </TextField>
-
-            <div className="md:col-span-2">
-              <PostCoverManager
-                items={formData.coverItems}
-                disabled={loading}
-                onChange={(items) => updateField("coverItems", items)}
-              />
-            </div>
-
-            <TextField isRequired isInvalid={!!errors.content} className="md:col-span-2">
-              <Label className="text-text-muted">文章内容</Label>
-              <Description>支持 Markdown 语法；可上传或登记外链插图并自动插入</Description>
-              {previewMode === "write" ? (
-                <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2">
-                    <ImageUploader
-                      category="images"
-                      label="上传插图"
-                      disabled={loading}
-                      onUploaded={(media) => insertContentImage(media)}
-                    />
-                    <ExternalMediaInput
-                      category="images"
-                      label="插入外链"
-                      disabled={loading}
-                      onRegistered={(media) => insertContentImage(media)}
-                    />
-                  </div>
+              </Card.Header>
+              <Card.Content className="p-4">
+                <TextField isInvalid={!!errors.excerpt}>
+                  <Description className="mb-2 text-xs">留空提交时会根据正文自动截取</Description>
                   <TextArea
-                    ref={contentRef}
-                    className="min-h-[420px] w-full text-text-base"
-                    rows={18}
-                    value={formData.content}
-                    onChange={(event) => updateField("content", event.target.value)}
+                    className="text-sm text-text-base"
+                    rows={3}
+                    placeholder="简短描述文章内容…"
+                    value={formData.excerpt}
+                    onChange={(event) => updateField("excerpt", event.target.value)}
                   />
-                </div>
-              ) : (
-                <div className="min-h-[420px] rounded-md border border-border bg-background p-4">
-                  <ArticleMarkdownClient content={formData.content} />
-                </div>
-              )}
-              {errors.content ? <FieldError>{errors.content}</FieldError> : null}
-            </TextField>
-          </div>
+                  {errors.excerpt ? <FieldError>{errors.excerpt}</FieldError> : null}
+                </TextField>
+              </Card.Content>
+            </Card>
 
-          <div className="flex items-center gap-2">
-            <Switch isSelected={formData.featured} onChange={(value) => updateField("featured", value)}>
-              <Switch.Control>
-                <Switch.Thumb />
-              </Switch.Control>
-            </Switch>
-            <span className="text-sm">置顶文章</span>
-          </div>
-
-          <div className="space-y-3">
-            <label className="text-sm font-medium">文章标签</label>
-
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag) =>
-                tag.id ? (
-                  <Chip
-                    key={tag.id}
-                    variant={selectedTagIds.has(tag.id) ? "primary" : "secondary"}
-                    color={selectedTagIds.has(tag.id) ? "accent" : "default"}
-                    className="cursor-pointer"
-                    onClick={() => handleTagSelect(tag as Tag)}
-                  >
-                    <Chip.Label>{tag.name}</Chip.Label>
-                  </Chip>
-                ) : null,
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Input
-                className="text-text-base max-w-xs"
-                placeholder="输入新标签"
-                value={newTag}
-                onChange={(event) => setNewTag(event.target.value)}
-              />
-              <Button size="sm" variant="secondary" onPress={handleAddNewTag}>
-                添加
-              </Button>
-            </div>
-
-            {formData.tags.length > 0 ? (
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="text-sm text-text-base">已选择标签:</span>
-                {formData.tags.map((tag) => (
-                  <Chip key={tag.id} variant="soft" color="accent" size="sm">
-                    <Chip.Label>{tag.name}</Chip.Label>
-                  </Chip>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </Card.Content>
-
-        <div className="flex flex-wrap justify-end gap-3 border-t p-4">
-          {onCancel ? (
-            <Button variant="ghost" onPress={onCancel} isDisabled={loading}>
-              取消
-            </Button>
-          ) : null}
-          <Button type="button" variant="secondary" isDisabled={loading} onPress={() => void handleSubmit("DRAFT")}>
-            保存草稿
-          </Button>
-          <Button type="submit" variant="primary" isDisabled={loading} isPending={loading}>
-            {submitText}
-          </Button>
+            <Card className="rounded-2xl border border-border bg-background shadow-sm">
+              <Card.Content className="p-4">
+                <PostTagPicker
+                  catalogTags={tags}
+                  value={formData.tags}
+                  onChange={handleTagChange}
+                  disabled={loading}
+                />
+              </Card.Content>
+            </Card>
+          </aside>
         </div>
       </Form>
-    </Card>
+    </div>
   );
 }

@@ -98,7 +98,7 @@ const mdBase: Components = {
     }
     return (
       <code
-        className={`rounded-md bg-foreground px-1.5 py-0.5 font-mono text-[13px] text-primary dark:text-primary ${cls}`}
+        className={`rounded-md bg-canvas px-1.5 py-0.5 font-mono text-[13px] text-primary dark:text-primary ${cls}`}
         {...domProps}
       >
         {children}

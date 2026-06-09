@@ -126,7 +126,7 @@ export default function AdminCommentListPage() {
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
 
   return (
-    <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
+    <div className="space-y-4 p-4 text-text-base bg-canvas h-full">
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold text-text-base">评论管理</h1>
         <div className="flex flex-wrap items-end gap-3">

@@ -1,9 +1,83 @@
 @layer components {
+  /* Toast */
   .toast__title {
     @apply text-text-base;
   }
 
   .toast__indicator {
+    @apply text-text-base;
+  }
+
+  /* 表单与选择器：兜底映射到项目文字 token */
+  .label {
+    @apply text-text-muted;
+  }
+
+  .description {
+    @apply text-text-sub;
+  }
+
+  .field-error {
+    @apply text-error;
+  }
+
+  .input,
+  .textarea {
+    @apply text-text-base;
+  }
+
+  .input::placeholder,
+  .textarea::placeholder {
+    @apply text-text-sub;
+  }
+
+  .select__trigger,
+  .select__value,
+  .autocomplete__trigger,
+  .autocomplete__value,
+  .combobox__input-group .input {
+    @apply text-text-base;
+  }
+
+  .empty-state {
+    @apply text-text-muted;
+  }
+
+  .search-field__input {
+    @apply text-text-base;
+  }
+
+  .search-field__input::placeholder {
+    @apply text-text-sub;
+  }
+
+  .tag,
+  .tag-group .tag {
+    @apply text-text-base;
+  }
+
+  .table,
+  .table__cell {
+    @apply text-text-base;
+  }
+
+  .modal__heading {
+    @apply text-text-base;
+  }
+
+  .alert__title {
+    @apply text-text-base;
+  }
+
+  .alert__description {
+    @apply text-text-muted;
+  }
+
+  .tabs__tab {
+    @apply text-text-base;
+  }
+
+  .chip__label {
     @apply text-text-base;
   }
 }

@@ -132,7 +132,7 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
 
   if (error || !stats) {
     return (
-      <div className="flex h-full items-center justify-center bg-foreground p-6">
+      <div className="flex h-full items-center justify-center bg-canvas p-6">
         <div className="w-full max-w-md">
           <Alert status="danger">
             <Alert.Title>加载失败</Alert.Title>
@@ -164,7 +164,7 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
   }));
 
   return (
-    <div className="min-h-full space-y-6 bg-foreground p-6">
+    <div className="min-h-full space-y-6 bg-canvas p-6">
       <Card className="shadow-sm" variant="default">
         <Card.Content className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center">
           <Avatar color="accent" size="lg" className="h-14 w-14 shrink-0">

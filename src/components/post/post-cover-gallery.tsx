@@ -120,7 +120,7 @@ function CoverCarousel({ urls, alt, variant, className, priority }: CoverCarouse
       aria-label={`${alt} 封面图集`}
     >
       <div
-        className={clsx("relative overflow-hidden bg-foreground", mainHeightClass[variant])}
+        className={clsx("relative overflow-hidden bg-canvas", mainHeightClass[variant])}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >

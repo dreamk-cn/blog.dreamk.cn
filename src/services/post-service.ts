@@ -240,6 +240,42 @@ function resolvePublishedAt(
   return existingPublishedAt ?? new Date();
 }
 
+async function resolveCategory(input: {
+  categoryId?: string;
+  category?: { id?: string; name?: string; slug?: string };
+}) {
+  const draft = input.category;
+  if (draft?.name?.trim()) {
+    const name = draft.name.trim();
+    const slug = normalizeSlug(draft.slug || name, 100);
+
+    if (draft.id && !draft.id.startsWith("temp-")) {
+      const byId = await prisma.category.findUnique({
+        where: { id: draft.id },
+        select: { id: true },
+      });
+      if (byId) return { id: byId.id };
+    }
+
+    const existing = await prisma.category.findFirst({
+      where: {
+        OR: [{ slug }, { name: { equals: name, mode: "insensitive" } }],
+      },
+      select: { id: true },
+    });
+    if (existing) return { id: existing.id };
+
+    try {
+      const created = await prisma.category.create({ data: { name, slug } });
+      return { id: created.id };
+    } catch {
+      return { error: "创建分类失败，可能已存在同名分类" as const };
+    }
+  }
+
+  return resolveCategoryId(input.categoryId);
+}
+
 async function resolveCategoryId(categoryId?: string) {
   const trimmed = categoryId?.trim();
   if (!trimmed) return { id: undefined as string | undefined };
@@ -267,6 +303,7 @@ export async function createPost(input: {
   coverMediaFileIds?: string[];
   contentMediaFileIds?: string[];
   categoryId?: string;
+  category?: { id?: string; name?: string; slug?: string };
   tags: PostTagInput[];
   publishedAt?: Date;
 }) {
@@ -281,11 +318,12 @@ export async function createPost(input: {
     coverMediaFileIds = [],
     contentMediaFileIds = [],
     categoryId,
+    category,
     tags,
     publishedAt,
   } = input;
 
-  const resolvedCategory = await resolveCategoryId(categoryId);
+  const resolvedCategory = await resolveCategory({ categoryId, category });
   if ("error" in resolvedCategory) return resolvedCategory;
 
   const post = await prisma.post.create({
@@ -323,6 +361,7 @@ export async function updatePost(input: {
   coverMediaFileIds?: string[];
   contentMediaFileIds?: string[];
   categoryId?: string;
+  category?: { id?: string; name?: string; slug?: string };
   tags: PostTagInput[];
   publishedAt?: Date;
 }) {
@@ -337,6 +376,7 @@ export async function updatePost(input: {
     coverMediaFileIds = [],
     contentMediaFileIds = [],
     categoryId,
+    category,
     tags,
     publishedAt,
   } = input;
@@ -346,7 +386,7 @@ export async function updatePost(input: {
   });
   if (!existingPost) return null;
 
-  const resolvedCategory = await resolveCategoryId(categoryId);
+  const resolvedCategory = await resolveCategory({ categoryId, category });
   if ("error" in resolvedCategory) return resolvedCategory;
 
   await prisma.post.update({

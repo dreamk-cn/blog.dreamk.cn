@@ -45,6 +45,15 @@ export const PostCreateSchema = z.object({
   coverMediaFileIds: zValue(z.array(z.string().min(1)).default([])),
   contentMediaFileIds: zValue(z.array(z.string().min(1)).default([])),
   categoryId: zValue(z.string().optional()),
+  category: zValue(
+    z
+      .object({
+        id: zValue(z.string().optional()),
+        name: zValue(z.string().min(1).max(100).optional()),
+        slug: zValue(z.string().optional()),
+      })
+      .optional(),
+  ),
   tags: zValue(z.array(
     z.object({
       name: zValue(z.string().optional()),

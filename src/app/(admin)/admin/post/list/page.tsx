@@ -256,7 +256,7 @@ export default function Posts() {
   ), [pageNo, totalPages, total, pageSize]);
 
   return (
-    <div className="space-y-4 p-4 bg-foreground h-full">
+    <div className="space-y-4 p-4 bg-canvas h-full">
       {topContent}
 
       <div className="rounded-lg bg-content1">

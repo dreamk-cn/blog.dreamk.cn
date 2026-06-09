@@ -294,7 +294,7 @@ export default function AdminFriendLinkListPage() {
   };
 
   return (
-    <div className="space-y-4 p-4 text-text-base bg-foreground h-full">
+    <div className="space-y-4 p-4 text-text-base bg-canvas h-full">
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-wrap items-end gap-3">
           <TextField className="max-w-sm">
@@ -364,7 +364,7 @@ export default function AdminFriendLinkListPage() {
       <Modal state={createModal}>
         <Modal.Backdrop>
           <Modal.Container>
-            <Modal.Dialog className="bg-foreground inset-ring-primary inset-ring-2">
+            <Modal.Dialog className="bg-canvas inset-ring-primary inset-ring-2">
               <Modal.Header>
                 <Modal.Heading className="text-text-base">新增友链</Modal.Heading>
               </Modal.Header>
@@ -425,7 +425,7 @@ export default function AdminFriendLinkListPage() {
       <Modal state={editModal}>
         <Modal.Backdrop>
           <Modal.Container>
-            <Modal.Dialog className="bg-foreground inset-ring-primary inset-ring-2">
+            <Modal.Dialog className="bg-canvas inset-ring-primary inset-ring-2">
               <Modal.Header>
                 <Modal.Heading className="text-text-base">编辑友链</Modal.Heading>
               </Modal.Header>

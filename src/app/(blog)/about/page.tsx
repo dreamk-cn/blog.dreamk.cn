@@ -121,7 +121,7 @@ export default async function AboutPage() {
   const authorName = post.user?.name?.trim() || siteConfig.name;
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-foreground/60 via-background to-background text-text-base">
+    <div className="min-h-full bg-gradient-to-b from-canvas/60 via-background to-background text-text-base">
       <div className="mx-auto max-w-4xl px-4 pb-20 pt-6 sm:px-6 lg:px-8 lg:pt-10">
         <article className="rounded-2xl border border-border bg-background shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
           <header className="border-b border-border px-6 py-8 sm:px-10 sm:py-10">

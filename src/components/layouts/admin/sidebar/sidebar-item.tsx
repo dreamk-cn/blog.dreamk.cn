@@ -23,7 +23,7 @@ export const SidebarItem = ({ icon, title, isActive, href = "", prefetch = true 
     <NextLink href={href} prefetch={prefetch} className="max-w-full text-text-base active:bg-none">
       <div
         className={clsx(
-          isActive ? "bg-primary/10 text-primary [&_svg_path]:fill-current" : "hover:bg-foreground",
+          isActive ? "bg-primary/10 text-primary [&_svg_path]:fill-current" : "hover:bg-canvas",
           "flex h-full min-h-[44px] w-full cursor-pointer items-center gap-2 rounded-xl px-3.5 transition-all duration-150 active:scale-[0.98]"
         )}
         onClick={handleClick}

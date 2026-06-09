@@ -82,7 +82,7 @@ export function PostCoverManager({ items, disabled, onChange }: PostCoverManager
               key={item.id}
               className="flex items-center gap-3 rounded-xl border border-border bg-background p-2"
             >
-              <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-foreground">
+              <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-canvas">
                 <Image
                   src={item.url}
                   alt={`封面 ${index + 1}`}
@@ -131,7 +131,7 @@ export function PostCoverManager({ items, disabled, onChange }: PostCoverManager
           ))}
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-border bg-foreground">
+        <div className="overflow-hidden rounded-xl border border-border bg-canvas">
           <p className="border-b border-border px-3 py-2 text-xs text-text-muted">封面预览</p>
           <div className="relative h-32 w-full sm:h-36">
             <Image

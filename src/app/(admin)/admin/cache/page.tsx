@@ -149,7 +149,7 @@ export default function AdminAppCachePage() {
   };
 
   return (
-    <div className="h-full space-y-4 bg-foreground p-4 text-text-base">
+    <div className="h-full space-y-4 bg-canvas p-4 text-text-base">
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-2xl font-bold text-text-base">应用缓存</h1>

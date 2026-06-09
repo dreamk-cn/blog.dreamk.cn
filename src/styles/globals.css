@@ -6,12 +6,26 @@
 :root {
   /* 背景颜色 */
   --background: #ffffff;
-  --foreground: #f5f5f5;
+  /* 页面衬底（Tailwind bg-canvas），勿与 HeroUI 的 --foreground 混用 */
+  --canvas: #f5f5f5;
 
   /* 文字颜色 */
   --text-primary: #1E293B;
   --text-secondary: #64748B;
   --text-tertiary: #94A3B8;
+
+  /* HeroUI 文字语义（组件默认读取这些变量） */
+  --foreground: var(--text-primary);
+  --muted: var(--text-secondary);
+  --field-foreground: var(--text-primary);
+  --field-placeholder: var(--text-tertiary);
+  --surface-foreground: var(--text-primary);
+  --surface-secondary-foreground: var(--text-primary);
+  --surface-tertiary-foreground: var(--text-primary);
+  --overlay-foreground: var(--text-primary);
+  --default-foreground: var(--text-primary);
+  --segment-foreground: var(--text-primary);
+  --link: var(--text-primary);
 
   /* 阴影、圆角、边框颜色 */
   --border-color: #f5f5f5;
@@ -23,12 +37,24 @@
 
 .dark {
   --background: #18181b;
-  --foreground: #000000;
+  --canvas: #000000;
 
   --text-primary: #F1F5F9;
   --text-secondary: #94A3B8;
   --text-tertiary: #64748B;
-  
+
+  --foreground: var(--text-primary);
+  --muted: var(--text-secondary);
+  --field-foreground: var(--text-primary);
+  --field-placeholder: var(--text-tertiary);
+  --surface-foreground: var(--text-primary);
+  --surface-secondary-foreground: var(--text-primary);
+  --surface-tertiary-foreground: var(--text-primary);
+  --overlay-foreground: var(--text-primary);
+  --default-foreground: var(--text-primary);
+  --segment-foreground: var(--text-primary);
+  --link: var(--text-primary);
+
   --border-color: #334155;
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.5);
@@ -42,7 +68,8 @@
 
 @theme inline {
   --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-canvas: var(--canvas);
+  --color-foreground: var(--text-primary);
 
   /* 文字颜色定义 */
   --color-text-base: var(--text-primary);
@@ -63,7 +90,7 @@
 
 body {
   background: var(--background);
-  color: var(--foreground);
+  color: var(--text-primary);
   font-family: var(--font-en), var(--font-cn), Arial, Helvetica, sans-serif;
 }
 

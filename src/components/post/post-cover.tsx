@@ -40,7 +40,7 @@ export function PostCover({
   return (
     <div
       className={clsx(
-        "relative overflow-hidden bg-foreground",
+        "relative overflow-hidden bg-canvas",
         variantClass[variant],
         className,
       )}

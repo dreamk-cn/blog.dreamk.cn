@@ -124,7 +124,7 @@ export default async function PostDetail({ params }: PageProps) {
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(breadcrumbItems);
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-foreground/60 via-background to-background text-text-base">
+    <div className="min-h-full bg-gradient-to-b from-canvas/60 via-background to-background text-text-base">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: stringifyJsonLd(articleJsonLd) }}
@@ -163,7 +163,7 @@ export default async function PostDetail({ params }: PageProps) {
                     {post.category && (
                       <>
                         <span className="mx-2 hidden text-text-sub sm:inline">·</span>
-                        <span className="rounded-full bg-foreground px-2.5 py-0.5 text-xs font-medium text-text-base">
+                        <span className="rounded-full bg-canvas px-2.5 py-0.5 text-xs font-medium text-text-base">
                           {post.category.name}
                         </span>
                       </>
