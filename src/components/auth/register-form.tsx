@@ -11,10 +11,10 @@ import {
   TextField,
   toast,
 } from "@heroui/react";
-import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useRef, useState } from "react";
 
+import { loginWithCredentials } from "@/lib/auth/credentials-login";
 import {
   getRegisterFieldErrors,
   RegisterSchema,
@@ -28,19 +28,22 @@ export default function RegisterForm() {
     confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const submittingRef = useRef(false);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    if (loading) return;
-    e.preventDefault();
+  async function handleRegister() {
+    if (submittingRef.current || loading) return;
+
     const parsed = RegisterSchema.safeParse(formData);
     if (!parsed.success) {
       return;
     }
+
     const { name, email, password, confirmPassword } = parsed.data;
+    submittingRef.current = true;
     setLoading(true);
+    let releaseLock = true;
 
     try {
       const response = await fetch("/api/auth/register", {
@@ -66,36 +69,32 @@ export default function RegisterForm() {
         return;
       }
 
-      const signInResult = await signIn("dreamk-credentials", {
-        email,
-        password,
-        redirect: false,
-        callbackUrl,
-      });
+      const signInResult = await loginWithCredentials({ email, password, callbackUrl });
 
-      if (signInResult?.error) {
-        try {
-          const errorData = JSON.parse(signInResult.error);
-          const msg = errorData.errors?.[0]?.message;
-          toast.danger("自动登录失败", {
-            description:
-              typeof msg === "string" ? msg : "请切换到登录页手动登录",
-          });
-        } catch {
-          toast.danger("自动登录失败", {
-            description: "请切换到登录页手动登录",
-          });
-        }
-      } else {
-        router.push(callbackUrl);
+      if (!signInResult.ok) {
+        toast.danger("自动登录失败", {
+          description: signInResult.error || "请切换到登录页手动登录",
+        });
+        return;
       }
+
+      releaseLock = false;
+      window.location.assign(callbackUrl);
     } catch {
       toast.danger("注册失败", {
         description: "遇到未知错误，请重试",
       });
     } finally {
-      setLoading(false);
+      if (releaseLock) {
+        submittingRef.current = false;
+        setLoading(false);
+      }
     }
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    await handleRegister();
   }
 
   return (

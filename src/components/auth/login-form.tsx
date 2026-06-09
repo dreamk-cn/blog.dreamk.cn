@@ -1,48 +1,59 @@
 "use client";
 
 import { Button, Form, FieldError, Input, Label, TextField, Spinner, toast } from "@heroui/react";
-import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useRef, useState } from 'react';
+import { loginWithCredentials } from "@/lib/auth/credentials-login";
 import { getLoginFieldErrors, LoginSchema } from "@/schemas/auth";
+
+function navigateAfterAuth(callbackUrl: string) {
+  window.location.assign(callbackUrl);
+}
 
 export default function LoginForm() {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const submittingRef = useRef(false);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/';
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    if (loading) return;
-    e.preventDefault();
+  async function handleLogin() {
+    if (submittingRef.current || loading) return;
+
     const parsed = LoginSchema.safeParse(formData);
     if (!parsed.success) {
       return;
     }
+
     const { email, password } = parsed.data;
-    setLoading(true)
+    submittingRef.current = true;
+    setLoading(true);
+    let releaseLock = true;
 
     try {
-      const result = await signIn("dreamk-credentials", {
-        email,
-        password,
-        redirect: false,
-        callbackUrl
-      })
+      const result = await loginWithCredentials({ email, password, callbackUrl });
 
-      console.warn('result', result)
-      if (result.error) {
-        toast.danger('登录失败', { description: '无效的邮箱或密码' });
-      } else {
-        router.push(callbackUrl)
+      if (!result.ok) {
+        toast.danger('登录失败', { description: result.error });
+        return;
       }
+
+      releaseLock = false;
+      navigateAfterAuth(callbackUrl);
     } catch {
       toast.danger('登录失败', { description: '遇到未知错误，请重试' });
     } finally {
-      setLoading(false)
+      if (releaseLock) {
+        submittingRef.current = false;
+        setLoading(false);
+      }
     }
-  };
+  }
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    await handleLogin();
+  }
 
   return (
     <div className="mt-5">

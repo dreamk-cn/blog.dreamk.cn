@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
 import { consumeAnonymousCommentRateLimit } from "@/lib/cache";
 import { fail, internalError, ok, tooManyRequests, zodFail } from "@/lib/api-response";
+import { getRequestIp } from "@/lib/request-ip";
 import { CommentCreateSchema, CommentListSchema, CommentReplyListSchema, CommentSelfDeleteSchema } from "@/schemas/comment";
 import { notifyOnCommentCreated } from "@/services/comment-notify";
 import {
@@ -12,14 +13,6 @@ import {
 } from "@/services/comment-service";
 import { NextRequest } from "next/server";
 import z from "zod";
-
-function getRequestIp(request: NextRequest) {
-  const xff = request.headers.get("x-forwarded-for");
-  if (xff) {
-    return xff.split(",")[0]?.trim() || null;
-  }
-  return request.headers.get("x-real-ip");
-}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;

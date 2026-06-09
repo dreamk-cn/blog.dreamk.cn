@@ -11,3 +11,14 @@ export {
   consumeAnonymousCommentRateLimit,
   type AnonymousCommentRateResult,
 } from "./comment-anon-rate-limit";
+export {
+  AUTH_LOGIN_RATE_CACHE_KEY_PREFIX,
+  AUTH_REGISTER_RATE_CACHE_KEY_PREFIX,
+  consumeAuthLoginRateLimit,
+  consumeAuthRegisterRateLimit,
+} from "./auth-rate-limit";
+export {
+  consumeFixedWindowRateLimit,
+  readRateLimitEnvInt,
+  type FixedWindowRateLimitResult,
+} from "./fixed-window-rate-limit";

@@ -1,10 +1,22 @@
-import { fail, internalError, ok, zodFail } from "@/lib/api-response";
+import { fail, internalError, ok, tooManyRequests, zodFail } from "@/lib/api-response";
+import { consumeAuthRegisterRateLimit } from "@/lib/cache";
+import { getRequestIp } from "@/lib/request-ip";
 import { RegisterSchema } from "@/schemas/auth";
 import { registerUser } from "@/services/user-service";
+import { type NextRequest } from "next/server";
 import z from "zod";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const ip = getRequestIp(request);
+    const rate = await consumeAuthRegisterRateLimit(ip);
+    if (!rate.ok) {
+      return tooManyRequests(
+        `注册过于频繁，每 ${rate.windowSec} 秒最多 ${rate.limit} 次，请稍后再试`,
+        rate.retryAfterSec,
+      );
+    }
+
     const json = await request.json();
     const parsed = RegisterSchema.parse(json ?? {});
 
