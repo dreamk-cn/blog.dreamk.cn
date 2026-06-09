@@ -2,6 +2,7 @@ import { fail, internalError, ok, tooManyRequests, zodFail } from "@/lib/api-res
 import { consumeAuthRegisterRateLimit } from "@/lib/cache";
 import { getRequestIp } from "@/lib/request-ip";
 import { RegisterSchema } from "@/schemas/auth";
+import { verifyRegisterCode } from "@/services/register-verify-service";
 import { registerUser } from "@/services/user-service";
 import { type NextRequest } from "next/server";
 import z from "zod";
@@ -19,6 +20,11 @@ export async function POST(request: NextRequest) {
 
     const json = await request.json();
     const parsed = RegisterSchema.parse(json ?? {});
+
+    const verified = await verifyRegisterCode(parsed.email, parsed.code);
+    if ("error" in verified) {
+      return fail(400, verified.error);
+    }
 
     const result = await registerUser(parsed);
     if (result.error) {

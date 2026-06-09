@@ -12,25 +12,39 @@ import {
   toast,
 } from "@heroui/react";
 import { useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { loginWithCredentials } from "@/lib/auth/credentials-login";
 import {
   getRegisterFieldErrors,
   RegisterSchema,
+  SendRegisterCodeSchema,
 } from "@/schemas/auth";
+
+const SEND_CODE_COOLDOWN_SEC = 60;
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    code: "",
     password: "",
     confirmPassword: "",
   });
   const [loading, setLoading] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [cooldownSec, setCooldownSec] = useState(0);
   const submittingRef = useRef(false);
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
+
+  useEffect(() => {
+    if (cooldownSec <= 0) return;
+    const timer = window.setTimeout(() => {
+      setCooldownSec((prev) => prev - 1);
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [cooldownSec]);
 
   async function handleRegister() {
     if (submittingRef.current || loading) return;
@@ -40,7 +54,7 @@ export default function RegisterForm() {
       return;
     }
 
-    const { name, email, password, confirmPassword } = parsed.data;
+    const { name, email, code, password, confirmPassword } = parsed.data;
     submittingRef.current = true;
     setLoading(true);
     let releaseLock = true;
@@ -52,6 +66,7 @@ export default function RegisterForm() {
         body: JSON.stringify({
           name,
           email,
+          code,
           password,
           confirmPassword,
         }),
@@ -89,6 +104,49 @@ export default function RegisterForm() {
         submittingRef.current = false;
         setLoading(false);
       }
+    }
+  }
+
+  async function handleSendCode() {
+    if (sendingCode || cooldownSec > 0 || loading) return;
+
+    const parsed = SendRegisterCodeSchema.safeParse({ email: formData.email });
+    if (!parsed.success) {
+      toast.danger("无法发送验证码", {
+        description: parsed.error.issues[0]?.message || "请先填写正确的邮箱",
+      });
+      return;
+    }
+
+    setSendingCode(true);
+    try {
+      const response = await fetch("/api/auth/register/send-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: parsed.data.email }),
+      });
+      const result = await response.json();
+
+      if (result.code !== 200) {
+        toast.danger("发送失败", {
+          description:
+            typeof result.message === "string"
+              ? result.message
+              : "验证码发送失败，请稍后重试",
+        });
+        return;
+      }
+
+      setCooldownSec(SEND_CODE_COOLDOWN_SEC);
+      toast.success("验证码已发送", {
+        description: "请查收邮件并在 10 分钟内完成注册",
+      });
+    } catch {
+      toast.danger("发送失败", {
+        description: "遇到未知错误，请重试",
+      });
+    } finally {
+      setSendingCode(false);
     }
   }
 
@@ -143,11 +201,50 @@ export default function RegisterForm() {
             disabled={loading}
             onChange={(e) => {
               const next = e.target.value;
-              setFormData((prev) => ({ ...prev, email: next }));
+              setFormData((prev) => ({ ...prev, email: next, code: "" }));
+              setCooldownSec(0);
             }}
           />
           <FieldError />
         </TextField>
+
+        <div className="flex w-full items-start gap-2">
+          <TextField
+            isRequired
+            className="min-w-0 flex-1"
+            validate={(value) =>
+              getRegisterFieldErrors({ ...formData, code: value }).code
+            }
+          >
+            <Label className="text-text-base">验证码</Label>
+            <Input
+              className="text-text-base"
+              name="code"
+              placeholder="6 位数字验证码"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              value={formData.code}
+              disabled={loading}
+              onChange={(e) => {
+                const next = e.target.value.replace(/\D/g, "").slice(0, 6);
+                setFormData((prev) => ({ ...prev, code: next }));
+              }}
+            />
+            <FieldError />
+          </TextField>
+          <Button
+            className="mt-7 shrink-0"
+            type="button"
+            variant="secondary"
+            isDisabled={loading || sendingCode || cooldownSec > 0}
+            isPending={sendingCode}
+            onPress={handleSendCode}
+          >
+            {cooldownSec > 0 ? `重新发送 (${cooldownSec}s)` : "发送验证码"}
+          </Button>
+        </div>
 
         <TextField
           isRequired
@@ -220,9 +317,11 @@ export default function RegisterForm() {
               setFormData({
                 name: "",
                 email: "",
+                code: "",
                 password: "",
                 confirmPassword: "",
               });
+              setCooldownSec(0);
             }}
           >
             重置

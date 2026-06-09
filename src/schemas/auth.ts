@@ -35,11 +35,19 @@ export function getLoginFieldErrors(data: {
   return out;
 }
 
+/** 发送注册验证码（与 POST /api/auth/register/send-code 校验一致） */
+export const SendRegisterCodeSchema = z.object({
+  email: z.string().trim().pipe(z.email("邮箱格式不正确")),
+});
+
+export type SendRegisterCodeInput = z.infer<typeof SendRegisterCodeSchema>;
+
 /** 注册表单（与 POST /api/auth/register 校验一致） */
 export const RegisterSchema = z
   .object({
     name: z.string().trim().min(2, "用户名至少 2 个字符"),
     email: z.string().trim().pipe(z.email("邮箱格式不正确")),
+    code: z.string().regex(/^\d{6}$/, "请输入 6 位验证码"),
     password: z
       .string()
       .regex(
@@ -58,17 +66,20 @@ export type RegisterInput = z.infer<typeof RegisterSchema>;
 export function getRegisterFieldErrors(data: {
   name: string;
   email: string;
+  code: string;
   password: string;
   confirmPassword: string;
 }): {
   name: string;
   email: string;
+  code: string;
   password: string;
   confirmPassword: string;
 } {
   const empty = {
     name: "",
     email: "",
+    code: "",
     password: "",
     confirmPassword: "",
   };
@@ -82,6 +93,7 @@ export function getRegisterFieldErrors(data: {
     if (
       (key === "name" ||
         key === "email" ||
+        key === "code" ||
         key === "password" ||
         key === "confirmPassword") &&
       !out[key]

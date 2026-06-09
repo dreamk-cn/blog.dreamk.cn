@@ -98,6 +98,7 @@ export async function registerUser(input: RegisterInput) {
       email: input.email,
       name: input.name,
       password: hashedPassword,
+      emailVerified: new Date(),
       role: process.env.ADMIN_EMAIL === input.email ? "ADMIN" : "USER",
     },
   });

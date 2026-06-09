@@ -22,3 +22,20 @@ export {
   readRateLimitEnvInt,
   type FixedWindowRateLimitResult,
 } from "./fixed-window-rate-limit";
+export {
+  checkRegisterSendCodeCooldown,
+  consumeRegisterSendCodeEmailRateLimit,
+  consumeRegisterSendCodeIpRateLimit,
+  markRegisterSendCodeCooldown,
+  readRegisterSendCodeCooldownSec,
+  REGISTER_SEND_CODE_COOLDOWN_CACHE_KEY_PREFIX,
+  REGISTER_SEND_CODE_EMAIL_RATE_CACHE_KEY_PREFIX,
+  REGISTER_SEND_CODE_IP_RATE_CACHE_KEY_PREFIX,
+} from "./register-send-code-rate-limit";
+export {
+  generateRegisterVerifyCode,
+  saveRegisterVerifyCode,
+  verifyAndConsumeRegisterCode,
+  REGISTER_VERIFY_CODE_CACHE_KEY_PREFIX,
+  type RegisterVerifyCodeError,
+} from "./register-verify-code";
