@@ -112,7 +112,7 @@ export function PostCommentItem({
       </div>
 
       {replyingTo?.id === comment.id ? (
-        <div className="mt-3 space-y-2 rounded-lg border border-default-200/70 bg-content1 p-3 dark:border-default-100/20 dark:bg-content1/60">
+        <div className="mt-3 space-y-2 rounded-lg border border-default-200/70 bg-background p-3 dark:border-default-100/20">
           <TextArea
             className="w-full text-text-base"
             value={replyContent}

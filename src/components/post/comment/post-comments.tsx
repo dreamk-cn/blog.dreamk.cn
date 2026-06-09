@@ -360,7 +360,7 @@ export function PostComments({
   return (
     <section
       id="comments"
-      className="mt-8 rounded-2xl border border-default-200/70 bg-content1 p-6 shadow-[0_1px_2px_rgba(15,23,42,0.06)] dark:border-default-100/20 dark:bg-content1/60 dark:shadow-none sm:p-8"
+      className="mt-8 rounded-2xl border border-default-200/70 bg-background p-6 shadow-sm dark:border-default-100/20 sm:p-8"
     >
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-xl font-semibold text-text-base">评论区</h2>

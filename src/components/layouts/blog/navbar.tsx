@@ -140,26 +140,27 @@ export const Navbar = () => {
 
         <div className="flex items-center gap-2 lg:hidden">
           <ThemeSwitch />
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
             aria-label={isMenuOpen ? "收起菜单" : "展开菜单"}
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-            className="rounded-lg cursor-pointer border border-default-200 px-2 py-1 text-sm text-text-base"
+            className="min-w-0 px-3"
+            onPress={() => setIsMenuOpen((prev) => !prev)}
           >
             <MenuIcon color="current" size={20} />
-          </button>
+          </Button>
         </div>
       </nav>
 
       <>
-        <button
-          type="button"
+        <Button
+          variant="ghost"
           aria-label="关闭菜单遮罩"
           className={clsx(
-            "fixed inset-0 z-40 bg-black/30 transition-opacity duration-200 lg:hidden",
+            "fixed inset-0 z-40 h-full min-h-full w-full min-w-full max-w-none rounded-none bg-black/30 p-0 transition-opacity duration-200 lg:hidden",
             isMenuOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
           )}
-          onClick={() => setIsMenuOpen(false)}
+          onPress={() => setIsMenuOpen(false)}
         />
         <div
           className={clsx(
