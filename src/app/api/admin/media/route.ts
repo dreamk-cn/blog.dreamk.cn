@@ -2,7 +2,7 @@ import { fail, internalError, ok, zodFail } from "@/lib/api-response";
 import { requireAdmin } from "@/lib/route-auth";
 import { MediaDeleteSchema, MediaListSchema } from "@/schemas/media";
 import { deleteMediaFile, listMediaFiles } from "@/services/media-file-service";
-import { NextRequest } from "next/server";
+import { type NextRequest } from "next/server";
 import { z } from "zod";
 
 export async function GET(request: NextRequest) {
@@ -50,13 +50,13 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   const auth = await requireAdmin();
   if (!auth.ok) return auth.response;
 
   try {
-    const body = await request.json();
-    const parsed = MediaDeleteSchema.parse(body);
+    const { searchParams } = request.nextUrl;
+    const parsed = MediaDeleteSchema.parse({ id: searchParams.get("id") });
     const result = await deleteMediaFile(parsed.id);
 
     if ("error" in result) {
