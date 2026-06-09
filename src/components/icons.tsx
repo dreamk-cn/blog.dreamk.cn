@@ -331,3 +331,28 @@ export const DatabaseIcon = ({ size = 20, width, height, ...props }: IconSvgProp
     <path d="M4.5 12.75V17.25C4.5 18.9069 7.85786 20.25 12 20.25C16.1421 20.25 19.5 18.9069 19.5 17.25V12.75" stroke="currentColor" strokeWidth="1.8" />
   </svg>
 )
+
+export const MediaIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M4.5 7.5C4.5 6.67157 5.17157 6 6 6H18C18.8284 6 19.5 6.67157 19.5 7.5V16.5C19.5 17.3284 18.8284 18 18 18H6C5.17157 18 4.5 17.3284 4.5 16.5V7.5Z"
+      stroke="currentColor"
+      strokeWidth="1.8"
+    />
+    <path
+      d="M4.5 14.25L8.25 10.5L11.25 13.5L14.25 10.5L19.5 15.75"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <circle cx="9" cy="9.75" r="1" fill="currentColor" />
+  </svg>
+)

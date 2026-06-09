@@ -11,6 +11,7 @@ import {
   DashboardIcon,
   DatabaseIcon,
   LinkIcon,
+  MediaIcon,
   PostIcon,
   TagIcon,
   UserIcon
@@ -29,6 +30,7 @@ export const SidebarWrapper = () => {
       "/admin/tag/list",
       "/admin/category/list",
       "/admin/friend-link/list",
+      "/admin/media/list",
       "/admin/cache",
       "/admin/user/list",
     ],
@@ -102,6 +104,12 @@ export const SidebarWrapper = () => {
                 title="友链"
                 icon={<LinkIcon />}
                 href="/admin/friend-link/list"
+              />
+              <SidebarItem
+                isActive={pathname === "/admin/media/list"}
+                title="文件管理"
+                icon={<MediaIcon />}
+                href="/admin/media/list"
               />
               <SidebarItem
                 isActive={pathname === "/admin/cache"}

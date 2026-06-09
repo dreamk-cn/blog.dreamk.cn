@@ -1,5 +1,6 @@
 import z from "zod";
 import zValue from ".";
+import { SearchPageSchema } from "./page";
 
 export const ExternalMediaSchema = z.object({
   url: zValue(
@@ -31,3 +32,13 @@ export function uploadCategoryToMediaCategory(category: "asset" | "covers" | "im
   if (category === "images") return "CONTENT" as const;
   return "ASSET" as const;
 }
+
+export const MediaListSchema = SearchPageSchema.extend({
+  category: zValue(z.enum(["ALL", "ASSET", "COVER", "CONTENT"]).default("ALL")),
+  source: zValue(z.enum(["ALL", "UPLOAD", "EXTERNAL"]).default("ALL")),
+  sortBy: zValue(z.enum(["createdAt", "size"]).default("createdAt")),
+});
+
+export const MediaDeleteSchema = z.object({
+  id: zValue(z.string().min(1, "缺少文件 ID")),
+});

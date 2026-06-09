@@ -92,3 +92,8 @@ export function getOssHostname() {
     return null;
   }
 }
+
+export async function deleteObject(key: string) {
+  const client = getOssClient();
+  await client.delete(key);
+}
