@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  Alert,
   Pagination,
   useOverlayState,
 } from '@heroui/react';
@@ -237,7 +238,6 @@ export default function AdminMediaListPage() {
         <MediaTableView
           items={items}
           loading={loading}
-          error={error}
           deletingId={deletingId}
           onPreview={openPreview}
           onDelete={openDelete}
@@ -246,12 +246,18 @@ export default function AdminMediaListPage() {
         <MediaGridView
           items={items}
           loading={loading}
-          error={error}
           deletingId={deletingId}
           onPreview={openPreview}
           onDelete={openDelete}
         />
       )}
+
+      {error ? (
+        <Alert status="danger">
+          <Alert.Title>错误</Alert.Title>
+          <Alert.Description>{error}</Alert.Description>
+        </Alert>
+      ) : null}
 
       {bottomContent}
 

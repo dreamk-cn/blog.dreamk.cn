@@ -271,7 +271,7 @@ export default function Posts() {
     <div className="space-y-4 p-4 bg-canvas h-full">
       {topContent}
 
-      <div className="rounded-lg bg-content1">
+      <div className="rounded-lg bg-background">
         <Table>
           <Table.ScrollContainer className="max-h-[calc(100vh-280px)]">
             <Table.Content aria-label="文章列表">

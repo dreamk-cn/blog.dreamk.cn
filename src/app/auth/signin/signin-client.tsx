@@ -87,7 +87,7 @@ export function SignInClient() {
       </Tabs>
       <div className="my-4 flex w-full items-center gap-3">
         <Separator className="flex-1" />
-        <span className="text-small text-text-muted">Or</span>
+        <span className="text-small text-text-muted">或</span>
         <Separator className="flex-1" />
       </div>
       <div className="flex flex-col items-center gap-y-4">{renderLoginButtons(providers)}</div>

@@ -15,7 +15,6 @@ import {
 type MediaGridViewProps = {
   items: MediaListItem[];
   loading: boolean;
-  error: string | null;
   deletingId: string | null;
   onPreview: (item: MediaListItem) => void;
   onDelete: (item: MediaListItem) => void;
@@ -24,7 +23,6 @@ type MediaGridViewProps = {
 export function MediaGridView({
   items,
   loading,
-  error,
   deletingId,
   onPreview,
   onDelete,
@@ -35,10 +33,6 @@ export function MediaGridView({
         <Spinner color="accent" aria-label="加载中" />
       </div>
     );
-  }
-
-  if (error) {
-    return <p className="py-8 text-center text-red-500">{error}</p>;
   }
 
   if (items.length === 0) {

@@ -43,7 +43,7 @@ export function MobilePostToc({ items }: { items: MarkdownTocItem[] }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-40 rounded-full border border-default-200/80 bg-content1 px-4 py-2 text-sm font-medium shadow-md backdrop-blur-md xl:hidden"
+        className="fixed bottom-20 right-4 z-40 rounded-full border border-default-200/80 bg-background px-4 py-2 text-sm font-medium shadow-md backdrop-blur-md xl:hidden"
       >
         目录
       </button>
@@ -60,7 +60,7 @@ export function MobilePostToc({ items }: { items: MarkdownTocItem[] }) {
         />
 
         <aside
-          className={`absolute right-0 top-0 h-full w-[78vw] max-w-[320px] transform border-l border-default-200/70 bg-background/95 p-4 shadow-xl backdrop-blur-md transition-transform duration-300 ease-out dark:border-default-100/20 dark:bg-content1/95 ${
+          className={`absolute right-0 top-0 h-full w-[78vw] max-w-[320px] transform border-l border-default-200/70 bg-background/95 p-4 shadow-xl backdrop-blur-md transition-transform duration-300 ease-out dark:border-default-100/20 ${
             open ? "translate-x-0" : "translate-x-full"
           }`}
         >

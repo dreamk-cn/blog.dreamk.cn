@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  Alert,
   Button,
   Input,
   InputGroup,
@@ -30,14 +31,12 @@ async function loadTags(kw: string): Promise<{ data: Tag[]; error: string | null
 
 function TagTableRows({
   tags,
-  error,
   loading,
   deletingId,
   onEdit,
   onDelete,
 }: {
   tags: Tag[];
-  error: string | null;
   loading: boolean;
   deletingId: string | null;
   onEdit: (tag: Tag) => void;
@@ -50,16 +49,6 @@ function TagTableRows({
           <div className="flex justify-center py-3">
             <Spinner color="accent" aria-label="加载中" />
           </div>
-        </Table.Cell>
-      </Table.Row>
-    );
-  }
-
-  if (error) {
-    return (
-      <Table.Row>
-        <Table.Cell colSpan={5}>
-          <span className="text-red-500">{error}</span>
         </Table.Cell>
       </Table.Row>
     );
@@ -278,7 +267,6 @@ export default function AdminTagListPage() {
               <Table.Body>
                 <TagTableRows
                   tags={listTags}
-                  error={listError}
                   loading={listLoading}
                   deletingId={deletingId}
                   onEdit={openEdit}
@@ -289,6 +277,13 @@ export default function AdminTagListPage() {
           </Table.ScrollContainer>
         </Table>
       </div>
+
+      {listError ? (
+        <Alert status="danger">
+          <Alert.Title>错误</Alert.Title>
+          <Alert.Description>{listError}</Alert.Description>
+        </Alert>
+      ) : null}
 
       <Modal state={createModal}>
         <Modal.Backdrop>

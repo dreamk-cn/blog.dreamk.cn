@@ -15,7 +15,6 @@ import {
 type MediaTableViewProps = {
   items: MediaListItem[];
   loading: boolean;
-  error: string | null;
   deletingId: string | null;
   onPreview: (item: MediaListItem) => void;
   onDelete: (item: MediaListItem) => void;
@@ -24,13 +23,12 @@ type MediaTableViewProps = {
 export function MediaTableView({
   items,
   loading,
-  error,
   deletingId,
   onPreview,
   onDelete,
 }: MediaTableViewProps) {
   return (
-    <div className="rounded-lg bg-content1">
+    <div className="rounded-lg bg-background">
       <Table>
         <Table.ScrollContainer className="max-h-[calc(100vh-280px)]">
           <Table.Content aria-label="文件列表">
@@ -51,12 +49,6 @@ export function MediaTableView({
                     <div className="flex justify-center py-3">
                       <Spinner color="accent" aria-label="加载中" />
                     </div>
-                  </Table.Cell>
-                </Table.Row>
-              ) : error ? (
-                <Table.Row>
-                  <Table.Cell colSpan={8}>
-                    <span className="text-red-500">{error}</span>
                   </Table.Cell>
                 </Table.Row>
               ) : items.length === 0 ? (

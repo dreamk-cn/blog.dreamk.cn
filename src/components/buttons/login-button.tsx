@@ -31,7 +31,7 @@ export default function LoginButton({
       {auth ? (
         <div className="flex items-center gap-2">
           <Icon provider={auth.name as string} />
-          Sign In with {auth.name as string}
+          使用 {auth.name as string} 登录
         </div>
       ) : (
         "登录"

@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
+  Alert,
   Button,
   Input,
   InputGroup,
@@ -30,14 +31,12 @@ async function loadCategories(kw: string): Promise<{ data: Category[]; error: st
 
 function CategoryTableRows({
   categories,
-  error,
   loading,
   deletingId,
   onEdit,
   onDelete,
 }: {
   categories: Category[];
-  error: string | null;
   loading: boolean;
   deletingId: string | null;
   onEdit: (cat: Category) => void;
@@ -50,16 +49,6 @@ function CategoryTableRows({
           <div className="flex justify-center py-3">
             <Spinner color="accent" aria-label="加载中" />
           </div>
-        </Table.Cell>
-      </Table.Row>
-    );
-  }
-
-  if (error) {
-    return (
-      <Table.Row>
-        <Table.Cell colSpan={5}>
-          <span className="text-red-500">{error}</span>
         </Table.Cell>
       </Table.Row>
     );
@@ -276,7 +265,6 @@ export default function AdminCategoryListPage() {
               <Table.Body>
                 <CategoryTableRows
                   categories={listCategories}
-                  error={listError}
                   loading={listLoading}
                   deletingId={deletingId}
                   onEdit={openEdit}
@@ -287,6 +275,13 @@ export default function AdminCategoryListPage() {
           </Table.ScrollContainer>
         </Table>
       </div>
+
+      {listError ? (
+        <Alert status="danger">
+          <Alert.Title>错误</Alert.Title>
+          <Alert.Description>{listError}</Alert.Description>
+        </Alert>
+      ) : null}
 
       <Modal state={createModal}>
         <Modal.Backdrop>

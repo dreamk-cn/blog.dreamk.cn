@@ -35,7 +35,7 @@ export function MediaDeleteModal({ state, item, deleting, onConfirm }: MediaDele
                 <p className="mt-2 text-xs text-text-muted">外链记录将从媒体库中移除。</p>
               )}
               {item.usageCount > 0 ? (
-                <p className="mt-2 text-sm text-red-500">
+                <p className="mt-2 text-sm text-error">
                   该文件正在被 {item.usageCount} 篇文章引用，无法删除。
                 </p>
               ) : null}

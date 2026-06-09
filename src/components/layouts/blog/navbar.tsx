@@ -91,7 +91,7 @@ export const Navbar = () => {
     >
       <SearchField.Group>
         <SearchField.SearchIcon />
-        <SearchField.Input aria-label="站内搜索" placeholder="Search..." className="placeholder:text-text-muted text-text-base" />
+        <SearchField.Input aria-label="站内搜索" placeholder="搜索..." className="placeholder:text-text-muted text-text-base" />
         <SearchField.ClearButton />
       </SearchField.Group>
     </SearchField>

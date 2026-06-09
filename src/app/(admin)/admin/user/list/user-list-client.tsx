@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Button, InputGroup, Table, TextField, Label, Modal, Spinner, useOverlayState } from "@heroui/react";
+import { Alert, Button, InputGroup, Table, TextField, Label, Modal, Spinner, useOverlayState } from "@heroui/react";
 import { SearchIcon } from "@/components/icons";
 import { request } from "@/lib/request";
 import { StringSelect } from "@/components/admin/string-select";
@@ -21,14 +21,12 @@ async function loadUsers(kw: string, status: string | undefined): Promise<{ data
 
 function UserTableRows({
   users,
-  error,
   loading,
   updatingId,
   onBan,
   onUnban,
 }: {
   users: AdminUserListItem[];
-  error: string | null;
   loading: boolean;
   updatingId: string | null;
   onBan: (user: AdminUserListItem) => void;
@@ -41,16 +39,6 @@ function UserTableRows({
           <div className="flex justify-center py-3">
             <Spinner color="accent" aria-label="加载中" />
           </div>
-        </Table.Cell>
-      </Table.Row>
-    );
-  }
-
-  if (error) {
-    return (
-      <Table.Row>
-        <Table.Cell colSpan={6}>
-          <span className="text-red-500">{error}</span>
         </Table.Cell>
       </Table.Row>
     );
@@ -78,7 +66,7 @@ function UserTableRows({
         <span className="text-text-base">{u.role}</span>
       </Table.Cell>
       <Table.Cell>
-        <span className={u.status === "BAN" ? "text-red-500" : "text-text-muted"}>{u.status}</span>
+        <span className={u.status === "BAN" ? "text-error" : "text-text-muted"}>{u.status}</span>
       </Table.Cell>
       <Table.Cell>
         <span className="text-xs text-text-muted">{new Date(u.createdAt).toLocaleString()}</span>
@@ -254,7 +242,6 @@ export default function AdminUserListClient({ initialUsers, initialError = null 
               <Table.Body>
                 <UserTableRows
                   users={listUsers}
-                  error={listError}
                   loading={listLoading}
                   updatingId={updatingId}
                   onBan={openBanConfirm}
@@ -265,6 +252,13 @@ export default function AdminUserListClient({ initialUsers, initialError = null 
           </Table.ScrollContainer>
         </Table>
       </div>
+
+      {listError ? (
+        <Alert status="danger">
+          <Alert.Title>错误</Alert.Title>
+          <Alert.Description>{listError}</Alert.Description>
+        </Alert>
+      ) : null}
 
       <Modal state={banConfirmModal}>
         <Modal.Backdrop>
