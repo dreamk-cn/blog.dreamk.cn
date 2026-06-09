@@ -1,9 +1,13 @@
 import { isDev } from '@/utils/env';
 import { toast } from '@heroui/react';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { signOut } from 'next-auth/react';
+import { ResponseCode } from '@/config/response-code';
 import { ApiResponse } from '@/types/request';
 import { isClient } from '@/utils';
 import { getSiteOrigin } from '@/lib/site-url';
+
+let unauthorizedRedirecting = false;
 
 // 基础URL配置
 const BASE_URL = getSiteOrigin();
@@ -187,14 +191,27 @@ class HttpClient {
   }
 
   /**
-   * 处理未授权
+   * 处理未授权：提示后登出并跳转登录页（带 callbackUrl）
    */
   private handleUnauthorized(): void {
-    if (isClient()) {
-      toast.danger('未授权', { description: '请重新登录' });
-      
-      // 重定向到登录页的逻辑
+    if (!isClient() || unauthorizedRedirecting) {
+      return;
     }
+
+    const { pathname, search } = window.location;
+    if (pathname.startsWith('/auth/signin') || pathname.startsWith('/auth/signout')) {
+      return;
+    }
+
+    unauthorizedRedirecting = true;
+    toast.danger('未授权', { description: '请重新登录' });
+
+    const returnTo = `${pathname}${search}`;
+    const signInUrl = `/auth/signin?callbackUrl=${encodeURIComponent(returnTo)}`;
+
+    void signOut({ redirect: false }).finally(() => {
+      window.location.href = signInUrl;
+    });
   }
 
   /**
@@ -209,6 +226,11 @@ class HttpClient {
       return;
     }
     
+    // 401 已在 handleUnauthorized 中提示并跳转
+    if (error.code === ResponseCode.UNAUTHORIZED) {
+      return;
+    }
+
     // 显示错误提示
     if (config?.showErrorMessage !== false) {
       if (isClient()) {
