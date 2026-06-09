@@ -14,6 +14,15 @@ export class PrismaAppCache implements CacheStore, CacheStoreAdmin {
       return null;
     }
     if (row.expiresAt != null && row.expiresAt.getTime() <= Date.now()) {
+      // 删除过期缓存(防止缓存堆积)
+      void this.db.appCache
+        .deleteMany({
+          where: {
+            key,
+            expiresAt: { not: null, lte: new Date() },
+          },
+        })
+        .catch(() => {});
       return null;
     }
     return row.value;
