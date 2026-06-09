@@ -2,10 +2,13 @@
 
 import { Suspense, useEffect, useState } from "react";
 import { getProviders } from "next-auth/react";
+import NextLink from "next/link";
 import { Separator, Tabs, useIsMounted } from "@heroui/react";
 import LoginForm from "@/components/auth/login-form";
 import LoginButton from "@/components/buttons/login-button";
 import RegisterForm from "@/components/auth/register-form";
+import { LogoIcon } from "@/components/icons";
+import { siteConfig } from "@/config/site";
 
 type Providers = Awaited<ReturnType<typeof getProviders>>;
 
@@ -36,7 +39,23 @@ export function SignInClient() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-[40rem] flex-col items-center bg-background p-20">
+    <div className="mx-auto flex min-h-screen max-w-[40rem] flex-col items-center bg-background p-8 sm:p-20">
+      <div className="mb-8 flex w-full max-w-md items-center justify-between">
+        <NextLink
+          aria-label="返回首页"
+          className="flex items-center gap-1 transition-opacity hover:opacity-80"
+          href="/"
+        >
+          <LogoIcon className="dark:invert-90" height={34} width={34} />
+          <span className="text-xl font-bold text-text-base">{siteConfig.name}</span>
+        </NextLink>
+        <NextLink
+          className="text-sm text-text-muted transition-colors hover:text-accent"
+          href="/"
+        >
+          返回首页
+        </NextLink>
+      </div>
       <Tabs
         className="w-full max-w-md"
         selectedKey={selected}
