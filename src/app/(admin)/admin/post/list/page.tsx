@@ -10,10 +10,12 @@ import {
   Chip,
   Input,
   Label,
+  Modal,
   Pagination,
   Spinner,
   Table,
   TextField,
+  useOverlayState,
 } from '@heroui/react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { StringSelect } from '@/components/admin/string-select';
@@ -53,6 +55,8 @@ export default function Posts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [postToDelete, setPostToDelete] = useState<PostItem | null>(null);
+  const deleteModal = useOverlayState();
 
   const keywordDebounced = useDebounce(keyword, 300);
 
@@ -89,16 +93,24 @@ export default function Posts() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageNo, pageSize, sortBy, sortOrder, status, keywordDebounced]);
 
-  const handleDelete = async (id: string) => {
-    setDeletingId(id);
+  const openDelete = (post: PostItem) => {
+    setPostToDelete(post);
+    deleteModal.open();
+  };
+
+  const handleDelete = async () => {
+    if (!postToDelete) return;
+    setDeletingId(postToDelete.id);
     try {
       const res = await request.request<{ success: boolean }>({
         method: 'DELETE',
         url: '/post',
-        data: { ids: [id] },
+        data: { ids: [postToDelete.id] },
         showSuccessMessage: true,
       });
       if (res.code === 200) {
+        deleteModal.close();
+        setPostToDelete(null);
         const isLastItemOnPage = items.length === 1 && pageNo > 1;
         if (isLastItemOnPage) {
           setPageNo(pageNo - 1);
@@ -362,7 +374,7 @@ export default function Posts() {
                             size="sm"
                             variant="danger"
                             isPending={deletingId === item.id}
-                            onPress={() => handleDelete(item.id)}
+                            onPress={() => openDelete(item)}
                           >
                             删除
                           </Button>
@@ -385,6 +397,35 @@ export default function Posts() {
           <Alert.Description>{error}</Alert.Description>
         </Alert>
       ) : null}
+
+      <Modal state={deleteModal}>
+        <Modal.Backdrop>
+          <Modal.Container>
+            <Modal.Dialog>
+              <Modal.Header>
+                <Modal.Heading>删除文章</Modal.Heading>
+              </Modal.Header>
+              <Modal.Body>
+                <p>
+                  确认要删除文章 &quot;{postToDelete?.title}&quot; 吗？此操作不可撤销。
+                </p>
+              </Modal.Body>
+              <Modal.Footer className="flex justify-end gap-2">
+                <Button variant="outline" onPress={deleteModal.close}>
+                  取消
+                </Button>
+                <Button
+                  variant="danger"
+                  isDisabled={deletingId !== null}
+                  onPress={handleDelete}
+                >
+                  {deletingId ? '删除中...' : '确认删除'}
+                </Button>
+              </Modal.Footer>
+            </Modal.Dialog>
+          </Modal.Container>
+        </Modal.Backdrop>
+      </Modal>
     </div>
   );
 }

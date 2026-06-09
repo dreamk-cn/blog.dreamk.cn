@@ -508,7 +508,13 @@ export function PostForm({
               >
                 保存草稿
               </Button>
-              <Button type="submit" variant="primary" isDisabled={loading} isPending={loading}>
+              <Button
+                type="button"
+                variant="primary"
+                isDisabled={loading}
+                isPending={loading}
+                onPress={() => void handleSubmit()}
+              >
                 {submitText}
               </Button>
             </div>
