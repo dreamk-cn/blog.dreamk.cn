@@ -1,7 +1,10 @@
 import OSS from "ali-oss";
 import { randomBytes } from "crypto";
+import { isDev } from "@/utils/env";
 
-export const OSS_PREFIX = "blog";
+export function getOssPrefix() {
+  return isDev ? "blog-dev" : "blog";
+}
 
 const MIME_TO_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -55,7 +58,7 @@ export function buildObjectKey(category: OssUploadCategory, extension: string) {
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const folder = category === "covers" ? "covers" : category === "images" ? "images" : "assets";
   const id = randomBytes(8).toString("hex");
-  return `${OSS_PREFIX}/${folder}/${year}/${month}/${id}.${extension}`;
+  return `${getOssPrefix()}/${folder}/${year}/${month}/${id}.${extension}`;
 }
 
 export function buildPublicUrl(key: string) {
