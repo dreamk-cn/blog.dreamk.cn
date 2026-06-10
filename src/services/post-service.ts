@@ -1,5 +1,6 @@
 import { Prisma } from "@/generated/prisma";
 import { contentConfig } from "@/config/content";
+import { env } from "@/config/env";
 import { getDeepseekClient } from "@/lib/ai-client";
 import { prisma } from "@/lib/prisma";
 import { normalizeSlug } from "@/lib/slug";
@@ -12,12 +13,8 @@ import {
 
 type PostTagInput = { id?: string; name?: string; slug?: string };
 
-const deepseekSlugModel =
-  process.env.DEEPSEEK_SLUG_MODEL ??
-  process.env.DEEPSEEK_EXCERPT_MODEL ??
-  "deepseek-v4-flash";
-
-const deepseekExcerptModel = process.env.DEEPSEEK_EXCERPT_MODEL ?? "deepseek-v4-flash";
+const deepseekSlugModel = env.ai?.slugModel ?? "deepseek-v4-flash";
+const deepseekExcerptModel = env.ai?.excerptModel ?? "deepseek-v4-flash";
 
 const publicPostOrderBy: Prisma.PostOrderByWithRelationInput[] = [{ publishedAt: "desc" }, { createdAt: "desc" }];
 

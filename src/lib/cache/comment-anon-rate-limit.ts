@@ -1,3 +1,4 @@
+import { env } from "@/config/env";
 import { getCacheStore } from "./create-cache-store";
 
 /** 与后台「清除匿名评论限流」快捷操作共用此前缀 */
@@ -9,21 +10,11 @@ function anonCommentRateKey(ip: string | null): string {
 }
 
 function readMaxPerWindow(): number {
-  const raw = process.env.ANONYMOUS_COMMENT_RATE_MAX;
-  if (raw === undefined || raw === "") {
-    return 5;
-  }
-  const n = Number.parseInt(raw, 10);
-  return Number.isFinite(n) ? Math.max(0, n) : 5;
+  return env.rateLimits.ANONYMOUS_COMMENT_RATE_MAX;
 }
 
 function readWindowSec(): number {
-  const raw = process.env.ANONYMOUS_COMMENT_RATE_WINDOW_SEC;
-  if (raw === undefined || raw === "") {
-    return 60;
-  }
-  const n = Number.parseInt(raw, 10);
-  return Number.isFinite(n) ? Math.max(1, n) : 60;
+  return env.rateLimits.ANONYMOUS_COMMENT_RATE_WINDOW_SEC;
 }
 
 export type AnonymousCommentRateResult =

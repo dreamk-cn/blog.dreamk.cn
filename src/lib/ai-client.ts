@@ -1,9 +1,10 @@
+import { env } from "@/config/env";
 import OpenAI from "openai";
 
 const DEEPSEEK_BASE_URL = "https://api.deepseek.com";
 
 export function getDeepseekClient() {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+  const apiKey = env.ai?.apiKey;
   if (!apiKey) return null;
 
   return new OpenAI({

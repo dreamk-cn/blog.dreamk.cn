@@ -1,9 +1,17 @@
+import { env } from "@/config/env";
 import OSS from "ali-oss";
 import { randomBytes } from "crypto";
 
+function requireOssConfig() {
+  const oss = env.oss;
+  if (!oss) {
+    throw new Error("缺少 OSS 环境变量配置");
+  }
+  return oss;
+}
+
 export function getOssPrefix() {
-  const prefix = requireOssEnv("OSS_PREFIX");
-  return prefix.replace(/^\/+|\/+$/g, "");
+  return requireOssConfig().prefix;
 }
 
 const MIME_TO_EXT: Record<string, string> = {
@@ -15,21 +23,14 @@ const MIME_TO_EXT: Record<string, string> = {
 
 export type OssUploadCategory = "covers" | "images" | "asset";
 
-function requireOssEnv(name: string): string {
-  const value = process.env[name]?.trim();
-  if (!value) {
-    throw new Error(`缺少 OSS 环境变量: ${name}`);
-  }
-  return value;
-}
-
 export function getOssConfig() {
+  const oss = requireOssConfig();
   return {
-    accessKeyId: requireOssEnv("OSS_ACCESS_KEY_ID"),
-    accessKeySecret: requireOssEnv("OSS_ACCESS_KEY_SECRET"),
-    endpoint: requireOssEnv("OSS_ENDPOINT"),
-    bucket: requireOssEnv("OSS_BUCKET"),
-    publicUrl: requireOssEnv("OSS_URL").replace(/\/$/, ""),
+    accessKeyId: oss.accessKeyId,
+    accessKeySecret: oss.accessKeySecret,
+    endpoint: oss.endpoint,
+    bucket: oss.bucket,
+    publicUrl: oss.publicUrl,
   };
 }
 

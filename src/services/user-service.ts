@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { env } from "@/config/env";
 import { Prisma, UserStatus } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import type { RegisterInput } from "@/schemas/auth";
@@ -99,7 +100,7 @@ export async function registerUser(input: RegisterInput) {
       name: input.name,
       password: hashedPassword,
       emailVerified: new Date(),
-      role: process.env.ADMIN_EMAIL === input.email ? "ADMIN" : "USER",
+      role: env.adminEmail === input.email ? "ADMIN" : "USER",
     },
   });
 

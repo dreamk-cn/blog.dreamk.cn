@@ -1,3 +1,4 @@
+import { env } from "@/config/env";
 import z from "zod";
 import zValue from ".";
 import { SearchPageSchema } from "./page";
@@ -22,8 +23,7 @@ export const ALLOWED_IMAGE_MIME_TYPES = [
 export const DEFAULT_MAX_FILE_SIZE_MB = 5;
 
 export function getMaxFileSizeBytes() {
-  const configured = Number(process.env.OSS_MAX_FILE_SIZE_MB);
-  const mb = Number.isFinite(configured) && configured > 0 ? configured : DEFAULT_MAX_FILE_SIZE_MB;
+  const mb = env.oss?.maxFileSizeMb ?? DEFAULT_MAX_FILE_SIZE_MB;
   return mb * 1024 * 1024;
 }
 

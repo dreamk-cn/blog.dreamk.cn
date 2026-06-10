@@ -134,12 +134,19 @@ docker compose up -d db
 
 ### 2. 配置环境变量
 
-建议维护 `.env.development`，最少先配置：
+复制模板并按需填写：
+
+```bash
+cp .env.example .env.development
+```
+
+最少先配置：
 
 ```env
 DATABASE_URL=postgresql://blog:blog_password@127.0.0.1:5432/blog?schema=public
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 AUTH_SECRET=replace-with-a-random-secret
+AUTH_URL=http://localhost:3000
 ADMIN_EMAIL=your-admin@example.com
 ```
 
@@ -206,7 +213,10 @@ docker compose down
 - `DATABASE_URL`：Prisma 连接 PostgreSQL
 - `NEXT_PUBLIC_BASE_URL`：站点公开访问地址
 - `AUTH_SECRET`：NextAuth 密钥
+- `AUTH_URL`：NextAuth v5 生成 OAuth 回调地址时使用；生产环境建议显式设置
 - `ADMIN_EMAIL`：与该邮箱匹配的新用户会自动授予管理员权限
+
+完整变量说明见仓库根目录 [`.env.example`](.env.example)。应用启动时会在服务端校验环境变量（可通过 `SKIP_ENV_VALIDATION=1` 跳过，仅用于特殊构建场景）。
 
 ### 可选登录配置
 
@@ -243,6 +253,7 @@ docker compose down
 - `OSS_BUCKET`
 - `OSS_REGION`
 - `OSS_URL`：公开访问域名（CDN 或 Bucket 域名，不含末尾 `/`）
+- `OSS_PREFIX`：对象存储路径前缀，默认 `blog`（多项目共用 Bucket 时区分目录）
 - `OSS_MAX_FILE_SIZE_MB`：可选，默认 `5`
 
 Bucket 需允许 `blog/` 路径公共读（或通过 CDN 回源）。媒体元数据保存在 PostgreSQL `MediaFile` 表，支持本地上传与外链登记，文章通过 `PostCoverMedia`（多封面有序）与 `PostContentMedia`（正文插图）建立引用。

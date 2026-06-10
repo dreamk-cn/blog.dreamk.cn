@@ -1,3 +1,4 @@
+import { env, type RateLimitEnvKey } from "@/config/env";
 import { getCacheStore } from "./create-cache-store";
 
 export type FixedWindowRateLimitResult =
@@ -5,16 +6,12 @@ export type FixedWindowRateLimitResult =
   | { ok: false; count: number; limit: number; windowSec: number; retryAfterSec: number };
 
 export function readRateLimitEnvInt(
-  name: string,
+  name: RateLimitEnvKey,
   fallback: number,
   min = 0,
 ): number {
-  const raw = process.env[name];
-  if (raw === undefined || raw === "") {
-    return fallback;
-  }
-  const n = Number.parseInt(raw, 10);
-  return Number.isFinite(n) ? Math.max(min, n) : fallback;
+  const value = env.rateLimits[name];
+  return Math.max(min, value ?? fallback);
 }
 
 /**

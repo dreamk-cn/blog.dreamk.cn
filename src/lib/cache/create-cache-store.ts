@@ -1,3 +1,4 @@
+import { env } from "@/config/env";
 import { prisma } from "@/lib/prisma";
 import type { CacheStore, CacheStoreAdmin } from "./cache-store";
 import { PrismaAppCache } from "./prisma-app-cache";
@@ -5,11 +6,7 @@ import { PrismaAppCache } from "./prisma-app-cache";
 export type CacheDriver = "postgres" | "redis";
 
 function resolveDriver(): CacheDriver {
-  const raw = (process.env.CACHE_DRIVER ?? "postgres").trim().toLowerCase();
-  if (raw === "redis") {
-    return "redis";
-  }
-  return "postgres";
+  return env.cache.driver;
 }
 
 let prismaCacheSingleton: PrismaAppCache | null = null;

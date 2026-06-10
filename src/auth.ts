@@ -1,4 +1,5 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import { env } from "@/config/env";
 import type { PrismaClient as AuthPrismaClient, UserStatus } from "@/generated/prisma";
 import NextAuth from "next-auth";
 import CredentialsProvider from 'next-auth/providers/credentials'
@@ -180,7 +181,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   },
   events: {
     createUser: async ({ user }) => {
-      const adminEmail = process.env.ADMIN_EMAIL
+      const adminEmail = env.adminEmail;
       if (adminEmail && user.email === adminEmail) {
         await prisma.user.update({
           where: { id: user.id },

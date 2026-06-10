@@ -7,6 +7,7 @@ import { postUrlWithCommentAnchor } from "@/lib/comment-anchor";
 import { normalizeEmail } from "@/lib/email";
 import { sendSmtpMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
+import { env } from "@/config/env";
 import { postAbsoluteUrl } from "@/lib/site-url";
 import { truncateText } from "@/lib/text";
 
@@ -47,7 +48,7 @@ function authorLabel(user: { name: string | null; email: string | null } | null)
 
 /** 新评论/回复提交后：通知站长；已通过审核的回复同时通知被回复的登录用户 */
 export async function notifyOnCommentCreated(commentId: string): Promise<void> {
-  const adminEmail = process.env.ADMIN_EMAIL?.trim();
+  const adminEmail = env.adminEmail;
   const loaded = await loadCommentWithParent(commentId);
   if (!loaded) return;
 
