@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { contentConfig } from "@/config/content";
-import { absoluteUrl } from "@/lib/site-url";
+import { absoluteUrl, postAbsoluteUrl } from "@/lib/site-url";
 import { prisma } from "@/lib/prisma";
 
 export const revalidate = 300;
@@ -90,7 +90,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   const postEntries: MetadataRoute.Sitemap = posts.map((p) => ({
-    url: absoluteUrl(`/posts/${encodeURIComponent(p.slug)}`),
+    url: postAbsoluteUrl(p.slug),
     lastModified: p.updatedAt ?? p.publishedAt ?? undefined,
     changeFrequency: "weekly" as const,
     priority: 0.8,

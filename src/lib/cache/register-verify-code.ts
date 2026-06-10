@@ -1,5 +1,6 @@
 import { randomInt } from "node:crypto";
 
+import { normalizeEmail } from "@/lib/email";
 import { getCacheStore } from "./create-cache-store";
 import { readRateLimitEnvInt } from "./fixed-window-rate-limit";
 
@@ -7,12 +8,8 @@ export const REGISTER_VERIFY_CODE_CACHE_KEY_PREFIX = "auth:register:code:v1:";
 
 export type RegisterVerifyCodeError = "missing" | "expired" | "invalid";
 
-function normEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
-
 function codeKey(email: string): string {
-  return `${REGISTER_VERIFY_CODE_CACHE_KEY_PREFIX}${normEmail(email)}`;
+  return `${REGISTER_VERIFY_CODE_CACHE_KEY_PREFIX}${normalizeEmail(email)}`;
 }
 
 function readCodeTtlSec(): number {

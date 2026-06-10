@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { siteConfig } from "@/config/site";
-import { absoluteUrl, getSiteOrigin } from "@/lib/site-url";
+import { absoluteUrl, getSiteOrigin, resolveAbsoluteUrl } from "@/lib/site-url";
+import { truncateText } from "@/lib/text";
 
 type JsonLd = Record<string, unknown>;
 
@@ -21,17 +22,13 @@ type ArticleJsonLdInput = {
   tags?: string[];
 };
 
-function toAbsoluteUrl(urlOrPath: string) {
-  return /^https?:\/\//.test(urlOrPath) ? urlOrPath : absoluteUrl(urlOrPath);
-}
-
 export function getMetadataBase() {
   return new URL(getSiteOrigin());
 }
 
 export function buildCanonical(urlOrPath: string): NonNullable<Metadata["alternates"]> {
   return {
-    canonical: toAbsoluteUrl(urlOrPath),
+    canonical: resolveAbsoluteUrl(urlOrPath),
   };
 }
 
@@ -59,7 +56,7 @@ export function buildNoIndexRobots(options?: { follow?: boolean }): NonNullable<
 }
 
 export function normalizeMetaDescription(text: string, maxLength = 160) {
-  return text.replace(/\s+/g, " ").trim().slice(0, maxLength);
+  return truncateText(text, maxLength);
 }
 
 export function stringifyJsonLd(value: JsonLd) {
@@ -119,7 +116,7 @@ export function buildArticleJsonLd(input: ArticleJsonLdInput): JsonLd {
     ...(input.categoryName ? { articleSection: input.categoryName } : {}),
     ...(keywords.length > 0 ? { keywords: keywords.join(", ") } : {}),
     ...(input.coverUrls && input.coverUrls.length > 0
-      ? { image: input.coverUrls.map((url) => toAbsoluteUrl(url)) }
+      ? { image: input.coverUrls.map((url) => resolveAbsoluteUrl(url)) }
       : {}),
   };
 }

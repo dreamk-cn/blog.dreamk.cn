@@ -1,6 +1,7 @@
 import NextLink from "next/link";
 import { PostCard } from "@/components/post/post-card";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
+import { buildPageNumbers } from "@/lib/pagination";
 import { listPublicPostsPage } from "@/services/post-service";
 
 const PAGE_SIZE = 10;
@@ -14,17 +15,6 @@ function buildPageHref(page: number, keyword?: string) {
   if (page <= 1) return `/posts${query.toString() ? `?${query.toString()}` : ""}`;
   const pagePath = `/posts/page/${page}`;
   return `${pagePath}${query.toString() ? `?${query.toString()}` : ""}`;
-}
-
-function buildPageNumbers(currentPage: number, totalPages: number) {
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  }
-
-  const pages = new Set<number>([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
-  return Array.from(pages)
-    .filter((page) => page >= 1 && page <= totalPages)
-    .sort((a, b) => a - b);
 }
 
 export async function renderPostsListPage(requestedPage: number, keyword?: string) {

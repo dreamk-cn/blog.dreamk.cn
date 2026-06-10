@@ -1,10 +1,7 @@
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import { normalizeSlug } from "@/lib/slug";
 import { buildPublicPostWhere } from "@/services/post-service";
-
-function normalizeSlug(name: string, slug?: string) {
-  return (slug || name).toLowerCase().replace(/\s+/g, "-");
-}
 
 export async function listCategories(keyword = "") {
   const query: Prisma.CategoryFindManyArgs = {
@@ -22,7 +19,7 @@ export async function listCategories(keyword = "") {
 }
 
 export async function createCategory(input: { name: string; slug?: string }) {
-  const normalizedSlug = normalizeSlug(input.name, input.slug);
+  const normalizedSlug = normalizeSlug(input.slug || input.name, 100);
   const exists = await prisma.category.findFirst({
     where: { OR: [{ name: input.name }, { slug: normalizedSlug }] },
   });
@@ -33,7 +30,7 @@ export async function createCategory(input: { name: string; slug?: string }) {
 }
 
 export async function updateCategory(input: { id: string; name: string; slug?: string }) {
-  const normalizedSlug = normalizeSlug(input.name, input.slug);
+  const normalizedSlug = normalizeSlug(input.slug || input.name, 100);
   const exists = await prisma.category.findFirst({
     where: {
       OR: [{ name: input.name }, { slug: normalizedSlug }],

@@ -5,6 +5,7 @@ import { siteConfig } from "@/config/site";
 import { ArticleMarkdown } from "@/components/post/article-markdown";
 import { PostCoverGallery } from "@/components/post/post-cover-gallery";
 import { formatDateTime } from "@/lib/format-datetime";
+import { postPath } from "@/lib/site-url";
 import { getCoverUrls } from "@/lib/post-cover";
 import { PostComments } from "@/components/post/comment";
 import { MobilePostToc, PostViewTracker } from "@/components/post/mobile-post-toc";
@@ -59,7 +60,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: post.title,
     description: buildPostDescription(post),
-    alternates: buildCanonical(`/posts/${encodeURIComponent(post.slug)}`),
+    alternates: buildCanonical(postPath(post.slug)),
     ...(coverUrls.length > 0
       ? {
           openGraph: {
@@ -100,7 +101,7 @@ export default async function PostDetail({ params }: PageProps) {
   const articleJsonLd = buildArticleJsonLd({
     title: post.title,
     description,
-    path: `/posts/${encodeURIComponent(post.slug)}`,
+    path: postPath(post.slug),
     authorName,
     publishedAt: published,
     modifiedAt: post.updatedAt ?? published,
@@ -114,7 +115,7 @@ export default async function PostDetail({ params }: PageProps) {
     ...(post.category
       ? [{ name: post.category.name, path: `/categories/${encodeURIComponent(post.category.slug)}` }]
       : []),
-    { name: post.title, path: `/posts/${encodeURIComponent(post.slug)}` },
+    { name: post.title, path: postPath(post.slug) },
   ];
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(breadcrumbItems);
 

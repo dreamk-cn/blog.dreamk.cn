@@ -4,22 +4,11 @@ import {
   buildParentReplyReceivedEmail,
 } from "@/lib/comment-email-html";
 import { postUrlWithCommentAnchor } from "@/lib/comment-anchor";
+import { normalizeEmail } from "@/lib/email";
 import { sendSmtpMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
-import { absoluteUrl } from "@/lib/site-url";
-
-function postUrl(slug: string) {
-  return absoluteUrl(`/posts/${encodeURIComponent(slug)}`);
-}
-
-function excerpt(text: string, max = 400) {
-  const t = text.trim().replace(/\s+/g, " ");
-  return t.length <= max ? t : `${t.slice(0, max)}…`;
-}
-
-function normEmail(e: string | undefined | null) {
-  return e?.trim().toLowerCase() ?? "";
-}
+import { postAbsoluteUrl } from "@/lib/site-url";
+import { truncateText } from "@/lib/text";
 
 async function loadCommentWithParent(commentId: string) {
   const row = await prisma.comment.findUnique({
@@ -64,10 +53,10 @@ export async function notifyOnCommentCreated(commentId: string): Promise<void> {
 
   const { row, parent } = loaded;
   const { post } = row;
-  const link = postUrlWithCommentAnchor(postUrl(post.slug), row.id);
-  const bodyPreview = excerpt(row.content);
-  const adminNorm = normEmail(adminEmail);
-  const authorNorm = normEmail(row.user?.email);
+  const link = postUrlWithCommentAnchor(postAbsoluteUrl(post.slug), row.id);
+  const bodyPreview = truncateText(row.content, 400, { ellipsis: "…" });
+  const adminNorm = normalizeEmail(adminEmail);
+  const authorNorm = normalizeEmail(row.user?.email);
   const skipAdminNotify = Boolean(adminNorm && authorNorm && adminNorm === authorNorm);
 
   if (adminEmail && !skipAdminNotify) {
@@ -145,8 +134,8 @@ export async function notifyParentOnCommentApproved(commentId: string): Promise<
   if (parent.userId && row.userId && parent.userId === row.userId) return;
 
   const { post } = row;
-  const link = postUrlWithCommentAnchor(postUrl(post.slug), row.id);
-  const bodyPreview = excerpt(row.content);
+  const link = postUrlWithCommentAnchor(postAbsoluteUrl(post.slug), row.id);
+  const bodyPreview = truncateText(row.content, 400, { ellipsis: "…" });
 
   const parentMail = buildParentReplyReceivedEmail({
     postTitle: post.title,

@@ -1,9 +1,6 @@
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
-
-function normalizeSlug(name: string, slug?: string) {
-  return (slug || name).toLowerCase().replace(/\s+/g, "-");
-}
+import { normalizeSlug } from "@/lib/slug";
 
 export async function listTags(keyword = "") {
   const query: Prisma.TagFindManyArgs = {
@@ -21,7 +18,7 @@ export async function listTags(keyword = "") {
 }
 
 export async function createTag(input: { name: string; slug?: string }) {
-  const normalizedSlug = normalizeSlug(input.name, input.slug);
+  const normalizedSlug = normalizeSlug(input.slug || input.name, 50);
   const exists = await prisma.tag.findFirst({
     where: { OR: [{ name: input.name }, { slug: normalizedSlug }] },
   });
@@ -32,7 +29,7 @@ export async function createTag(input: { name: string; slug?: string }) {
 }
 
 export async function updateTag(input: { id: string; name: string; slug?: string }) {
-  const normalizedSlug = normalizeSlug(input.name, input.slug);
+  const normalizedSlug = normalizeSlug(input.slug || input.name, 50);
   const exists = await prisma.tag.findFirst({
     where: {
       OR: [{ name: input.name }, { slug: normalizedSlug }],

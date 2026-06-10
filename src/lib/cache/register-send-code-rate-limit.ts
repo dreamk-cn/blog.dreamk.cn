@@ -1,3 +1,4 @@
+import { normalizeEmail } from "@/lib/email";
 import { getCacheStore } from "./create-cache-store";
 import {
   consumeFixedWindowRateLimit,
@@ -9,10 +10,6 @@ export const REGISTER_SEND_CODE_IP_RATE_CACHE_KEY_PREFIX = "ratelimit:auth:regis
 export const REGISTER_SEND_CODE_EMAIL_RATE_CACHE_KEY_PREFIX =
   "ratelimit:auth:register:send-code:email:v1:";
 export const REGISTER_SEND_CODE_COOLDOWN_CACHE_KEY_PREFIX = "auth:register:send-cooldown:v1:";
-
-function normEmail(email: string): string {
-  return email.trim().toLowerCase();
-}
 
 function readSendCodeIpLimit() {
   return readRateLimitEnvInt("AUTH_REGISTER_SEND_CODE_IP_MAX", 5);
@@ -49,7 +46,7 @@ export async function consumeRegisterSendCodeEmailRateLimit(
   email: string,
 ): Promise<FixedWindowRateLimitResult> {
   return consumeFixedWindowRateLimit({
-    key: `${REGISTER_SEND_CODE_EMAIL_RATE_CACHE_KEY_PREFIX}${normEmail(email)}`,
+    key: `${REGISTER_SEND_CODE_EMAIL_RATE_CACHE_KEY_PREFIX}${normalizeEmail(email)}`,
     limit: readSendCodeEmailLimit(),
     windowSec: readSendCodeEmailWindowSec(),
   });
@@ -60,7 +57,7 @@ export async function checkRegisterSendCodeCooldown(
 ): Promise<{ ok: true } | { ok: false; retryAfterSec: number }> {
   const cooldownSec = readSendCodeCooldownSec();
   const store = getCacheStore();
-  const key = `${REGISTER_SEND_CODE_COOLDOWN_CACHE_KEY_PREFIX}${normEmail(email)}`;
+  const key = `${REGISTER_SEND_CODE_COOLDOWN_CACHE_KEY_PREFIX}${normalizeEmail(email)}`;
   const stored = await store.get(key);
   if (!stored) {
     return { ok: true };
@@ -82,7 +79,7 @@ export async function checkRegisterSendCodeCooldown(
 export async function markRegisterSendCodeCooldown(email: string): Promise<void> {
   const cooldownSec = readSendCodeCooldownSec();
   const store = getCacheStore();
-  const key = `${REGISTER_SEND_CODE_COOLDOWN_CACHE_KEY_PREFIX}${normEmail(email)}`;
+  const key = `${REGISTER_SEND_CODE_COOLDOWN_CACHE_KEY_PREFIX}${normalizeEmail(email)}`;
   await store.set(key, String(Date.now()), { ttlMs: cooldownSec * 1000 });
 }
 

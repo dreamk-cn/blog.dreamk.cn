@@ -2,6 +2,7 @@ import NextLink from "next/link";
 import { notFound } from "next/navigation";
 import { PostCard } from "@/components/post/post-card";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
+import { buildPageNumbers } from "@/lib/pagination";
 import { getPublicCategoryPostListPage } from "@/services/category-service";
 
 const PAGE_SIZE = 10;
@@ -9,17 +10,6 @@ const PAGE_SIZE = 10;
 function buildPageHref(categorySlug: string, page: number) {
   if (page <= 1) return `/categories/${categorySlug}`;
   return `/categories/${categorySlug}/page/${page}`;
-}
-
-function buildPageNumbers(currentPage: number, totalPages: number) {
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  }
-
-  const pages = new Set<number>([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
-  return Array.from(pages)
-    .filter((page) => page >= 1 && page <= totalPages)
-    .sort((a, b) => a - b);
 }
 
 export async function renderCategoryPostListPage(slug: string, requestedPage: number) {
