@@ -4,6 +4,7 @@ import { ArticleMarkdown } from "@/components/post/article-markdown";
 import { PostComments } from "@/components/post/comment";
 import { contentConfig } from "@/config/content";
 import { siteConfig } from "@/config/site";
+import { formatDateTime } from "@/lib/format-datetime";
 import { buildCanonical } from "@/lib/seo";
 import { countApprovedCommentsByPostSlug, listApprovedCommentsBySlug } from "@/services/comment-service";
 import { getPublishedPostBySlug, getPublishedPostMetadataBySlug } from "@/services/post-service";
@@ -14,12 +15,6 @@ const REPLY_PAGE_SIZE = 5;
 
 /** ISR：约 10 分钟重新生成，发布后最多延迟一小段时间可见（可按需改成 300/900） */
 export const revalidate = 30; // 减少缓存时间
-
-function formatDateTime(date: Date | null) {
-  if (!date) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
 
 async function getAboutPost() {
   return getPublishedPostBySlug(ABOUT_SLUG);

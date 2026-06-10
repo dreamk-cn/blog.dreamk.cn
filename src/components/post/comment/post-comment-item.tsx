@@ -4,8 +4,9 @@ import { Avatar, Button, Spinner, TextArea } from "@heroui/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { commentDomId } from "@/lib/comment-anchor";
+import { formatDateTime } from "@/lib/format-datetime";
 import type { CommentItem } from "./post-comments-types";
-import { formatDateTime, getAvatarFallback } from "./post-comments-utils";
+import { getAvatarFallback } from "./post-comments-utils";
 
 type ReplyingState = {
   id: string;

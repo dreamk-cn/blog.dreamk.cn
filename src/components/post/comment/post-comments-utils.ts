@@ -1,12 +1,5 @@
 import type { CommentItem, ServerCommentPayload } from "./post-comments-types";
 
-export function formatDateTime(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
 export function getAvatarFallback(name?: string | null) {
   const normalized = name?.trim();
   if (!normalized) return "匿";

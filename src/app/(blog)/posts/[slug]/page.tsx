@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { siteConfig } from "@/config/site";
 import { ArticleMarkdown } from "@/components/post/article-markdown";
 import { PostCoverGallery } from "@/components/post/post-cover-gallery";
+import { formatDateTime } from "@/lib/format-datetime";
 import { getCoverUrls } from "@/lib/post-cover";
 import { PostComments } from "@/components/post/comment";
 import { MobilePostToc, PostViewTracker } from "@/components/post/mobile-post-toc";
@@ -28,12 +29,6 @@ export const revalidate = 0; // 禁用缓存
 type PageProps = {
   params: Promise<{ slug: string }>;
 };
-
-function formatDateTime(date: Date | null) {
-  if (!date) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
-}
 
 const getCachedPublishedPostBySlug = cache(getPublishedPostBySlug);
 
