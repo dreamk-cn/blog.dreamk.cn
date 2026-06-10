@@ -6,16 +6,10 @@ import {
 import { postUrlWithCommentAnchor } from "@/lib/comment-anchor";
 import { sendSmtpMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
-import { isDev } from "@/utils/env";
-
-function publicBaseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_BASE_URL?.trim() || (isDev ? "http://localhost:3000" : "https://blog.dreamk.cn")
-  );
-}
+import { absoluteUrl } from "@/lib/site-url";
 
 function postUrl(slug: string) {
-  return `${publicBaseUrl()}/posts/${encodeURIComponent(slug)}`;
+  return absoluteUrl(`/posts/${encodeURIComponent(slug)}`);
 }
 
 function excerpt(text: string, max = 400) {
