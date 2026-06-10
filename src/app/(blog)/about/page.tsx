@@ -13,7 +13,7 @@ const ROOT_PAGE_SIZE = 20;
 const REPLY_PAGE_SIZE = 5;
 
 /** ISR：约 10 分钟重新生成，发布后最多延迟一小段时间可见（可按需改成 300/900） */
-export const revalidate = 600;
+export const revalidate = 30; // 减少缓存时间
 
 function formatDateTime(date: Date | null) {
   if (!date) return "";
