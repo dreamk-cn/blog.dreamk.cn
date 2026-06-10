@@ -1,186 +1,132 @@
-// /api/post
 import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
-import { fail, internalError, ok, zodFail } from "@/lib/api-response";
-import { mapPrismaError } from "@/lib/prisma-errors";
-import { requireAdmin } from "@/lib/route-auth";
+import { fail, ok } from "@/lib/api-response";
+import { parseJson, withAdmin, withRoute } from "@/lib/route-handler";
 import { PostCreateSchema, PostDeleteSchema, PostDetailSchema, PostUpdateSchema } from "@/schemas/post";
 import { createPost, deletePosts, getPostDetail, updatePost } from "@/services/post-service";
-import { NextRequest } from "next/server";
-import z from "zod";
+import { NextResponse } from "next/server";
 
 const POST_PRISMA_MESSAGES = {
   P2002: "Slug已存在，请换一个",
   P2025: "关联的分类或标签不存在",
-} as const;
+};
 
-// 获取文章详情（支持id或slug）
-export async function GET(request: NextRequest) {
+export const GET = withRoute(async (request) => {
   const { searchParams } = request.nextUrl;
+  const { id, slug, status } = PostDetailSchema.parse({
+    id: searchParams.get("id"),
+    slug: searchParams.get("slug"),
+    status: searchParams.get("status"),
+  });
 
-  try {
-    const parser = PostDetailSchema.parse({
-      id: searchParams.get('id'),
-      slug: searchParams.get('slug'),
-      status: searchParams.get('status')
-    })
+  const session = await auth();
+  const isAdmin = session?.user?.role === "ADMIN";
+  const post = await getPostDetail({ id, slug, status, isAdmin });
 
-    const { id, slug, status } = parser;
-    const session = await auth();
-    const isAdmin = session?.user?.role === 'ADMIN';
-
-    const post = await getPostDetail({ id, slug, status, isAdmin });
-
-    if (!post) {
-      return fail(ResponseCode.FAIL, "文章不存在")
-    }
-    
-    return ok(post, "获取文章成功");
-  } catch(err) {
-    if (err instanceof z.ZodError) {
-      return zodFail(err.issues[0]?.message || "参数错误")
-    }
-    console.error('获取文章失败:', err)
-    return internalError()
+  if (!post) {
+    return fail(ResponseCode.FAIL, "文章不存在");
   }
-}
 
-// 创建文章（仅管理员）
-export async function POST(request: NextRequest) {
-  try {
-    const admin = await requireAdmin()
-    if (!admin.ok) return admin.response
-    const userId = admin.session.user.id as string
+  return ok(post, "获取文章成功");
+}, "获取文章失败");
 
-    const json = await request.json()
+export const POST = withAdmin(async (request, admin) => {
+  const json = await parseJson(request);
+  if (json instanceof NextResponse) return json;
 
-    const parsed = PostCreateSchema.parse(json ?? {})
-    const {
-      title,
-      slug,
-      content,
-      excerpt,
-      status,
-      featured,
-      coverMediaFileIds,
-      contentMediaFileIds,
-      categoryId,
-      category,
-      tags,
-      publishedAt,
-    } = parsed
+  const parsed = PostCreateSchema.parse(json ?? {});
+  const {
+    title,
+    slug,
+    content,
+    excerpt,
+    status,
+    featured,
+    coverMediaFileIds,
+    contentMediaFileIds,
+    categoryId,
+    category,
+    tags,
+    publishedAt,
+  } = parsed;
 
-    const newPost = await createPost({
-      userId,
-      title,
-      slug,
-      content,
-      excerpt,
-      status,
-      featured,
-      coverMediaFileIds,
-      contentMediaFileIds,
-      categoryId: categoryId || undefined,
-      category,
-      tags,
-      publishedAt,
-    });
+  const newPost = await createPost({
+    userId: admin.session.user.id as string,
+    title,
+    slug,
+    content,
+    excerpt,
+    status,
+    featured,
+    coverMediaFileIds,
+    contentMediaFileIds,
+    categoryId: categoryId || undefined,
+    category,
+    tags,
+    publishedAt,
+  });
 
-    if (newPost && "error" in newPost && newPost.error) {
-      return fail(ResponseCode.FAIL, newPost.error)
-    }
-
-    return ok(newPost, "创建文章成功")
-  } catch(err) {
-    if (err instanceof z.ZodError) {
-      return zodFail(err.issues[0]?.message || "参数错误")
-    }
-    const knownError = mapPrismaError(err, POST_PRISMA_MESSAGES)
-    if (knownError) return knownError
-    console.warn('err', err)
-    return internalError()
+  if (newPost && "error" in newPost && newPost.error) {
+    return fail(ResponseCode.FAIL, newPost.error);
   }
-}
 
-// 更新文章（仅管理员）
-export async function PUT(request: NextRequest) {
-  try {
-    const admin = await requireAdmin()
-    if (!admin.ok) return admin.response
+  return ok(newPost, "创建文章成功");
+}, { logLabel: "创建文章失败", prismaMessages: POST_PRISMA_MESSAGES });
 
-    const json = await request.json()
-    const parsed = PostUpdateSchema.parse(json ?? {})
-    const {
-      id,
-      title,
-      slug,
-      content,
-      excerpt,
-      status,
-      featured,
-      coverMediaFileIds,
-      contentMediaFileIds,
-      categoryId,
-      category,
-      tags,
-      publishedAt,
-    } = parsed
+export const PUT = withAdmin(async (request) => {
+  const json = await parseJson(request);
+  if (json instanceof NextResponse) return json;
 
-    const updatedPost = await updatePost({
-      id,
-      title,
-      slug,
-      content,
-      excerpt,
-      status,
-      featured,
-      coverMediaFileIds,
-      contentMediaFileIds,
-      categoryId: categoryId || undefined,
-      category,
-      tags,
-      publishedAt,
-    });
+  const parsed = PostUpdateSchema.parse(json ?? {});
+  const {
+    id,
+    title,
+    slug,
+    content,
+    excerpt,
+    status,
+    featured,
+    coverMediaFileIds,
+    contentMediaFileIds,
+    categoryId,
+    category,
+    tags,
+    publishedAt,
+  } = parsed;
 
-    if (!updatedPost) {
-      return fail(ResponseCode.FAIL, "文章不存在")
-    }
+  const updatedPost = await updatePost({
+    id,
+    title,
+    slug,
+    content,
+    excerpt,
+    status,
+    featured,
+    coverMediaFileIds,
+    contentMediaFileIds,
+    categoryId: categoryId || undefined,
+    category,
+    tags,
+    publishedAt,
+  });
 
-    if ("error" in updatedPost && updatedPost.error) {
-      return fail(ResponseCode.FAIL, updatedPost.error)
-    }
-
-    return ok(updatedPost, "更新文章成功")
-  } catch(err) {
-    if (err instanceof z.ZodError) {
-      return zodFail(err.issues[0]?.message || "参数错误")
-    }
-    const knownError = mapPrismaError(err, POST_PRISMA_MESSAGES)
-    if (knownError) return knownError
-    console.error('更新文章失败:', err)
-    return internalError()
+  if (!updatedPost) {
+    return fail(ResponseCode.FAIL, "文章不存在");
   }
-}
 
-// 删除文章（仅管理员）
-export async function DELETE(request: NextRequest) {
-  try {
-    const admin = await requireAdmin()
-    if (!admin.ok) return admin.response
-
-    const json = await request.json()
-    const { ids } = PostDeleteSchema.parse(json ?? {})
-
-    const { count } = await deletePosts(ids)
-
-    return ok(null, `删除${count}条文章`)
-  } catch(err) {
-    if (err instanceof z.ZodError) {
-      return zodFail(err.issues[0]?.message || "参数错误")
-    }
-    const knownError = mapPrismaError(err)
-    if (knownError) return knownError
-    console.error('err', err)
-    return internalError()
+  if ("error" in updatedPost && updatedPost.error) {
+    return fail(ResponseCode.FAIL, updatedPost.error);
   }
-}
+
+  return ok(updatedPost, "更新文章成功");
+}, { logLabel: "更新文章失败", prismaMessages: POST_PRISMA_MESSAGES });
+
+export const DELETE = withAdmin(async (request) => {
+  const json = await parseJson(request);
+  if (json instanceof NextResponse) return json;
+
+  const { ids } = PostDeleteSchema.parse(json ?? {});
+  const { count } = await deletePosts(ids);
+
+  return ok(null, `删除${count}条文章`);
+}, "删除文章失败");

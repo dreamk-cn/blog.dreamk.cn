@@ -1,21 +1,15 @@
-import { NextRequest } from "next/server";
-import { internalError, ok, zodFail } from "@/lib/api-response";
+import { ok } from "@/lib/api-response";
+import { parseJson, withRoute } from "@/lib/route-handler";
 import { PostViewSchema } from "@/schemas/post";
 import { incrementPostView } from "@/services/post-service";
-import z from "zod";
+import { NextResponse } from "next/server";
 
-export async function POST(request: NextRequest) {
-  try {
-    const json = await request.json();
-    const { slug } = PostViewSchema.parse(json ?? {});
+export const POST = withRoute(async (request) => {
+  const json = await parseJson(request);
+  if (json instanceof NextResponse) return json;
 
-    await incrementPostView(slug);
+  const { slug } = PostViewSchema.parse(json ?? {});
+  await incrementPostView(slug);
 
-    return ok(null, "ok");
-  } catch (err) {
-    if (err instanceof z.ZodError) {
-      return zodFail(err.issues[0]?.message || "参数错误");
-    }
-    return internalError();
-  }
-}
+  return ok(null, "ok");
+}, "记录浏览量失败");

@@ -16,6 +16,7 @@
 - [x] **Prisma 错误统一映射** — `src/lib/prisma-errors.ts`，P2002 / P2025 / P2003
 - [x] **API Route 公共包装** — `src/lib/route-handler.ts`（`parseJson`、`handleRouteError`、`withAdmin`、`withRoute`）；已迁移 categories / tags / friend-links / users
 - [x] **NextAuth 凭证登录限流对齐** — `[...nextauth]/route.ts` 复用 `tooManyRequests`；`credentials-login.ts` 读 body `code`
+- [x] **API Route 全量迁移至 `route-handler`** — 除 `[...nextauth]` 外均已使用 `withRoute` / `withAdmin`；`route-handler` 支持 `mapError`（upload OSS）
 
 ---
 
@@ -39,10 +40,6 @@
 - [ ] 补充单元测试：`normalizeSlug`、`buildPageNumbers`、`truncateText`、`readRateLimitEnvInt`、关键 Zod schema
 - [ ] 补充 API 集成测试：注册、评论、文章 CRUD
 - [ ] 添加 GitHub Actions：`prisma generate → lint → typecheck → test`
-
-### API 健壮性
-
-- [ ] **其余 route 迁移至 `route-handler`** — post、comments、upload 等仍手写 try/catch，可逐步改用 `withAdmin` / `handleRouteError`
 
 ### 安全
 
