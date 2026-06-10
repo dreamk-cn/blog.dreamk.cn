@@ -12,5 +12,6 @@ alwaysApply: false
 - 查询参数和请求体校验优先放在 `src/schemas`，不要把大段校验逻辑散落在 route 文件里。
 - `catch` 中先处理 `z.ZodError`，再处理 Prisma 已知错误或业务错误，最后兜底 `internalError()`。
 - 保持响应结构稳定：`code`、`message`、`data`，不要为单个接口发明新格式。
+- **HTTP 状态码尽量统一为 200**；业务成败、权限、限流等由 body 中的 `code` 表达（见 `src/config/response-code.ts`）。客户端 `src/lib/request.ts` 已按 `data.code` 分支，不要在 route 里单独返回 HTTP 401/403/500，除非与第三方协议兼容（如 NextAuth 回调）。
 - 不在 route 中写复杂 Prisma 查询；涉及组合查询、状态流转、树结构处理时下沉到 `src/services`。
 - 例：文章、评论、友链接口都应继续由 route 负责校验和权限，service 负责真正的数据读写。

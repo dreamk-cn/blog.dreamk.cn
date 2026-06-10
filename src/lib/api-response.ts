@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { ResponseCode, ResponseMessage } from "@/config/response-code";
 
+/** 业务 JSON 响应统一 HTTP 200，成败由 body.code 表达（见 response-code.ts） */
+
 export function ok<T>(data: T, message = ResponseMessage[ResponseCode.SUCCESS]) {
   return NextResponse.json({
     code: ResponseCode.SUCCESS,
@@ -43,7 +45,7 @@ export function tooManyRequests(
       message,
       data: null,
     },
-    { status: ResponseCode.TOO_MANY_REQUESTS, headers },
+    { headers },
   );
 }
 
