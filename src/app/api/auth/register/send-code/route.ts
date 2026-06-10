@@ -1,4 +1,5 @@
-import { fail, internalError, ok, tooManyRequests, zodFail } from "@/lib/api-response";
+import { ResponseCode } from "@/config/response-code";
+import { conflict, fail, internalError, ok, tooManyRequests, zodFail } from "@/lib/api-response";
 import { getRequestIp } from "@/lib/request-ip";
 import { SendRegisterCodeSchema } from "@/schemas/auth";
 import { sendRegisterVerificationCode } from "@/services/register-verify-service";
@@ -17,13 +18,13 @@ export async function POST(request: NextRequest) {
     });
 
     if ("error" in result && result.error) {
-      if (result.status === 409) {
-        return fail(409, result.error);
+      if (result.code === ResponseCode.CONFLICT) {
+        return conflict(result.error);
       }
-      if (result.status === 429) {
+      if (result.code === ResponseCode.TOO_MANY_REQUESTS) {
         return tooManyRequests(result.error, result.retryAfterSec);
       }
-      return fail(400, result.error);
+      return fail(ResponseCode.FAIL, result.error);
     }
 
     return ok(null, "验证码已发送");

@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
 import { consumeAnonymousCommentRateLimit } from "@/lib/cache";
 import { fail, internalError, ok, tooManyRequests, zodFail } from "@/lib/api-response";
+import { mapPrismaError } from "@/lib/prisma-errors";
 import { getRequestIp } from "@/lib/request-ip";
 import { CommentCreateSchema, CommentListSchema, CommentReplyListSchema, CommentSelfDeleteSchema } from "@/schemas/comment";
 import { notifyOnCommentCreated } from "@/services/comment-notify";
@@ -104,6 +105,8 @@ export async function POST(request: NextRequest) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误");
     }
+    const prismaErr = mapPrismaError(err);
+    if (prismaErr) return prismaErr;
     return internalError();
   }
 }
@@ -133,6 +136,8 @@ export async function DELETE(request: NextRequest) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误");
     }
+    const prismaErr = mapPrismaError(err);
+    if (prismaErr) return prismaErr;
     return internalError();
   }
 }

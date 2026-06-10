@@ -1,7 +1,7 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { env } from "@/config/env";
 import type { PrismaClient as AuthPrismaClient, UserStatus } from "@/generated/prisma";
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
 import bcrypt from "bcryptjs";
@@ -10,6 +10,22 @@ import Google from "next-auth/providers/google";
 
 function isUserBlocked(status: UserStatus) {
   return status === "BAN" || status === "DELETED";
+}
+
+class MissingCredentials extends CredentialsSignin {
+  code = "credentials_required";
+}
+
+class InvalidCredentials extends CredentialsSignin {
+  code = "invalid_credentials";
+}
+
+class AccountBlocked extends CredentialsSignin {
+  code = "account_blocked";
+}
+
+class AccountUnavailable extends CredentialsSignin {
+  code = "account_unavailable";
 }
 
 export const { auth, handlers, signIn, signOut } = NextAuth({
@@ -25,12 +41,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         try {
           if (!credentials?.email || !credentials?.password) {
-            throw new Error(JSON.stringify({
-              errors: [{ 
-                message: "邮箱和密码不能为空", 
-                field: "credentials" 
-              }]
-            }));
+            throw new MissingCredentials();
           }
           const user = await prisma.user.findUnique({
             where: { email: credentials.email as string },
@@ -46,32 +57,17 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           })
 
           if (!user || !user.password) {
-            throw new Error(JSON.stringify({
-              errors: [{ 
-                message: "账号不存在", 
-                field: "credentials" 
-              }]
-            }));
+            throw new InvalidCredentials();
           }
 
           const passwordMatch = await bcrypt.compare(credentials.password as string, user.password)
 
           if (!passwordMatch) {
-            throw new Error(JSON.stringify({
-              errors: [{ 
-                message: "账号或密码错误", 
-                field: "credentials" 
-              }]
-            }));
+            throw new InvalidCredentials();
           }
 
           if (isUserBlocked(user.status)) {
-            throw new Error(JSON.stringify({
-              errors: [{
-                message: user.status === "BAN" ? "账号已被禁用" : "账号不可用",
-                field: "credentials",
-              }],
-            }));
+            throw user.status === "BAN" ? new AccountBlocked() : new AccountUnavailable();
           }
 
           return {
@@ -82,27 +78,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             role: user.role
           }
         } catch (error) {
-          if (error instanceof Error) {
-            try {
-              // 如果已经是JSON格式，直接抛出
-              JSON.parse(error.message);
-              throw error;
-            } catch {
-              // 如果不是JSON格式，包装成结构化错误
-              throw new Error(JSON.stringify({
-                errors: [{ 
-                  message: "An unexpected error occurred", 
-                  field: "system" 
-                }]
-              }));
-            }
+          if (error instanceof CredentialsSignin) {
+            throw error;
           }
-          throw new Error(JSON.stringify({
-            errors: [{ 
-              message: "An unexpected error occurred", 
-              field: "system" 
-            }]
-          }));
+          console.error("[auth] credentials authorize failed:", error);
+          throw new InvalidCredentials();
         }
       }
     }),

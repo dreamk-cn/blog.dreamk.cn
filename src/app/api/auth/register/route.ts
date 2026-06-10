@@ -1,4 +1,6 @@
-import { fail, internalError, ok, tooManyRequests, zodFail } from "@/lib/api-response";
+import { ResponseCode } from "@/config/response-code";
+import { conflict, fail, internalError, ok, tooManyRequests, zodFail } from "@/lib/api-response";
+import { mapPrismaError } from "@/lib/prisma-errors";
 import { consumeAuthRegisterRateLimit } from "@/lib/cache";
 import { getRequestIp } from "@/lib/request-ip";
 import { RegisterSchema } from "@/schemas/auth";
@@ -23,12 +25,12 @@ export async function POST(request: NextRequest) {
 
     const verified = await verifyRegisterCode(parsed.email, parsed.code);
     if ("error" in verified) {
-      return fail(400, verified.error);
+      return fail(ResponseCode.FAIL, verified.error);
     }
 
     const result = await registerUser(parsed);
     if (result.error) {
-      return fail(409, result.error);
+      return conflict(result.error);
     }
 
     return ok(null, "注册成功");
@@ -36,6 +38,8 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return zodFail(error.issues[0]?.message || "参数错误");
     }
+    const prismaErr = mapPrismaError(error);
+    if (prismaErr) return prismaErr;
     return internalError("Internal server error");
   }
 }

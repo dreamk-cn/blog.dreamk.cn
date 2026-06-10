@@ -1,4 +1,5 @@
-import { fail, internalError, ok, zodFail } from "@/lib/api-response";
+import { internalError, ok, zodFail } from "@/lib/api-response";
+import { mapPrismaError } from "@/lib/prisma-errors";
 import { requireAdmin } from "@/lib/route-auth";
 import { ExternalMediaSchema, uploadCategoryToMediaCategory } from "@/schemas/media";
 import { createMediaFile } from "@/services/media-file-service";
@@ -33,6 +34,8 @@ export async function POST(request: Request) {
     if (error instanceof z.ZodError) {
       return zodFail(error.issues[0]?.message || "参数错误");
     }
+    const prismaErr = mapPrismaError(error);
+    if (prismaErr) return prismaErr;
     console.error("登记外链媒体失败:", error);
     return internalError("登记外链失败");
   }

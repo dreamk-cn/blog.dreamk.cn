@@ -7,7 +7,8 @@ alwaysApply: false
 # API Route 约定
 
 - Route 只做 4 件事：解析请求、Zod 校验、权限校验、调用 service。
-- 统一复用 `src/lib/api-response.ts` 的 `ok`、`fail`、`zodFail`、`unauthorized`、`forbidden`、`internalError`，避免直接拼 `NextResponse.json`。
+- 统一复用 `src/lib/api-response.ts` 的 `ok`、`fail`、`zodFail`、`unauthorized`、`forbidden`、`conflict`、`notFound`、`internalError`，避免直接拼 `NextResponse.json`。
+- 优先使用 `src/lib/route-handler.ts` 的 `withAdmin`、`withRoute`、`parseJson`、`handleRouteError` 减少重复 try/catch；Prisma 已知错误用 `src/lib/prisma-errors.ts` 的 `mapPrismaError`。
 - 管理员写操作优先使用 `requireAdmin()`；需要区分游客/登录态时再调用 `auth()`。
 - 查询参数和请求体校验优先放在 `src/schemas`，不要把大段校验逻辑散落在 route 文件里。
 - `catch` 中先处理 `z.ZodError`，再处理 Prisma 已知错误或业务错误，最后兜底 `internalError()`。

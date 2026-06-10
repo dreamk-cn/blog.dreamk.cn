@@ -11,7 +11,7 @@ export function ok<T>(data: T, message = ResponseMessage[ResponseCode.SUCCESS]) 
   });
 }
 
-export function fail(code: number, message: string, data: unknown = null) {
+export function fail(code: ResponseCode, message: string, data: unknown = null) {
   return NextResponse.json({
     code,
     message,
@@ -29,6 +29,14 @@ export function unauthorized(message = "请登录后再操作") {
 
 export function forbidden(message = "您没有操作权限") {
   return fail(ResponseCode.FORBIDDEN, message);
+}
+
+export function notFound(message = ResponseMessage[ResponseCode.NOT_FOUND]) {
+  return fail(ResponseCode.NOT_FOUND, message);
+}
+
+export function conflict(message = ResponseMessage[ResponseCode.CONFLICT]) {
+  return fail(ResponseCode.CONFLICT, message);
 }
 
 export function tooManyRequests(

@@ -1,5 +1,6 @@
 import { ResponseCode } from "@/config/response-code";
 import { fail, internalError, ok, zodFail } from "@/lib/api-response";
+import { mapPrismaError } from "@/lib/prisma-errors";
 import { requireAdmin } from "@/lib/route-auth";
 import {
   CommentAdminListSchema,
@@ -72,6 +73,8 @@ export async function PUT(request: NextRequest) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误");
     }
+    const prismaErr = mapPrismaError(err);
+    if (prismaErr) return prismaErr;
     return internalError("更新评论状态失败");
   }
 }
@@ -89,6 +92,8 @@ export async function DELETE(request: NextRequest) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误");
     }
+    const prismaErr = mapPrismaError(err);
+    if (prismaErr) return prismaErr;
     return internalError("删除评论失败");
   }
 }

@@ -102,10 +102,10 @@ class HttpClient {
         }
         
         // 处理业务状态码
-        if (data.code !== 200) {
+        if (data.code !== ResponseCode.SUCCESS) {
           // 处理特定业务状态码
           switch (data.code) {
-            case 401:
+            case ResponseCode.UNAUTHORIZED:
               this.handleUnauthorized();
               break;
           }

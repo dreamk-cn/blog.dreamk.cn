@@ -1,3 +1,4 @@
+import { ResponseCode } from "@/config/response-code";
 import { siteConfig } from "@/config/site";
 import {
   checkRegisterSendCodeCooldown,
@@ -31,7 +32,11 @@ export async function sendRegisterVerificationCode(params: {
   ip: string | null;
 }): Promise<
   | { data: null }
-  | { error: string; retryAfterSec?: number; status?: 409 | 429 }
+  | {
+      error: string;
+      retryAfterSec?: number;
+      code?: ResponseCode.CONFLICT | ResponseCode.TOO_MANY_REQUESTS;
+    }
 > {
   const email = params.email.trim();
 
@@ -40,7 +45,7 @@ export async function sendRegisterVerificationCode(params: {
     select: { id: true },
   });
   if (existingUser) {
-    return { error: "该邮箱已经被注册了", status: 409 };
+    return { error: "该邮箱已经被注册了", code: ResponseCode.CONFLICT };
   }
 
   const cooldown = await checkRegisterSendCodeCooldown(email);
@@ -48,7 +53,7 @@ export async function sendRegisterVerificationCode(params: {
     return {
       error: `发送过于频繁，请 ${cooldown.retryAfterSec} 秒后再试`,
       retryAfterSec: cooldown.retryAfterSec,
-      status: 429,
+      code: ResponseCode.TOO_MANY_REQUESTS,
     };
   }
 
@@ -57,7 +62,7 @@ export async function sendRegisterVerificationCode(params: {
     return {
       error: `发送过于频繁，每 ${ipRate.windowSec} 秒最多 ${ipRate.limit} 次，请稍后再试`,
       retryAfterSec: ipRate.retryAfterSec,
-      status: 429,
+      code: ResponseCode.TOO_MANY_REQUESTS,
     };
   }
 
@@ -66,7 +71,7 @@ export async function sendRegisterVerificationCode(params: {
     return {
       error: `该邮箱发送次数过多，每 ${emailRate.windowSec} 秒最多 ${emailRate.limit} 次，请稍后再试`,
       retryAfterSec: emailRate.retryAfterSec,
-      status: 429,
+      code: ResponseCode.TOO_MANY_REQUESTS,
     };
   }
 

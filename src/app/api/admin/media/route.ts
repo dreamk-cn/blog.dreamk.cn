@@ -1,4 +1,6 @@
-import { fail, internalError, ok, zodFail } from "@/lib/api-response";
+import { ResponseCode } from "@/config/response-code";
+import { conflict, fail, internalError, ok, zodFail } from "@/lib/api-response";
+import { mapPrismaError } from "@/lib/prisma-errors";
 import { requireAdmin } from "@/lib/route-auth";
 import { MediaDeleteSchema, MediaListSchema } from "@/schemas/media";
 import { deleteMediaFile, listMediaFiles } from "@/services/media-file-service";
@@ -60,8 +62,10 @@ export async function DELETE(request: NextRequest) {
     const result = await deleteMediaFile(parsed.id);
 
     if ("error" in result) {
-      const status = "usageCount" in result && result.usageCount ? 409 : 400;
-      return fail(status, result.error);
+      if ("usageCount" in result && result.usageCount) {
+        return conflict(result.error);
+      }
+      return fail(ResponseCode.FAIL, result.error);
     }
 
     return ok({ success: true }, "删除成功");
@@ -69,6 +73,8 @@ export async function DELETE(request: NextRequest) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误");
     }
+    const prismaErr = mapPrismaError(err);
+    if (prismaErr) return prismaErr;
     console.error("admin media delete error", err);
     return internalError();
   }

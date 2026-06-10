@@ -12,6 +12,10 @@
 - [x] **工具函数去重（部分）** — `pagination`、`email`、`text`、`site-url`（`postPath` 等）抽取到 `src/lib/`
 - [x] **API 响应约定文档化** — HTTP 尽量 200 + body.`code`；见下文「设计约定」与 `.cursor/rules/api-route-conventions.mdc`
 - [x] **`tooManyRequests` 改为 HTTP 200** — `src/lib/api-response.ts`，限流语义由 body `code: 429` 表达
+- [x] **API 错误码统一** — `ResponseCode.CONFLICT`、`conflict()` / `notFound()`；route 不再使用裸数字 `fail(400/409/500)`
+- [x] **Prisma 错误统一映射** — `src/lib/prisma-errors.ts`，P2002 / P2025 / P2003
+- [x] **API Route 公共包装** — `src/lib/route-handler.ts`（`parseJson`、`handleRouteError`、`withAdmin`、`withRoute`）；已迁移 categories / tags / friend-links / users
+- [x] **NextAuth 凭证登录限流对齐** — `[...nextauth]/route.ts` 复用 `tooManyRequests`；`credentials-login.ts` 读 body `code`
 
 ---
 
@@ -23,12 +27,8 @@
 
 - 正常 JSON 响应统一 **HTTP 200**，结构固定为 `{ code, message, data }`
 - 客户端（`src/lib/request.ts`）在响应拦截器里读 **`data.code`**，非 `200` 即业务失败
-- `code` 取值见 `src/config/response-code.ts`（`400` 参数/业务失败、`401` 未登录、`403` 无权限、`429` 限流、`500` 服务器错误等）
-- 新增 route 时复用 `src/lib/api-response.ts`，**不要**为单个接口单独设置 `401`/`403`/`500` 等 HTTP status
-
-**已知例外（待逐步对齐时可勾选）：**
-
-- [ ] NextAuth 凭证登录限流 — `src/app/api/auth/[...nextauth]/route.ts` 仍返回 HTTP `429` + `{ error }`，与标准 envelope 不同；`credentials-login.ts` 依赖 `res.status === 429`
+- `code` 取值见 `src/config/response-code.ts`（`400` 参数/业务失败、`401` 未登录、`403` 无权限、`409` 冲突、`429` 限流、`500` 服务器错误等）
+- 新增 route 时复用 `src/lib/api-response.ts` 与 `src/lib/route-handler.ts`，**不要**为单个接口单独设置 `401`/`403`/`500` 等 HTTP status
 
 ---
 
@@ -42,9 +42,7 @@
 
 ### API 健壮性
 
-- [ ] **抽取 API Route 公共包装** — `parseJson`、`handleRouteError`、`adminRoute` 等，减少 18 个 route 的重复 try/catch
-- [ ] **Prisma 错误统一映射** — `src/lib/prisma-errors.ts` 处理 P2002 / P2025 / P2003，各 route 复用，通过 `fail(ResponseCode.*)` 返回（HTTP 仍为 200）
-- [ ] **API 错误码统一** — 全面使用 `ResponseCode` 枚举；`conflict` 等业务错误用 body `code`（如 `409`），不设 HTTP status
+- [ ] **其余 route 迁移至 `route-handler`** — post、comments、upload 等仍手写 try/catch，可逐步改用 `withAdmin` / `handleRouteError`
 
 ### 安全
 

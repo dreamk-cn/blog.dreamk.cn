@@ -2,25 +2,17 @@
 import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
 import { fail, internalError, ok, zodFail } from "@/lib/api-response";
+import { mapPrismaError } from "@/lib/prisma-errors";
 import { requireAdmin } from "@/lib/route-auth";
 import { PostCreateSchema, PostDeleteSchema, PostDetailSchema, PostUpdateSchema } from "@/schemas/post";
 import { createPost, deletePosts, getPostDetail, updatePost } from "@/services/post-service";
-import { Prisma } from "@/generated/prisma";
 import { NextRequest } from "next/server";
 import z from "zod";
 
-function prismaPostError(err: unknown) {
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    if (err.code === "P2002") {
-      return fail(ResponseCode.FAIL, "Slug已存在，请换一个");
-    }
-    if (err.code === "P2025") {
-      return fail(ResponseCode.FAIL, "关联的分类或标签不存在");
-    }
-  }
-  return null;
-}
-
+const POST_PRISMA_MESSAGES = {
+  P2002: "Slug已存在，请换一个",
+  P2025: "关联的分类或标签不存在",
+} as const;
 
 // 获取文章详情（支持id或slug）
 export async function GET(request: NextRequest) {
@@ -103,7 +95,7 @@ export async function POST(request: NextRequest) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误")
     }
-    const knownError = prismaPostError(err)
+    const knownError = mapPrismaError(err, POST_PRISMA_MESSAGES)
     if (knownError) return knownError
     console.warn('err', err)
     return internalError()
@@ -163,7 +155,7 @@ export async function PUT(request: NextRequest) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误")
     }
-    const knownError = prismaPostError(err)
+    const knownError = mapPrismaError(err, POST_PRISMA_MESSAGES)
     if (knownError) return knownError
     console.error('更新文章失败:', err)
     return internalError()
@@ -186,6 +178,8 @@ export async function DELETE(request: NextRequest) {
     if (err instanceof z.ZodError) {
       return zodFail(err.issues[0]?.message || "参数错误")
     }
+    const knownError = mapPrismaError(err)
+    if (knownError) return knownError
     console.error('err', err)
     return internalError()
   }

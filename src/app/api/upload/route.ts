@@ -1,4 +1,6 @@
+import { ResponseCode } from "@/config/response-code";
 import { fail, internalError, ok } from "@/lib/api-response";
+import { mapPrismaError } from "@/lib/prisma-errors";
 import { extensionFromMime, uploadImage, type OssUploadCategory } from "@/lib/oss";
 import { requireAdmin } from "@/lib/route-auth";
 import {
@@ -23,22 +25,22 @@ export async function POST(request: Request) {
     const file = formData.get("file");
 
     if (!(file instanceof File)) {
-      return fail(400, "请上传文件");
+      return fail(ResponseCode.FAIL, "请上传文件");
     }
 
     const mimeType = file.type;
     if (!ALLOWED_IMAGE_MIME_TYPES.includes(mimeType as (typeof ALLOWED_IMAGE_MIME_TYPES)[number])) {
-      return fail(400, "仅支持 JPEG、PNG、WebP、GIF 图片");
+      return fail(ResponseCode.FAIL, "仅支持 JPEG、PNG、WebP、GIF 图片");
     }
 
     const maxSize = getMaxFileSizeBytes();
     if (file.size > maxSize) {
-      return fail(400, `文件大小不能超过 ${Math.floor(maxSize / 1024 / 1024)}MB`);
+      return fail(ResponseCode.FAIL, `文件大小不能超过 ${Math.floor(maxSize / 1024 / 1024)}MB`);
     }
 
     const extension = extensionFromMime(mimeType);
     if (!extension) {
-      return fail(400, "不支持的图片类型");
+      return fail(ResponseCode.FAIL, "不支持的图片类型");
     }
 
     const category = parseUploadCategory(formData.get("category"));
@@ -71,8 +73,10 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("上传文件失败:", error);
     if (error instanceof Error && error.message.startsWith("缺少 OSS")) {
-      return fail(500, error.message);
+      return internalError(error.message);
     }
+    const prismaErr = mapPrismaError(error);
+    if (prismaErr) return prismaErr;
     return internalError("上传失败");
   }
 }
