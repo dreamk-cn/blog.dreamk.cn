@@ -280,4 +280,31 @@ model PostContentMedia {
   @@index([mediaFileId])
 }
 
+enum VisitorKind {
+  HUMAN
+  CRAWLER
+  PREVIEW
+  UNKNOWN
+}
+
+model AccessLog {
+  id          String      @id @default(cuid())
+  method      String      @db.VarChar(10)
+  pathname    String      @db.VarChar(500)
+  query       String?     @db.VarChar(1000)
+  ip          String?     @db.VarChar(45)
+  userAgent   String?     @db.Text
+  referer     String?     @db.VarChar(2000)
+  visitorKind VisitorKind @default(UNKNOWN)
+  botName     String?     @db.VarChar(100)
+  userId      String?
+  createdAt   DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([pathname])
+  @@index([ip])
+  @@index([visitorKind])
+  @@index([userId])
+}
+
 // todo:后期扩展通知表

@@ -317,6 +317,25 @@ export const LinkIcon = ({ size = 20, width, height, ...props }: IconSvgProps) =
   </svg>
 )
 
+export const ActivityIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <path
+      d="M4 12H7.5L10.5 6L14.5 18L17.5 12H20"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
 export const DatabaseIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
   <svg
     viewBox="0 0 24 24"

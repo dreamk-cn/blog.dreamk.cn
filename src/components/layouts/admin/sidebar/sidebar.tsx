@@ -6,6 +6,7 @@ import { SidebarMenu } from "./sidebar-menu";
 import { useSidebarContext } from '../layout-content';
 import { usePathname, useRouter } from "next/navigation";
 import {
+  ActivityIcon,
   CategoryIcon,
   CommentIcon,
   DashboardIcon,
@@ -32,6 +33,7 @@ export const SidebarWrapper = () => {
       "/admin/friend-link/list",
       "/admin/media/list",
       "/admin/cache",
+      "/admin/access-log/list",
       "/admin/user/list",
     ],
     []
@@ -116,6 +118,12 @@ export const SidebarWrapper = () => {
                 title="缓存"
                 icon={<DatabaseIcon />}
                 href="/admin/cache"
+              />
+              <SidebarItem
+                isActive={pathname === "/admin/access-log/list"}
+                title="访问日志"
+                icon={<ActivityIcon />}
+                href="/admin/access-log/list"
               />
             </SidebarMenu>
             <SidebarItem

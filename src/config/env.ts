@@ -55,6 +55,8 @@ const rawEnvSchema = z
     AUTH_REGISTER_SEND_CODE_COOLDOWN_SEC: z.string().optional(),
     ANONYMOUS_COMMENT_RATE_MAX: z.string().optional(),
     ANONYMOUS_COMMENT_RATE_WINDOW_SEC: z.string().optional(),
+    TRUST_PROXY: z.string().optional(),
+    ACCESS_LOG_RETENTION_DAYS: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.NODE_ENV === "production" && !trimOptional(data.NEXT_PUBLIC_BASE_URL)) {
@@ -271,6 +273,8 @@ function buildEnv(raw: RawEnv) {
     ai,
     cache: { driver: resolveCacheDriver(raw.CACHE_DRIVER) },
     rateLimits,
+    trustProxy: trimOptional(raw.TRUST_PROXY) === "true",
+    accessLogRetentionDays: readOptionalInt(raw.ACCESS_LOG_RETENTION_DAYS, 90, 1),
     oauth: {
       github: Boolean(trimOptional(raw.AUTH_GITHUB_ID) && trimOptional(raw.AUTH_GITHUB_SECRET)),
       google: Boolean(trimOptional(raw.AUTH_GOOGLE_ID) && trimOptional(raw.AUTH_GOOGLE_SECRET)),
