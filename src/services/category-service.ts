@@ -1,7 +1,7 @@
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
 import { normalizeSlug } from "@/lib/slug";
-import { buildPublicPostWhere } from "@/services/post-service";
+import { buildPublicPostWhere, postListInclude } from "@/services/post-service";
 
 export async function listCategories(keyword = "") {
   const query: Prisma.CategoryFindManyArgs = {
@@ -81,6 +81,19 @@ export async function listPublicCategories(limit?: number) {
 
 export async function listPublicCategoriesWithPostCount() {
   const publicPostWhere = buildPublicPostWhere();
+  const groupedPostCountsArgs = {
+    by: ["categoryId"],
+    where: {
+      ...publicPostWhere,
+      categoryId: {
+        not: null,
+      },
+    },
+    _count: {
+      _all: true,
+    },
+  } satisfies Prisma.PostGroupByArgs;
+
   const [categories, groupedPostCounts] = await Promise.all([
     prisma.category.findMany({
       select: {
@@ -89,18 +102,7 @@ export async function listPublicCategoriesWithPostCount() {
         slug: true,
       },
     }),
-    prisma.post.groupBy({
-      by: ["categoryId"],
-      where: {
-        ...publicPostWhere,
-        categoryId: {
-          not: null,
-        },
-      },
-      _count: {
-        _all: true,
-      },
-    }),
+    prisma.post.groupBy(groupedPostCountsArgs),
   ]);
 
   const postCountMap = new Map(
@@ -142,9 +144,7 @@ export async function getPublicCategoryPostListPage(params: {
   const skip = (currentPage - 1) * params.pageSize;
 
   const posts = await prisma.post.findMany({
-    include: {
-      tags: true,
-    },
+    include: postListInclude,
     where,
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
     skip,
