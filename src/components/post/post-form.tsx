@@ -15,6 +15,7 @@ import {
   TextField,
   Tabs,
   InputGroup,
+  useOverlayState,
 } from "@heroui/react";
 import { Category, Post, PostStatus, Tag } from "@/generated/prisma";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -27,6 +28,7 @@ import { PostCategoryPicker, type FormCategory } from "@/components/post/post-ca
 import { PostCoverManager, type CoverPreviewItem } from "@/components/post/post-cover-manager";
 import { PostTagPicker, type FormTag } from "@/components/post/post-tag-picker";
 import { nowPublishedAtValue, PublishedAtPicker } from "@/components/post/published-at-picker";
+import { MediaPickerModal } from "@/components/admin/media/media-picker-modal";
 import { ImageUploader, type UploadedMedia } from "@/components/ui/image-uploader";
 import { ExternalMediaInput } from "@/components/ui/external-media-input";
 
@@ -220,6 +222,7 @@ export function PostForm({
   const [previewMode, setPreviewMode] = useState<"write" | "preview">("write");
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
+  const mediaPicker = useOverlayState();
 
   useEffect(() => {
     if (article?.id) return;
@@ -593,6 +596,15 @@ export function PostForm({
                         disabled={loading}
                         onRegistered={(media) => insertContentImage(media)}
                       />
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        isDisabled={loading}
+                        onPress={mediaPicker.open}
+                      >
+                        媒体库
+                      </Button>
                     </>
                   ) : null}
                   <Tabs
@@ -754,6 +766,14 @@ export function PostForm({
           </aside>
         </div>
       </Form>
+
+      <MediaPickerModal
+        state={mediaPicker}
+        title="选择正文插图"
+        uploadCategory="images"
+        initialCategoryFilter="CONTENT"
+        onSelect={(media) => insertContentImage(media)}
+      />
     </div>
   );
 }

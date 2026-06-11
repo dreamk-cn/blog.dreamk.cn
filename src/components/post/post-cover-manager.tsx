@@ -1,7 +1,8 @@
 'use client';
 
 import Image from "next/image";
-import { Button, Description, Label, Tabs } from "@heroui/react";
+import { Button, Description, Label, Tabs, useOverlayState } from "@heroui/react";
+import { MediaPickerModal } from "@/components/admin/media/media-picker-modal";
 import { ExternalMediaInput } from "@/components/ui/external-media-input";
 import { ImageUploader, type UploadedMedia } from "@/components/ui/image-uploader";
 import { isRemoteCoverSrc, POST_COVER_PLACEHOLDER_PATH } from "@/lib/post-cover";
@@ -18,6 +19,8 @@ type PostCoverManagerProps = {
 };
 
 export function PostCoverManager({ items, disabled, onChange }: PostCoverManagerProps) {
+  const mediaPicker = useOverlayState();
+
   function appendMedia(media: UploadedMedia) {
     if (items.some((item) => item.id === media.id)) return;
     onChange([...items, media]);
@@ -53,6 +56,10 @@ export function PostCoverManager({ items, disabled, onChange }: PostCoverManager
               外链封面
               <Tabs.Indicator />
             </Tabs.Tab>
+            <Tabs.Tab id="library" className="text-text-base">
+              媒体库
+              <Tabs.Indicator />
+            </Tabs.Tab>
           </Tabs.List>
         </Tabs.ListContainer>
 
@@ -72,6 +79,19 @@ export function PostCoverManager({ items, disabled, onChange }: PostCoverManager
             disabled={disabled}
             onRegistered={appendMedia}
           />
+        </Tabs.Panel>
+
+        <Tabs.Panel id="library" className="space-y-2 pt-3">
+          <Description>从已入库的媒体文件中选择封面，支持搜索与筛选。</Description>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            isDisabled={disabled}
+            onPress={mediaPicker.open}
+          >
+            打开媒体库
+          </Button>
         </Tabs.Panel>
       </Tabs>
 
@@ -144,6 +164,14 @@ export function PostCoverManager({ items, disabled, onChange }: PostCoverManager
           </div>
         </div>
       )}
+
+      <MediaPickerModal
+        state={mediaPicker}
+        title="选择封面"
+        uploadCategory="covers"
+        initialCategoryFilter="COVER"
+        onSelect={(media) => appendMedia(media)}
+      />
     </div>
   );
 }

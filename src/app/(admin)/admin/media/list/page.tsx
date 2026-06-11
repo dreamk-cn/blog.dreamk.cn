@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Alert,
@@ -20,8 +20,8 @@ import {
   type MediaSourceFilter,
 } from '@/components/admin/media/media-toolbar';
 import { MediaUploadModal } from '@/components/admin/media/media-upload-modal';
-import type { MediaListItem, MediaListResponse, MediaViewMode } from '@/components/admin/media/types';
-import { useDebounce } from '@/hooks/useDebounce';
+import type { MediaListItem, MediaViewMode } from '@/components/admin/media/types';
+import { useMediaList } from '@/hooks/use-media-list';
 import { request, type HttpError } from '@/lib/request';
 
 const VIEW_MODE_STORAGE_KEY = 'admin-media-view-mode';
@@ -36,8 +36,6 @@ export default function AdminMediaListPage() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const [items, setItems] = useState<MediaListItem[]>([]);
-  const [total, setTotal] = useState(0);
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
@@ -48,9 +46,8 @@ export default function AdminMediaListPage() {
   const [sortOrder, setSortOrder] = useState<MediaSortOrder>('desc');
   const [viewMode, setViewMode] = useState<MediaViewMode>(() => readStoredViewMode());
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [listError, setListError] = useState<string | null>(null);
 
   const [previewItem, setPreviewItem] = useState<MediaListItem | null>(null);
   const [deleteItem, setDeleteItem] = useState<MediaListItem | null>(null);
@@ -59,41 +56,17 @@ export default function AdminMediaListPage() {
   const previewModal = useOverlayState();
   const deleteModal = useOverlayState();
 
-  const keywordDebounced = useDebounce(keyword, 300);
+  const { items, total, loading, error, refetch } = useMediaList({
+    pageNo,
+    pageSize,
+    keyword,
+    category,
+    source,
+    sortBy,
+    sortOrder,
+  });
 
-  const fetchMedia = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await request.get<MediaListResponse>('/admin/media', {
-        pageNo,
-        pageSize,
-        keyword: keywordDebounced || undefined,
-        category,
-        source,
-        sortBy,
-        sortOrder,
-      });
-      if (res.code === 200) {
-        setItems(res.data?.list ?? []);
-        setTotal(res.data?.total ?? 0);
-      } else {
-        setError(res.message || '获取文件列表失败');
-      }
-    } catch (err) {
-      console.error(err);
-      setError('网络错误，请稍后再试');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    queueMicrotask(() => {
-      void fetchMedia();
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNo, pageSize, keywordDebounced, category, source, sortBy, sortOrder]);
+  const errorMessage = listError ?? error;
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
 
@@ -126,6 +99,7 @@ export default function AdminMediaListPage() {
   const handleDelete = async () => {
     if (!deleteItem) return;
     setDeletingId(deleteItem.id);
+    setListError(null);
     try {
       const res = await request.delete<{ success: boolean }>(
         '/admin/media',
@@ -139,13 +113,13 @@ export default function AdminMediaListPage() {
         if (isLastItemOnPage) {
           setPageNo(pageNo - 1);
         } else {
-          void fetchMedia();
+          void refetch();
         }
       }
     } catch (err) {
       const message = (err as HttpError).message;
       if (message) {
-        setError(message);
+        setListError(message);
       }
       console.error('删除文件失败:', err);
     } finally {
@@ -252,10 +226,10 @@ export default function AdminMediaListPage() {
         />
       )}
 
-      {error ? (
+      {errorMessage ? (
         <Alert status="danger">
           <Alert.Title>错误</Alert.Title>
-          <Alert.Description>{error}</Alert.Description>
+          <Alert.Description>{errorMessage}</Alert.Description>
         </Alert>
       ) : null}
 
@@ -265,7 +239,7 @@ export default function AdminMediaListPage() {
         state={uploadModal}
         onUploaded={() => {
           setPageNo(1);
-          void fetchMedia();
+          void refetch();
         }}
       />
 
