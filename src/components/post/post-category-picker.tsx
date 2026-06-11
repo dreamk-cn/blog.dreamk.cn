@@ -122,6 +122,7 @@ export function PostCategoryPicker({
 
   return (
     <Autocomplete
+      variant="secondary"
       allowsEmptyCollection
       className="w-full"
       isDisabled={disabled}

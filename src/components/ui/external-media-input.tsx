@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from "react";
-import { Button, Input, toast } from "@heroui/react";
+import { Button, InputGroup, toast } from "@heroui/react";
 import { request, type HttpError } from "@/lib/request";
 import type { UploadedMedia } from "@/components/ui/image-uploader";
 
@@ -52,25 +52,26 @@ export function ExternalMediaInput({
   }
 
   return (
-    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-      <Input
-        className="text-text-base flex-1"
-        placeholder="https://example.com/image.jpg"
+    <InputGroup variant="secondary" className="flex-1 font-mono text-sm text-text-base">
+      <InputGroup.Input
+        className="w-full"
+        placeholder="图片外链地址"
         value={url}
         onChange={(event) => setUrl(event.target.value)}
         disabled={disabled || loading}
       />
-      <Button
-        type="button"
-        size="sm"
-        variant="secondary"
-        className="shrink-0"
-        isDisabled={disabled || loading}
-        isPending={loading}
-        onPress={() => void handleRegister()}
-      >
-        {loading ? "登记中..." : label}
-      </Button>
-    </div>
+      <InputGroup.Suffix className="p-0">
+        <Button
+          type="button"
+          size="sm"
+          variant="primary"
+          isDisabled={disabled || loading}
+          isPending={loading}
+          onPress={() => void handleRegister()}
+        >
+          {loading ? "登记中..." : label}
+        </Button>
+      </InputGroup.Suffix>
+    </InputGroup>
   );
 }

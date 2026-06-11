@@ -27,6 +27,7 @@ export function StringSelect({
         <span className="mb-1 block text-small font-bold text-text-muted">{label}</span>
       ) : null}
       <Select
+        variant="secondary"
         aria-label={ariaLabel ?? label}
         className="w-full text-text-base"
         value={selectedId}

@@ -123,6 +123,7 @@ export function PostTagPicker({ catalogTags, value, onChange, disabled }: PostTa
 
   return (
     <Autocomplete
+      variant="secondary"
       allowsEmptyCollection
       className="w-full"
       isDisabled={disabled}

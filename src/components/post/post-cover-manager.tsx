@@ -48,15 +48,15 @@ export function PostCoverManager({ items, disabled, onChange }: PostCoverManager
       <Tabs defaultSelectedKey="upload">
         <Tabs.ListContainer>
           <Tabs.List aria-label="封面来源">
-            <Tabs.Tab id="upload" className="text-text-base">
+            <Tabs.Tab id="upload" className="text-text-base text-xs px-1">
               上传封面
               <Tabs.Indicator />
             </Tabs.Tab>
-            <Tabs.Tab id="external" className="text-text-base">
+            <Tabs.Tab id="external" className="text-text-base text-xs px-1">
               外链封面
               <Tabs.Indicator />
             </Tabs.Tab>
-            <Tabs.Tab id="library" className="text-text-base">
+            <Tabs.Tab id="library" className="text-text-base text-xs px-1">
               媒体库
               <Tabs.Indicator />
             </Tabs.Tab>

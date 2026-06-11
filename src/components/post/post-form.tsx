@@ -539,7 +539,8 @@ export function PostForm({
                 <TextField isRequired isInvalid={!!errors.title}>
                   <Label className="sr-only">文章标题</Label>
                   <Input
-                    className="border-none bg-transparent px-0 text-2xl font-semibold text-text-base shadow-none placeholder:text-text-sub sm:text-3xl"
+                    variant="secondary"
+                    className="border-none text-xl font-semibold text-text-base shadow-none placeholder:text-text-sub sm:text-2xl"
                     placeholder="输入文章标题…"
                     value={formData.title}
                     onChange={(event) => updateField("title", event.target.value)}
@@ -552,18 +553,19 @@ export function PostForm({
                   <Description className="text-xs">用于生成文章 URL</Description>
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <InputGroup
+                      variant="secondary"
                       className="flex-1 font-mono text-sm text-text-base"
                     >
                       <InputGroup.Input
                         value={formData.slug}
                         onBlur={() => updateField("slug", normalizeSlug(formData.slug))}
                         onChange={(event) => updateField("slug", event.target.value)}
-                        placeholder="article-slug"
+                        placeholder="文章-slug"
                       />
                       <InputGroup.Suffix className="p-0">
                         <Button
                           size="sm"
-                          variant="secondary"
+                          variant="primary"
                           onPress={handleGenerateSlug}
                           isDisabled={loading || generatingSlug}
                           isPending={generatingSlug}
@@ -635,8 +637,9 @@ export function PostForm({
                   <Label className="sr-only">文章内容</Label>
                   {previewMode === "write" ? (
                     <TextArea
+                      variant="secondary"
                       ref={contentRef}
-                      className="min-h-[min(70vh,640px)] w-full resize-y rounded-none border-0 bg-transparent px-4 py-4 font-mono text-sm leading-relaxed text-text-base shadow-none sm:px-5"
+                      className="min-h-[min(70vh,640px)] w-full resize-y font-mono leading-relaxed text-text-base shadow-none sm:px-5"
                       placeholder="在此编写 Markdown 正文…"
                       rows={24}
                       value={formData.content}
@@ -725,23 +728,26 @@ export function PostForm({
             </Card>
 
             <Card className="rounded-2xl border border-border bg-background shadow-sm">
-              <Card.Header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-                <h2 className="text-sm font-semibold text-text-base">摘要</h2>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  onPress={handleGenerateExcerpt}
-                  isDisabled={loading || generatingExcerpt}
-                  isPending={generatingExcerpt}
-                >
-                  {generatingExcerpt ? "生成中…" : "AI 生成"}
-                </Button>
+              <Card.Header className="border-b border-border px-4 py-3">
+                <div className="flex flex-row items-center justify-between gap-2 ">
+                  <h2 className="text-sm font-semibold text-text-base">摘要</h2>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    onPress={handleGenerateExcerpt}
+                    isDisabled={loading || generatingExcerpt}
+                    isPending={generatingExcerpt}
+                  >
+                    {generatingExcerpt ? "生成中…" : "AI 生成"}
+                  </Button>
+                </div>
               </Card.Header>
               <Card.Content className="p-4">
                 <TextField isInvalid={!!errors.excerpt}>
                   <Description className="mb-2 text-xs">留空提交时会根据正文自动截取</Description>
                   <TextArea
+                    variant="secondary"
                     className="text-sm text-text-base"
                     rows={3}
                     placeholder="简短描述文章内容…"
