@@ -63,6 +63,10 @@
 - [ ] **`requireAdmin()` 类型收窄** — 返回 `{ user: { id: string; role: 'ADMIN' } }`，去掉各处 `as string`
 - [ ] **目录整理** — 合并 `src/hooks/` 与 `src/components/hooks/`；`src/utils/verify.ts` 与 schemas 对齐
 
+### 访问日志
+
+- [ ] **定期清理任务** — `purgeOldAccessLogs()` 与 `env.accessLogRetentionDays`（默认 90 天）已在 `access-log-service.ts` 实现，需接入调度（如 cron API、Vercel Cron、或 instrumentation 周期任务），避免 `AccessLog` 表无限增长
+
 ### 配置（可选深化）
 
 - [ ] **`next.config.ts` 读 OSS_URL** — 可与 `env.public` 或薄 helper 共用，降低与 `env.ts` 的重复（注意构建阶段加载顺序）
