@@ -1,6 +1,6 @@
 "use client";
 
-import { ANON_COMMENT_RATE_CACHE_KEY_PREFIX } from "@/lib/cache";
+import { ANON_COMMENT_RATE_CACHE_KEY_PREFIX } from "@/lib/cache/cache-key-prefixes";
 import { StringSelect } from "@/components/admin/string-select";
 import { request } from "@/lib/request";
 import { useDebounce } from "@/hooks/useDebounce";

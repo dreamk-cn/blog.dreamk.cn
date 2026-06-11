@@ -1,8 +1,8 @@
 import { env } from "@/config/env";
+import { ANON_COMMENT_RATE_CACHE_KEY_PREFIX } from "./cache-key-prefixes";
 import { getCacheStore } from "./create-cache-store";
 
-/** 与后台「清除匿名评论限流」快捷操作共用此前缀 */
-export const ANON_COMMENT_RATE_CACHE_KEY_PREFIX = "ratelimit:comment:anon:v1:";
+export { ANON_COMMENT_RATE_CACHE_KEY_PREFIX };
 
 function anonCommentRateKey(ip: string | null): string {
   const safe = ip?.trim() || "unknown";

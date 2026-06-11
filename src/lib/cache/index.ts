@@ -6,8 +6,8 @@ export {
   getCacheStoreAdmin,
   type CacheDriver,
 } from "./create-cache-store";
+export { ANON_COMMENT_RATE_CACHE_KEY_PREFIX } from "./cache-key-prefixes";
 export {
-  ANON_COMMENT_RATE_CACHE_KEY_PREFIX,
   consumeAnonymousCommentRateLimit,
   type AnonymousCommentRateResult,
 } from "./comment-anon-rate-limit";
