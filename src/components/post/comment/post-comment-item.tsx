@@ -115,6 +115,7 @@ export function PostCommentItem({
       {replyingTo?.id === comment.id ? (
         <div className="mt-3 space-y-2 rounded-lg border border-default-200/70 bg-background p-3 dark:border-default-100/20">
           <TextArea
+            variant="secondary"
             className="w-full text-text-base"
             value={replyContent}
             onChange={(e) => onReplyContentChange(e.target.value)}

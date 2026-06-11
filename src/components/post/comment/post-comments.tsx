@@ -369,6 +369,7 @@ export function PostComments({
 
       <div className="space-y-3">
         <TextArea
+          variant="secondary"
           className="w-full text-text-base"
           value={content}
           onChange={(e) => setContent(e.target.value)}

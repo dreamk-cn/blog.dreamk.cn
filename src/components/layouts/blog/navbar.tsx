@@ -84,6 +84,7 @@ export const Navbar = () => {
 
   const searchInput = (
     <SearchField
+      variant="secondary"
       aria-label="站内搜索"
       value={searchValue}
       onChange={setSearchValue}
