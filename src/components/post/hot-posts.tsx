@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@heroui/react";
-import NextLink from "next/link";
+import { AppLink } from "@/components/ui/app-link";
 
 type HotPost = {
   id: string;
@@ -25,12 +25,12 @@ export function HotPosts({ posts }: { posts: HotPost[] }) {
             <span className="w-8 shrink-0 text-center text-2xl leading-none font-light text-text-sub">
               {String(index + 1).padStart(2, "0")}
             </span>
-            <NextLink
+            <AppLink
               href={`/posts/${post.slug}`}
               className="line-clamp-1 flex-1 text-sm text-text-base transition-colors group-hover:text-primary"
             >
               {post.title}
-            </NextLink>
+            </AppLink>
             <span className="shrink-0 whitespace-nowrap text-xs text-text-muted">
               浏览 {post.viewCount}
             </span>

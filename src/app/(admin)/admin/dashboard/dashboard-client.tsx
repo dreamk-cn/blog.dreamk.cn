@@ -1,6 +1,6 @@
 "use client";
 
-import NextLink from "next/link";
+import { AppLink } from "@/components/ui/app-link";
 import { useRouter } from "next/navigation";
 import type { DashboardStats } from "@/services/admin-dashboard-stats";
 import {
@@ -84,12 +84,12 @@ function StatCard({ label, value, icon, href, badge, badgeTone = "warning" }: St
 
   if (href) {
     return (
-      <NextLink
+      <AppLink
         href={href}
         className="group block h-full min-h-0 rounded-2xl outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-accent"
       >
         {inner}
-      </NextLink>
+      </AppLink>
     );
   }
 

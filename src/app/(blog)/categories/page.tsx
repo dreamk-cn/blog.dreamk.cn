@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import NextLink from "next/link";
+import { AppLink } from "@/components/ui/app-link";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 import { buildCanonical } from "@/lib/seo";
 import { listPublicCategoriesWithPostCount } from "@/services/category-service";
@@ -28,7 +28,7 @@ export default async function Categories() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {list.map((category) => (
-              <NextLink
+              <AppLink
                 key={category.id}
                 href={`/categories/${category.slug}`}
                 className="rounded-xl border border-border bg-background p-5 shadow-sm transition-colors hover:border-primary"
@@ -37,7 +37,7 @@ export default async function Categories() {
                   <h2 className="line-clamp-1 text-lg font-semibold text-text-base">{category.name}</h2>
                   <p className="text-sm text-text-muted">共 {category.postCount} 篇文章</p>
                 </div>
-              </NextLink>
+              </AppLink>
             ))}
           </div>
         )}

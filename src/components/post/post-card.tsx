@@ -3,7 +3,7 @@
 import { ClientChip } from "../ui/heroui-client";
 import { PostCover } from "@/components/post/post-cover";
 import { getTagColor } from "@/lib/tag-color";
-import NextLink from "next/link";
+import { AppLink } from "@/components/ui/app-link";
 import { Card } from "@heroui/react";
 import { getPrimaryCoverUrl, type CoverMediaItem } from "@/lib/post-cover";
 import type { Post, Tag } from "@/generated/prisma";
@@ -27,16 +27,16 @@ export function PostCard({ post }: { post: PostWithTags }) {
 
   return (
     <Card className="group overflow-hidden p-0 shadow-sm transition-shadow hover:shadow-md">
-      <NextLink href={postHref} className="block">
+      <AppLink href={postHref} className="block">
         <PostCover coverUrl={getPrimaryCoverUrl(post.coverMedia)} alt={post.title} variant="card" />
-      </NextLink>
+      </AppLink>
       <Card.Header className="flex-col items-start px-5 pb-0 pt-4">
-        <NextLink
+        <AppLink
           href={postHref}
           className="line-clamp-1 text-2xl/normal font-semibold tracking-tight text-text-base transition-colors hover:text-primary"
         >
           {post.title}
-        </NextLink>
+        </AppLink>
       </Card.Header>
       <Card.Content className="px-5">
         <p className="line-clamp-3 text-sm leading-7 text-text-muted">

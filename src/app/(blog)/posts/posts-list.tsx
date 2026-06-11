@@ -1,4 +1,4 @@
-import NextLink from "next/link";
+import { AppLink } from "@/components/ui/app-link";
 import { PostCard } from "@/components/post/post-card";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 import { buildPageNumbers } from "@/lib/pagination";
@@ -53,13 +53,13 @@ export async function renderPostsListPage(requestedPage: number, keyword?: strin
 
         <nav aria-label="文章分页导航" className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
           {hasPrev ? (
-            <NextLink
+            <AppLink
               href={buildPageHref(currentPage - 1, normalizedKeyword)}
               rel="prev"
               className="rounded-md border border-border px-3 py-1.5 text-sm text-text-base transition-colors hover:border-primary hover:text-primary"
             >
               上一页
-            </NextLink>
+            </AppLink>
           ) : (
             <span className="cursor-not-allowed rounded-md border border-border px-3 py-1.5 text-sm text-text-sub opacity-60">
               上一页
@@ -73,7 +73,7 @@ export async function renderPostsListPage(requestedPage: number, keyword?: strin
             return (
               <div key={page} className="flex items-center gap-2">
                 {showEllipsis && <span className="px-1 text-text-sub">...</span>}
-                <NextLink
+                <AppLink
                   href={buildPageHref(page, normalizedKeyword)}
                   aria-current={page === currentPage ? "page" : undefined}
                   className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
@@ -83,19 +83,19 @@ export async function renderPostsListPage(requestedPage: number, keyword?: strin
                   }`}
                 >
                   {page}
-                </NextLink>
+                </AppLink>
               </div>
             );
           })}
 
           {hasNext ? (
-            <NextLink
+            <AppLink
               href={buildPageHref(currentPage + 1, normalizedKeyword)}
               rel="next"
               className="rounded-md border border-border px-3 py-1.5 text-sm text-text-base transition-colors hover:border-primary hover:text-primary"
             >
               下一页
-            </NextLink>
+            </AppLink>
           ) : (
             <span className="cursor-not-allowed rounded-md border border-border px-3 py-1.5 text-sm text-text-sub opacity-60">
               下一页

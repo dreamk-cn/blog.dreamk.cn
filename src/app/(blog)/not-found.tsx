@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { AppLink } from "@/components/ui/app-link";
 
 export default function BlogNotFound() {
   return (
@@ -9,18 +9,18 @@ export default function BlogNotFound() {
         该文章不存在、尚未发布，或链接已失效。
       </p>
       <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
-        <Link
+        <AppLink
           className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm transition-opacity hover:opacity-90"
           href="/"
         >
           返回首页
-        </Link>
-        <Link
+        </AppLink>
+        <AppLink
           className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-text-base shadow-sm transition-colors hover:border-primary hover:text-primary"
           href="/posts"
         >
           文章列表
-        </Link>
+        </AppLink>
       </div>
     </div>
   );

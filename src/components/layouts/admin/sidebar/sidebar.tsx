@@ -1,10 +1,9 @@
-import React from "react";
 import { Sidebar } from "./sidebar.styles";
 import { CompaniesDropdown } from "./companies-dropdown";
 import { SidebarItem } from "./sidebar-item";
 import { SidebarMenu } from "./sidebar-menu";
 import { useSidebarContext } from '../layout-content';
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   ActivityIcon,
   CategoryIcon,
@@ -20,28 +19,7 @@ import {
 
 export const SidebarWrapper = () => {
   const pathname = usePathname();
-  const router = useRouter();
   const { collapsed, setCollapsed } = useSidebarContext();
-  const adminRoutes = React.useMemo(
-    () => [
-      "/admin/dashboard",
-      "/admin/post/create",
-      "/admin/post/list",
-      "/admin/comment/list",
-      "/admin/tag/list",
-      "/admin/category/list",
-      "/admin/friend-link/list",
-      "/admin/media/list",
-      "/admin/cache",
-      "/admin/access-log/list",
-      "/admin/user/list",
-    ],
-    []
-  );
-
-  React.useEffect(() => {
-    adminRoutes.forEach((route) => router.prefetch(route));
-  }, [adminRoutes, router]);
 
   return (
     <aside className="h-screen z-[20] sticky top-0">

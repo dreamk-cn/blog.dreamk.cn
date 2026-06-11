@@ -3,7 +3,7 @@ import { PostCard } from "@/components/post/post-card";
 import { ProfileSidebar } from "@/components/layouts/blog/profile-sidebar";
 import { HotPosts } from "@/components/post/hot-posts";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
-import NextLink from "next/link";
+import { AppLink } from "@/components/ui/app-link";
 import { siteConfig } from "@/config/site";
 import { buildCanonical } from "@/lib/seo";
 import { listPublicCategories } from "@/services/category-service";
@@ -50,12 +50,12 @@ export default async function Home() {
           )}
           {posts.length > 0 && (
             <div className="pt-1 text-center">
-              <NextLink
+              <AppLink
                 href="/posts"
                 className="inline-flex items-center rounded-md border border-border px-3 py-1.5 text-sm text-text-base transition-colors hover:border-primary hover:text-primary"
               >
                 查看全部文章
-              </NextLink>
+              </AppLink>
             </div>
           )}
         </main>

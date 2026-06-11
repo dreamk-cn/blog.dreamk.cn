@@ -1,4 +1,4 @@
-import NextLink from "next/link";
+import { AppLink } from "@/components/ui/app-link";
 import React from "react";
 import { useSidebarContext } from "../layout-content";
 import clsx from "clsx";
@@ -8,10 +8,9 @@ interface Props {
   icon: React.ReactNode;
   isActive?: boolean;
   href?: string;
-  prefetch?: boolean;
 }
 
-export const SidebarItem = ({ icon, title, isActive, href = "", prefetch = true }: Props) => {
+export const SidebarItem = ({ icon, title, isActive, href = "" }: Props) => {
   const { setCollapsed } = useSidebarContext();
 
   const handleClick = () => {
@@ -20,7 +19,7 @@ export const SidebarItem = ({ icon, title, isActive, href = "", prefetch = true 
     }
   };
   return (
-    <NextLink href={href} prefetch={prefetch} className="max-w-full text-text-base active:bg-none">
+    <AppLink href={href} className="max-w-full text-text-base active:bg-none">
       <div
         className={clsx(
           isActive ? "bg-primary/10 text-primary [&_svg_path]:fill-current" : "hover:bg-canvas",
@@ -31,6 +30,6 @@ export const SidebarItem = ({ icon, title, isActive, href = "", prefetch = true 
         {icon}
         <span className="text-text-base">{title}</span>
       </div>
-    </NextLink>
+    </AppLink>
   );
 };

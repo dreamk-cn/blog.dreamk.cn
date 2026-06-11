@@ -1,7 +1,7 @@
 "use client";
 
 import { Avatar, Card, Separator } from "@heroui/react";
-import NextLink from "next/link";
+import { AppLink } from "@/components/ui/app-link";
 import { siteConfig } from "@/config/site";
 import { ClientChip } from "@/components/ui/heroui-client";
 import type { Category } from "@/generated/prisma";
@@ -33,14 +33,14 @@ export function ProfileSidebar({
         <h2 className="text-[28px] font-semibold leading-none text-text-base">{siteConfig.name}&apos;s Blog</h2>
         <p className="mt-3 text-sm text-text-muted">Web Developer & Designer</p>
         <div className="mt-4 flex justify-center gap-3 text-sm text-text-base">
-          <NextLink
+          <AppLink
             href={siteConfig.links.github}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 text-text-muted hover:text-accent"
           >
             github ↗
-          </NextLink>
+          </AppLink>
         </div>
       </Card.Content>
 
@@ -53,11 +53,11 @@ export function ProfileSidebar({
             <span className="text-sm text-text-muted">暂无分类</span>
           ) : (
             categories.map((category) => (
-              <NextLink key={category.id} href={`/categories/${category.slug}`}>
+              <AppLink key={category.id} href={`/categories/${category.slug}`}>
                 <ClientChip variant="soft" color={getTagColor(category.name)}>
                   <ClientChip.Label>{category.name}</ClientChip.Label>
                 </ClientChip>
-              </NextLink>
+              </AppLink>
             ))
           )}
         </div>
@@ -72,7 +72,7 @@ export function ProfileSidebar({
             <span className="text-sm text-text-muted">暂无友链</span>
           ) : (
             friendLinks.map((item) => (
-              <NextLink
+              <AppLink
                 href={item.url}
                 target="_blank"
                 rel="noreferrer"
@@ -80,7 +80,7 @@ export function ProfileSidebar({
                 key={item.id}
               >
                 {item.name}
-              </NextLink>
+              </AppLink>
             ))
           )}
         </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { AppLink } from "@/components/ui/app-link";
 import { ArticleMarkdown } from "@/components/post/article-markdown";
 import { PostComments } from "@/components/post/comment";
 import { contentConfig } from "@/config/content";
@@ -88,9 +88,9 @@ export default async function AboutPage() {
         <div className="rounded-2xl border border-border bg-background p-8 text-center shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
           <h1 className="text-2xl font-semibold text-text-base">About 页面暂时不可用</h1>
           <p className="mt-3 text-sm text-text-muted">数据库连接异常，稍后刷新重试即可。</p>
-          <Link href="/posts" className="mt-5 inline-block text-sm text-primary hover:underline">
+          <AppLink href="/posts" className="mt-5 inline-block text-sm text-primary hover:underline">
             去看看其他文章
-          </Link>
+          </AppLink>
         </div>
       </div>
     );
@@ -102,9 +102,9 @@ export default async function AboutPage() {
         <div className="rounded-2xl border border-border bg-background p-8 text-center shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
           <h1 className="text-2xl font-semibold text-text-base">About 页面尚未发布</h1>
           <p className="mt-3 text-sm text-text-muted">请在后台创建并发布 slug 为 about 的文章后再访问此页。</p>
-          <Link href="/posts" className="mt-5 inline-block text-sm text-primary hover:underline">
+          <AppLink href="/posts" className="mt-5 inline-block text-sm text-primary hover:underline">
             去看看其他文章
-          </Link>
+          </AppLink>
         </div>
       </div>
     );

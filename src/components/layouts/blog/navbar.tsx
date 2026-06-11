@@ -6,7 +6,7 @@ import {
   Dropdown,
   SearchField,
 } from "@heroui/react";
-import NextLink from "next/link";
+import { AppLink } from "@/components/ui/app-link";
 import clsx from "clsx";
 
 import { siteConfig } from "@/config/site";
@@ -108,10 +108,10 @@ export const Navbar = () => {
     <header className="sticky top-0 z-50 border-b border-default-200 bg-background shadow">
       <nav className="h-16 mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <NextLink className="flex items-center justify-start gap-1" href="/">
+          <AppLink className="flex items-center justify-start gap-1" href="/">
             <LogoIcon className="dark:invert-90" height={34} width={34} />
             <p className="text-xl font-bold text-text-base">{siteConfig.name}</p>
-          </NextLink>
+          </AppLink>
         </div>
 
         <div className="hidden min-w-[280px] lg:block">{searchInput}</div>
@@ -123,7 +123,7 @@ export const Navbar = () => {
               const active = pathname === item.href;
               return (
                 <li key={item.href}>
-                  <NextLink
+                  <AppLink
                     className={clsx(
                       "text-text-muted transition-colors hover:text-accent",
                       active && "font-medium text-primary!",
@@ -131,7 +131,7 @@ export const Navbar = () => {
                     href={item.href}
                   >
                     {item.label}
-                  </NextLink>
+                  </AppLink>
                 </li>
               );
             })}
@@ -175,7 +175,7 @@ export const Navbar = () => {
           <ul className="flex flex-col gap-2">
             {siteConfig.navItems.map((item) => (
               <li key={item.href}>
-                <NextLink
+                <AppLink
                   className={clsx(
                     "block rounded-lg px-2 py-1.5 text-text-muted",
                     pathname === item.href && "bg-default-100 text-primary!",
@@ -184,7 +184,7 @@ export const Navbar = () => {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.label}
-                </NextLink>
+                </AppLink>
               </li>
             ))}
           </ul>
