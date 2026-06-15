@@ -58,7 +58,7 @@ export function AdminAgentMessages({ messages, loading, fullscreen }: AdminAgent
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
             </div>
           ) : (
-            <p className="whitespace-pre-wrap break-words">{message.content}</p>
+            <p className="whitespace-pre-wrap break-words text-white">{message.content}</p>
           )}
         </div>
       ))}

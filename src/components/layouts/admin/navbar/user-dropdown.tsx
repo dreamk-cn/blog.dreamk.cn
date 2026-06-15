@@ -10,7 +10,7 @@ export const UserDropdown = () => {
       <Dropdown.Trigger>
         <div
           aria-label="用户菜单"
-          className="inline-flex h-auto min-w-0 items-center gap-2 border-0 bg-transparent px-2 py-1 text-text-base shadow-none ring-0 hover:bg-canvas data-[pressed]:bg-canvas"
+          className="inline-flex h-auto min-w-0 items-center gap-2 rounded-2xl border-0 bg-transparent px-2 py-1 text-text-base shadow-none ring-0 hover:bg-canvas data-[pressed]:bg-canvas"
         >
           <span className="hidden text-sm sm:inline">
             欢迎回来，<span className="text-primary">{session.data?.user.name}</span>
