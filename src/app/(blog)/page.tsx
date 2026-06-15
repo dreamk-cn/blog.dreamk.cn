@@ -11,7 +11,6 @@ import { listApprovedFriendLinks } from "@/services/friend-link-service";
 import { listHotPublicPosts, listRecentPublicPosts } from "@/services/post-service";
 
 const HOME_RECENT_POSTS_LIMIT = 6;
-export const revalidate = 300;
 
 export const metadata: Metadata = {
   description: siteConfig.description,

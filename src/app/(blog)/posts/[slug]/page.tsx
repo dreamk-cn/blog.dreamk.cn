@@ -25,8 +25,6 @@ import { getPublishedPostBySlug } from "@/services/post-service";
 
 const POST_COMMENT_ROOT_PAGE_SIZE = 20;
 const POST_COMMENT_REPLY_PAGE_SIZE = 5;
-export const revalidate = 0; // 禁用缓存
-
 type PageProps = {
   params: Promise<{ slug: string }>;
 };

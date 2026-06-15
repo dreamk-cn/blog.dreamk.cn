@@ -4,8 +4,6 @@ import { buildCanonical } from "@/lib/seo";
 import { renderCategoryPostListPage } from "../../category-post-list";
 import { findCategoryBySlug } from "@/services/category-service";
 
-export const revalidate = 300;
-
 type PageProps = {
   params: Promise<{
     slug: string;

@@ -7,17 +7,18 @@ import { siteConfig } from "@/config/site";
 import { formatDateTime } from "@/lib/format-datetime";
 import { buildCanonical } from "@/lib/seo";
 import { countApprovedCommentsByPostSlug, listApprovedCommentsBySlug } from "@/services/comment-service";
-import { getPublishedPostBySlug, getPublishedPostMetadataBySlug } from "@/services/post-service";
+import {
+  getPublishedPostBySlugCached,
+  getPublishedPostMetadataBySlugCached,
+} from "@/services/post-service";
+import { PUBLIC_ABOUT_REVALIDATE_SEC } from "@/lib/public-cache";
 
 const ABOUT_SLUG = contentConfig.pageSlugs.about;
 const ROOT_PAGE_SIZE = 20;
 const REPLY_PAGE_SIZE = 5;
 
-/** ISR：约 10 分钟重新生成，发布后最多延迟一小段时间可见（可按需改成 300/900） */
-export const revalidate = 30; // 减少缓存时间
-
 async function getAboutPost() {
-  return getPublishedPostBySlug(ABOUT_SLUG);
+  return getPublishedPostBySlugCached(ABOUT_SLUG, PUBLIC_ABOUT_REVALIDATE_SEC);
 }
 
 type AboutPageData =
@@ -55,7 +56,7 @@ async function getAboutPageDataSafe(): Promise<AboutPageData> {
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const post = await getPublishedPostMetadataBySlug(ABOUT_SLUG);
+    const post = await getPublishedPostMetadataBySlugCached(ABOUT_SLUG, PUBLIC_ABOUT_REVALIDATE_SEC);
 
     if (!post) {
       return {

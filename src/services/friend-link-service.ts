@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { PUBLIC_CACHE_TAGS, PUBLIC_CONTENT_REVALIDATE_SEC, cachePublicContent } from "@/lib/public-cache";
 import { Prisma } from "@/generated/prisma";
 
 type LinkStatus = "PENDING" | "APPROVED" | "REJECTED" | "HIDDEN";
@@ -95,16 +96,21 @@ export async function deleteFriendLink(id: string) {
   return { data: null };
 }
 
-export async function listApprovedFriendLinks() {
-  return prisma.friendLink.findMany({
-    where: {
-      status: "APPROVED",
-    },
-    orderBy: [{ sortOrder: "desc" }, { createdAt: "desc" }],
-    select: {
-      id: true,
-      name: true,
-      url: true,
-    },
-  });
+export function listApprovedFriendLinks() {
+  return cachePublicContent(
+    () =>
+      prisma.friendLink.findMany({
+        where: {
+          status: "APPROVED",
+        },
+        orderBy: [{ sortOrder: "desc" }, { createdAt: "desc" }],
+        select: {
+          id: true,
+          name: true,
+          url: true,
+        },
+      }),
+    ["listApprovedFriendLinks"],
+    { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.friendLinks] },
+  );
 }

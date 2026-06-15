@@ -3,6 +3,11 @@ import { contentConfig } from "@/config/content";
 import { env } from "@/config/env";
 import { getDeepseekClient } from "@/lib/ai-client";
 import { prisma } from "@/lib/prisma";
+import {
+  PUBLIC_CACHE_TAGS,
+  PUBLIC_CONTENT_REVALIDATE_SEC,
+  cachePublicContent,
+} from "@/lib/public-cache";
 import { normalizeSlug } from "@/lib/slug";
 import {
   postContentMediaInclude,
@@ -71,55 +76,73 @@ export const postListInclude = {
   coverMedia: postCoverMediaInclude,
 } satisfies Prisma.PostInclude;
 
-export async function listRecentPublicPosts(limit: number) {
-  return prisma.post.findMany({
-    include: postListInclude,
-    where: buildPublicPostWhere(),
-    orderBy: {
-      publishedAt: "desc",
-    },
-    take: limit,
-  });
+export function listRecentPublicPosts(limit: number) {
+  return cachePublicContent(
+    () =>
+      prisma.post.findMany({
+        include: postListInclude,
+        where: buildPublicPostWhere(),
+        orderBy: {
+          publishedAt: "desc",
+        },
+        take: limit,
+      }),
+    ["listRecentPublicPosts", String(limit)],
+    { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.posts] },
+  );
 }
 
-export async function listHotPublicPosts(limit: number) {
-  return prisma.post.findMany({
-    select: {
-      id: true,
-      title: true,
-      slug: true,
-      viewCount: true,
-    },
-    where: buildPublicPostWhere(),
-    orderBy: {
-      viewCount: "desc",
-    },
-    take: limit,
-  });
+export function listHotPublicPosts(limit: number) {
+  return cachePublicContent(
+    () =>
+      prisma.post.findMany({
+        select: {
+          id: true,
+          title: true,
+          slug: true,
+          viewCount: true,
+        },
+        where: buildPublicPostWhere(),
+        orderBy: {
+          viewCount: "desc",
+        },
+        take: limit,
+      }),
+    ["listHotPublicPosts", String(limit)],
+    { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.posts] },
+  );
 }
 
-export async function listPublicPostsPage(params: { page: number; pageSize: number; keyword?: string }) {
+export function listPublicPostsPage(params: { page: number; pageSize: number; keyword?: string }) {
+  const normalizedKeyword = params.keyword?.trim() ?? "";
   const safePage = Number.isFinite(params.page) && params.page > 0 ? Math.floor(params.page) : 1;
-  const where = buildPublicPostWhere(params.keyword);
-  const total = await prisma.post.count({ where });
-  const totalPages = Math.max(1, Math.ceil(total / params.pageSize));
-  const currentPage = Math.min(safePage, totalPages);
-  const skip = (currentPage - 1) * params.pageSize;
 
-  const posts = await prisma.post.findMany({
-    include: postListInclude,
-    where,
-    orderBy: publicPostOrderBy,
-    skip,
-    take: params.pageSize,
-  });
+  return cachePublicContent(
+    async () => {
+      const where = buildPublicPostWhere(normalizedKeyword);
+      const total = await prisma.post.count({ where });
+      const totalPages = Math.max(1, Math.ceil(total / params.pageSize));
+      const currentPage = Math.min(safePage, totalPages);
+      const skip = (currentPage - 1) * params.pageSize;
 
-  return {
-    posts,
-    total,
-    totalPages,
-    currentPage,
-  };
+      const posts = await prisma.post.findMany({
+        include: postListInclude,
+        where,
+        orderBy: publicPostOrderBy,
+        skip,
+        take: params.pageSize,
+      });
+
+      return {
+        posts,
+        total,
+        totalPages,
+        currentPage,
+      };
+    },
+    ["listPublicPostsPage", String(safePage), String(params.pageSize), normalizedKeyword],
+    { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.posts] },
+  );
 }
 
 export async function getPublishedPostBySlug(slug: string) {
@@ -137,6 +160,14 @@ export async function getPublishedPostBySlug(slug: string) {
   });
 }
 
+export function getPublishedPostBySlugCached(slug: string, revalidate = PUBLIC_CONTENT_REVALIDATE_SEC) {
+  return cachePublicContent(
+    () => getPublishedPostBySlug(slug),
+    ["getPublishedPostBySlug", slug],
+    { revalidate, tags: [PUBLIC_CACHE_TAGS.posts, `public:post:${slug}`] },
+  );
+}
+
 export async function getPublishedPostMetadataBySlug(slug: string) {
   return prisma.post.findFirst({
     where: {
@@ -148,6 +179,14 @@ export async function getPublishedPostMetadataBySlug(slug: string) {
       excerpt: true,
     },
   });
+}
+
+export function getPublishedPostMetadataBySlugCached(slug: string, revalidate = PUBLIC_CONTENT_REVALIDATE_SEC) {
+  return cachePublicContent(
+    () => getPublishedPostMetadataBySlug(slug),
+    ["getPublishedPostMetadataBySlug", slug],
+    { revalidate, tags: [PUBLIC_CACHE_TAGS.posts, `public:post:${slug}`] },
+  );
 }
 
 export async function getPostDetail(params: { id?: string; slug?: string; status?: "DRAFT" | "PUBLISHED" | "ARCHIVED"; isAdmin: boolean }) {

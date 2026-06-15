@@ -6,21 +6,13 @@ import { getTagColor } from "@/lib/tag-color";
 import { AppLink } from "@/components/ui/app-link";
 import { Card } from "@heroui/react";
 import { getPrimaryCoverUrl, type CoverMediaItem } from "@/lib/post-cover";
+import { formatDate } from "@/lib/format-datetime";
 import type { Post, Tag } from "@/generated/prisma";
 
 type PostWithTags = Post & {
   tags: Tag[];
   coverMedia?: CoverMediaItem[];
 };
-
-function formatDate(date: Date | null) {
-  if (!date) return "";
-  return new Intl.DateTimeFormat("zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-}
 
 export function PostCard({ post }: { post: PostWithTags }) {
   const postHref = `/posts/${post.slug}`;

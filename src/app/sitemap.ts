@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
 import { contentConfig } from "@/config/content";
+import { PUBLIC_CACHE_TAGS, PUBLIC_CONTENT_REVALIDATE_SEC, cachePublicContent } from "@/lib/public-cache";
 import { absoluteUrl, postAbsoluteUrl } from "@/lib/site-url";
 import { prisma } from "@/lib/prisma";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 /** 与 `posts-list.tsx` 一致 */
 const POST_LIST_PAGE_SIZE = 10;
@@ -14,7 +15,7 @@ function pickLatestDate(...dates: Array<Date | null | undefined>) {
   return dates.filter((date): date is Date => Boolean(date)).sort((a, b) => b.getTime() - a.getTime())[0];
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
   const publicPostWhere = {
     status: "PUBLISHED" as const,
     slug: { notIn: [...contentConfig.excludedPostSlugsForPublicFeed] },
@@ -130,4 +131,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   return [...staticRoutes, ...postEntries, ...postListPages, ...categoryEntries];
+}
+
+export default function sitemap(): Promise<MetadataRoute.Sitemap> {
+  return cachePublicContent(buildSitemapEntries, ["sitemap"], {
+    revalidate: PUBLIC_CONTENT_REVALIDATE_SEC,
+    tags: [PUBLIC_CACHE_TAGS.sitemap, PUBLIC_CACHE_TAGS.posts, PUBLIC_CACHE_TAGS.categories],
+  });
 }
