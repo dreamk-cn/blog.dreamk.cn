@@ -1,10 +1,9 @@
-import { isDev } from '@/utils/env';
+import { isClient, isDev } from '@/config/env.public';
 import { toast } from '@heroui/react';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { signOut } from 'next-auth/react';
 import { ResponseCode } from '@/config/response-code';
 import { ApiResponse } from '@/types/request';
-import { isClient } from '@/utils';
 import { getSiteOrigin } from '@/lib/site-url';
 
 let unauthorizedRedirecting = false;

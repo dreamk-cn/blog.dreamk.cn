@@ -279,7 +279,6 @@ export function useCommentDeepLink({
     mailAnchorMeta,
     loadingMore,
     loadingReplyRootId,
-    comments,
   ]);
 
   return { flashCommentId, deepLinkLoading };

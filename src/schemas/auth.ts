@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { PasswordRegex } from "@/utils/verify";
+import { PasswordRegex } from "@/lib/auth-validators";
 
 /** 登录表单（与 credentials 提交字段一致） */
 export const LoginSchema = z.object({

@@ -1,7 +1,7 @@
 "use client";
 
 import { ANON_COMMENT_RATE_CACHE_KEY_PREFIX } from "@/lib/cache/cache-key-prefixes";
-import { StringSelect } from "@/components/admin/string-select";
+import { PaginatedFooter } from "@/components/admin/paginated-footer";
 import { request } from "@/lib/request";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -10,7 +10,6 @@ import {
   Input,
   Label,
   Modal,
-  Pagination,
   Spinner,
   Table,
   TextField,
@@ -275,55 +274,21 @@ export default function AdminAppCachePage() {
         </Table>
       </div>
 
-      {total > 0 ? (
-        <div className="flex flex-wrap items-center justify-between gap-3 px-2 py-2">
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="shrink-0 text-sm text-text-muted">
-              共 {total} 条，第 {pageNo} / {totalPages} 页
-            </span>
-            <StringSelect
-              aria-label="每页条数"
-              className="w-36"
-              selectedId={String(pageSize)}
-              onSelectionChange={(id) => {
-                setPageNo(1);
-                setPageSize(Number(id));
-              }}
-              options={[
-                { id: "10", label: "10条/页" },
-                { id: "20", label: "20条/页" },
-                { id: "50", label: "50条/页" },
-                { id: "100", label: "100条/页" },
-              ]}
-            />
-          </div>
-          <Pagination>
-            <Pagination.Content className="gap-1">
-              <Pagination.Item>
-                <Pagination.Previous
-                  isDisabled={pageNo <= 1}
-                  onPress={() => setPageNo((p) => Math.max(1, p - 1))}
-                >
-                  <Pagination.PreviousIcon />
-                </Pagination.Previous>
-              </Pagination.Item>
-              <Pagination.Item>
-                <span className="text-small px-2 text-text-muted">
-                  {pageNo} / {totalPages}
-                </span>
-              </Pagination.Item>
-              <Pagination.Item>
-                <Pagination.Next
-                  isDisabled={pageNo >= totalPages}
-                  onPress={() => setPageNo((p) => Math.min(totalPages, p + 1))}
-                >
-                  <Pagination.NextIcon />
-                </Pagination.Next>
-              </Pagination.Item>
-            </Pagination.Content>
-          </Pagination>
-        </div>
-      ) : null}
+      <PaginatedFooter
+        total={total}
+        pageNo={pageNo}
+        pageSize={pageSize}
+        totalPages={totalPages}
+        onPageChange={setPageNo}
+        onPageSizeChange={(size) => { setPageNo(1); setPageSize(size); }}
+        summary={<span className="shrink-0 text-sm text-text-muted">共 {total} 条，第 {pageNo} / {totalPages} 页</span>}
+        pageSizeOptions={[
+          { value: 10, label: '10条/页' },
+          { value: 20, label: '20条/页' },
+          { value: 50, label: '50条/页' },
+          { value: 100, label: '100条/页' },
+        ]}
+      />
 
       <Modal state={clearExpiredModal}>
         <Modal.Backdrop>

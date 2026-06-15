@@ -1,9 +1,11 @@
 "use client";
 
 import { StringSelect } from "@/components/admin/string-select";
+import { PaginatedFooter } from "@/components/admin/paginated-footer";
+import { AdminListLayout } from "@/components/admin/admin-list-layout";
 import { request } from "@/lib/request";
 import type { Comment, Post, User } from "@/generated/prisma";
-import { Alert, Button, Chip, Input, Label, Pagination, Spinner, Table, TextField } from "@heroui/react";
+import { Button, Chip, Input, Label, Spinner, Table, TextField } from "@heroui/react";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -126,7 +128,7 @@ export default function AdminCommentListPage() {
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
 
   return (
-    <div className="space-y-4 p-4 text-text-base bg-canvas h-full">
+    <AdminListLayout error={error}>
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold text-text-base">评论管理</h1>
         <div className="flex flex-wrap items-end gap-3">
@@ -298,57 +300,15 @@ export default function AdminCommentListPage() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between px-2 py-4">
-        <div className="flex items-center gap-4">
-          <span className="text-text-muted text-sm shrink-0">共 {total} 条数据</span>
-          <StringSelect
-            aria-label="每页条数"
-            className="w-32"
-            selectedId={String(pageSize)}
-            onSelectionChange={(id) => {
-              setPageNo(1);
-              setPageSize(Number(id));
-            }}
-            options={[
-              { id: "10", label: "10条/页" },
-              { id: "20", label: "20条/页" },
-              { id: "50", label: "50条/页" },
-            ]}
-          />
-        </div>
-        <Pagination>
-          <Pagination.Content className="gap-1">
-            <Pagination.Item>
-              <Pagination.Previous
-                isDisabled={pageNo <= 1}
-                onPress={() => setPageNo((p) => Math.max(1, p - 1))}
-              >
-                <Pagination.PreviousIcon />
-              </Pagination.Previous>
-            </Pagination.Item>
-            <Pagination.Item>
-              <span className="px-2 text-small text-text-muted">
-                {pageNo} / {totalPages}
-              </span>
-            </Pagination.Item>
-            <Pagination.Item>
-              <Pagination.Next
-                isDisabled={pageNo >= totalPages}
-                onPress={() => setPageNo((p) => Math.min(totalPages, p + 1))}
-              >
-                <Pagination.NextIcon />
-              </Pagination.Next>
-            </Pagination.Item>
-          </Pagination.Content>
-        </Pagination>
-      </div>
+      <PaginatedFooter
+        total={total}
+        pageNo={pageNo}
+        pageSize={pageSize}
+        totalPages={totalPages}
+        onPageChange={setPageNo}
+        onPageSizeChange={(size) => { setPageNo(1); setPageSize(size); }}
+      />
 
-      {error ? (
-        <Alert status="danger">
-          <Alert.Title>错误</Alert.Title>
-          <Alert.Description>{error}</Alert.Description>
-        </Alert>
-      ) : null}
-    </div>
+    </AdminListLayout>
   );
 }

@@ -3,7 +3,7 @@
 import { Alert, Button, Chip } from "@heroui/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { isDev } from "@/utils/env";
+import { isDev } from "@/config/env.public";
 
 export default function Error({
   error,

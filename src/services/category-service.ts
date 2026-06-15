@@ -4,6 +4,7 @@ import { PUBLIC_CACHE_TAGS, PUBLIC_CONTENT_REVALIDATE_SEC, cachePublicContent, p
 import { normalizeSlug } from "@/lib/slug";
 import { decodeRouteSlug } from "@/lib/site-url";
 import { resolveArchivePage, sortTaxonomyByPostCount } from "@/lib/taxonomy";
+import { taxonomyConflictExists, taxonomyKeywordWhere } from "@/lib/taxonomy-helpers";
 import { buildPublicPostWhere, postListInclude } from "@/services/post-service";
 
 export async function listCategories(keyword = "") {
@@ -11,21 +12,14 @@ export async function listCategories(keyword = "") {
     orderBy: { createdAt: "desc" },
   };
   if (keyword) {
-    query.where = {
-      OR: [
-        { name: { contains: keyword, mode: "insensitive" } },
-        { slug: { contains: keyword, mode: "insensitive" } },
-      ],
-    };
+    query.where = taxonomyKeywordWhere(keyword) as Prisma.CategoryFindManyArgs['where'];
   }
   return prisma.category.findMany(query);
 }
 
 export async function createCategory(input: { name: string; slug?: string }) {
   const normalizedSlug = normalizeSlug(input.slug || input.name, 100);
-  const exists = await prisma.category.findFirst({
-    where: { OR: [{ name: input.name }, { slug: normalizedSlug }] },
-  });
+  const exists = await taxonomyConflictExists(prisma.category, input.name, normalizedSlug);
   if (exists) return { error: "分类已存在" as const };
 
   const data = await prisma.category.create({ data: { name: input.name, slug: normalizedSlug } });
@@ -34,12 +28,7 @@ export async function createCategory(input: { name: string; slug?: string }) {
 
 export async function updateCategory(input: { id: string; name: string; slug?: string }) {
   const normalizedSlug = normalizeSlug(input.slug || input.name, 100);
-  const exists = await prisma.category.findFirst({
-    where: {
-      OR: [{ name: input.name }, { slug: normalizedSlug }],
-      NOT: { id: input.id },
-    },
-  });
+  const exists = await taxonomyConflictExists(prisma.category, input.name, normalizedSlug, input.id);
   if (exists) return { error: "分类名或Slug已被使用" as const };
 
   const data = await prisma.category.update({

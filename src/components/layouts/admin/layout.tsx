@@ -2,7 +2,7 @@
 // author: https://github.com/Siumauricio/nextui-dashboard-template
 import React from "react";
 import { AdminAgentAssistant } from "@/components/admin/agent/admin-agent-assistant";
-import { useLockedBody } from "../../hooks/useBodyLock";
+import { useLockedBody } from "@/hooks/useBodyLock";
 import { NavbarWrapper } from "./navbar/navbar";
 import { SidebarWrapper } from "./sidebar/sidebar";
 import { SidebarContext } from "./layout-content";

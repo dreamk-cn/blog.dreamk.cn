@@ -4,6 +4,10 @@ export const DEV_SITE_ORIGIN = "http://localhost:3000";
 /** 客户端安全：仅依赖 NODE_ENV */
 export const isDev = process.env.NODE_ENV === "development";
 
+/** 运行时环境检测 */
+export const isServer = () => typeof window === 'undefined';
+export const isClient = () => !isServer();
+
 /**
  * 客户端安全：解析对外站点根地址（无末尾斜杠）。
  * 仅读取 NEXT_PUBLIC_BASE_URL 与 NODE_ENV，可被打进 client bundle。

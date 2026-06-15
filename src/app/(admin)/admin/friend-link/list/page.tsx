@@ -3,21 +3,12 @@
 import { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { StringSelect } from "@/components/admin/string-select";
+import { AdminListLayout } from "@/components/admin/admin-list-layout";
+import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
 import { SearchIcon } from "@/components/icons";
 import { request } from "@/lib/request";
 import type { FriendLink, LinkStatus } from "@/generated/prisma";
-import {
-  Alert,
-  Button,
-  Input,
-  InputGroup,
-  Label,
-  Modal,
-  Spinner,
-  Table,
-  TextField,
-  useOverlayState,
-} from "@heroui/react";
+import { Button, Input, InputGroup, Label, Modal, Spinner, Table, TextField, useOverlayState } from "@heroui/react";
 import { useDebounce } from "@/hooks/useDebounce";
 
 type LinkStatusOption = LinkStatus | "all";
@@ -283,7 +274,7 @@ export default function AdminFriendLinkListPage() {
   };
 
   return (
-    <div className="space-y-4 p-4 text-text-base bg-canvas h-full">
+    <AdminListLayout error={listError}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-wrap items-end gap-3">
           <TextField className="max-w-sm">
@@ -348,13 +339,6 @@ export default function AdminFriendLinkListPage() {
           </Table.ScrollContainer>
         </Table>
       </div>
-
-      {listError ? (
-        <Alert status="danger">
-          <Alert.Title>错误</Alert.Title>
-          <Alert.Description>{listError}</Alert.Description>
-        </Alert>
-      ) : null}
 
       <Modal state={createModal}>
         <Modal.Backdrop>
@@ -480,28 +464,13 @@ export default function AdminFriendLinkListPage() {
         </Modal.Backdrop>
       </Modal>
 
-      <Modal state={deleteModal}>
-        <Modal.Backdrop>
-          <Modal.Container>
-            <Modal.Dialog>
-              <Modal.Header>
-                <Modal.Heading>删除友链</Modal.Heading>
-              </Modal.Header>
-              <Modal.Body>
-                <p>确认要删除友链 &quot;{itemToDelete?.name}&quot; 吗？此操作不可撤销。</p>
-              </Modal.Body>
-              <Modal.Footer className="flex justify-end gap-2">
-                <Button variant="outline" onPress={deleteModal.close}>
-                  取消
-                </Button>
-                <Button variant="danger" isDisabled={deletingId !== null} onPress={handleDelete}>
-                  {deletingId ? "删除中..." : "确认删除"}
-                </Button>
-              </Modal.Footer>
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
-    </div>
+      <ConfirmDeleteModal
+        state={deleteModal}
+        entityLabel="友链"
+        entityName={itemToDelete?.name ?? ''}
+        isDeleting={deletingId !== null}
+        onConfirm={handleDelete}
+      />
+    </AdminListLayout>
   );
 }

@@ -12,7 +12,7 @@ import {
 import { sendSmtpMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { buildRegisterVerificationEmail } from "@/lib/register-email-html";
-import { isDev } from "@/utils/env";
+import { isDev } from "@/config/env.public";
 
 function readCodeTtlSec(): number {
   return readRateLimitEnvInt("AUTH_REGISTER_CODE_TTL_SEC", 600, 1);

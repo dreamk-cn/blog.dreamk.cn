@@ -3,7 +3,6 @@
 import { useEffect, useState, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Alert,
   Button,
   Input,
   InputGroup,
@@ -15,6 +14,8 @@ import {
   useOverlayState,
 } from '@heroui/react';
 import { SearchIcon } from '@/components/icons';
+import { AdminListLayout } from '@/components/admin/admin-list-layout';
+import { ConfirmDeleteModal } from '@/components/admin/confirm-delete-modal';
 import type { Tag } from '@/generated/prisma';
 import { request } from '@/lib/request';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -223,7 +224,7 @@ export default function AdminTagListPage() {
   };
 
   return (
-    <div className="space-y-4 p-4 text-text-base bg-canvas h-full">
+    <AdminListLayout error={listError}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-wrap items-end gap-2">
           <InputGroup className="max-w-sm">
@@ -277,13 +278,6 @@ export default function AdminTagListPage() {
           </Table.ScrollContainer>
         </Table>
       </div>
-
-      {listError ? (
-        <Alert status="danger">
-          <Alert.Title>错误</Alert.Title>
-          <Alert.Description>{listError}</Alert.Description>
-        </Alert>
-      ) : null}
 
       <Modal state={createModal}>
         <Modal.Backdrop>
@@ -373,32 +367,13 @@ export default function AdminTagListPage() {
         </Modal.Backdrop>
       </Modal>
 
-      <Modal state={deleteModal}>
-        <Modal.Backdrop>
-          <Modal.Container>
-            <Modal.Dialog>
-              <Modal.Header>
-                <Modal.Heading>删除标签</Modal.Heading>
-              </Modal.Header>
-              <Modal.Body>
-                <p>确认要删除标签 &quot;{tagToDelete?.name}&quot; 吗？此操作不可撤销。</p>
-              </Modal.Body>
-              <Modal.Footer className="flex justify-end gap-2">
-                <Button variant="outline" onPress={deleteModal.close}>
-                  取消
-                </Button>
-                <Button
-                  variant="danger"
-                  isDisabled={deletingId !== null}
-                  onPress={handleDelete}
-                >
-                  {deletingId ? '删除中...' : '确认删除'}
-                </Button>
-              </Modal.Footer>
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
-    </div>
+      <ConfirmDeleteModal
+        state={deleteModal}
+        entityLabel="标签"
+        entityName={tagToDelete?.name ?? ''}
+        isDeleting={deletingId !== null}
+        onConfirm={handleDelete}
+      />
+    </AdminListLayout>
   );
 }

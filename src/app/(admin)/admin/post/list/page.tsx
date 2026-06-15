@@ -5,13 +5,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import { request } from '@/lib/request';
 import type { Post, Category, Tag } from '@/generated/prisma';
 import {
-  Alert,
   Button,
   Chip,
   Input,
   Label,
-  Modal,
-  Pagination,
   Spinner,
   Table,
   TextField,
@@ -19,6 +16,9 @@ import {
 } from '@heroui/react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { StringSelect } from '@/components/admin/string-select';
+import { PaginatedFooter } from '@/components/admin/paginated-footer';
+import { ConfirmDeleteModal } from '@/components/admin/confirm-delete-modal';
+import { AdminListLayout } from '@/components/admin/admin-list-layout';
 
 type PostItem = Post & { category: Category | null; tags: Tag[] };
 
@@ -220,55 +220,8 @@ export default function Posts() {
     </div>
   ), [keyword, status, sortBy, sortOrder, router, pathname]);
 
-  const bottomContent = useMemo(() => (
-    <div className="flex items-center justify-between px-2 py-4">
-      <div className="flex items-center gap-4">
-        <span className="text-sm text-text-muted shrink-0">共 {total} 条数据</span>
-        <StringSelect
-          aria-label="每页条数"
-          className="w-32"
-          selectedId={String(pageSize)}
-          onSelectionChange={(id) => {
-            setPageNo(1);
-            setPageSize(Number(id));
-          }}
-          options={[
-            { id: '10', label: '10条/页' },
-            { id: '20', label: '20条/页' },
-            { id: '50', label: '50条/页' },
-          ]}
-        />
-      </div>
-      <Pagination>
-        <Pagination.Content className="gap-1">
-          <Pagination.Item>
-            <Pagination.Previous
-              isDisabled={pageNo <= 1}
-              onPress={() => setPageNo((p) => Math.max(1, p - 1))}
-            >
-              <Pagination.PreviousIcon />
-            </Pagination.Previous>
-          </Pagination.Item>
-          <Pagination.Item>
-            <span className="px-2 text-small text-default-600">
-              {pageNo} / {totalPages}
-            </span>
-          </Pagination.Item>
-          <Pagination.Item>
-            <Pagination.Next
-              isDisabled={pageNo >= totalPages}
-              onPress={() => setPageNo((p) => Math.min(totalPages, p + 1))}
-            >
-              <Pagination.NextIcon />
-            </Pagination.Next>
-          </Pagination.Item>
-        </Pagination.Content>
-      </Pagination>
-    </div>
-  ), [pageNo, totalPages, total, pageSize]);
-
   return (
-    <div className="space-y-4 p-4 bg-canvas h-full">
+    <AdminListLayout error={error}>
       {topContent}
 
       <div className="rounded-lg bg-background">
@@ -389,43 +342,22 @@ export default function Posts() {
         </Table>
       </div>
 
-      {bottomContent}
+      <PaginatedFooter
+        total={total}
+        pageNo={pageNo}
+        pageSize={pageSize}
+        totalPages={totalPages}
+        onPageChange={setPageNo}
+        onPageSizeChange={(size) => { setPageNo(1); setPageSize(size); }}
+      />
 
-      {error ? (
-        <Alert status="danger">
-          <Alert.Title>错误</Alert.Title>
-          <Alert.Description>{error}</Alert.Description>
-        </Alert>
-      ) : null}
-
-      <Modal state={deleteModal}>
-        <Modal.Backdrop>
-          <Modal.Container>
-            <Modal.Dialog>
-              <Modal.Header>
-                <Modal.Heading>删除文章</Modal.Heading>
-              </Modal.Header>
-              <Modal.Body>
-                <p>
-                  确认要删除文章 &quot;{postToDelete?.title}&quot; 吗？此操作不可撤销。
-                </p>
-              </Modal.Body>
-              <Modal.Footer className="flex justify-end gap-2">
-                <Button variant="outline" onPress={deleteModal.close}>
-                  取消
-                </Button>
-                <Button
-                  variant="danger"
-                  isDisabled={deletingId !== null}
-                  onPress={handleDelete}
-                >
-                  {deletingId ? '删除中...' : '确认删除'}
-                </Button>
-              </Modal.Footer>
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
-    </div>
+      <ConfirmDeleteModal
+        state={deleteModal}
+        entityLabel="文章"
+        entityName={postToDelete?.title ?? ''}
+        isDeleting={deletingId !== null}
+        onConfirm={handleDelete}
+      />
+    </AdminListLayout>
   );
 }
