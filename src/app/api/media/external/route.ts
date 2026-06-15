@@ -15,7 +15,7 @@ export const POST = withAdmin(async (request, admin) => {
     source: "EXTERNAL",
     url: parsed.url,
     category: mediaCategory,
-    userId: admin.session.user.id as string,
+    userId: admin.session.user.id,
   });
 
   return ok(

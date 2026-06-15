@@ -7,7 +7,7 @@ import { AppLink } from "@/components/ui/app-link";
 import { Card } from "@heroui/react";
 import { getPrimaryCoverUrl, type CoverMediaItem } from "@/lib/post-cover";
 import { formatDate } from "@/lib/format-datetime";
-import { tagPath } from "@/lib/site-url";
+import { postPath, tagPath } from "@/lib/site-url";
 import type { Post, Tag } from "@/generated/prisma";
 
 type PostWithTags = Post & {
@@ -16,7 +16,7 @@ type PostWithTags = Post & {
 };
 
 export function PostCard({ post }: { post: PostWithTags }) {
-  const postHref = `/posts/${post.slug}`;
+  const postHref = postPath(post.slug);
 
   return (
     <Card className="group overflow-hidden p-0 shadow-sm transition-shadow hover:shadow-md">

@@ -54,7 +54,7 @@ export const POST = withAdmin(async (request, admin) => {
   } = parsed;
 
   const newPost = await createPost({
-    userId: admin.session.user.id as string,
+    userId: admin.session.user.id,
     title,
     slug,
     content,

@@ -1,5 +1,10 @@
 import { auth } from "@/auth";
 import { forbidden, unauthorized } from "@/lib/api-response";
+import type { Session } from "next-auth";
+
+export type AdminSession = Session & {
+  user: Session["user"] & { id: string; role: "ADMIN" };
+};
 
 export async function requireAdmin() {
   const session = await auth();
@@ -9,5 +14,8 @@ export async function requireAdmin() {
   if (session.user.role !== "ADMIN") {
     return { ok: false as const, response: forbidden() };
   }
-  return { ok: true as const, session };
+  return {
+    ok: true as const,
+    session: session as AdminSession,
+  };
 }

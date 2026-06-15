@@ -2,6 +2,7 @@
 
 import { Card } from "@heroui/react";
 import { AppLink } from "@/components/ui/app-link";
+import { postPath } from "@/lib/site-url";
 
 type HotPost = {
   id: string;
@@ -26,7 +27,7 @@ export function HotPosts({ posts }: { posts: HotPost[] }) {
               {String(index + 1).padStart(2, "0")}
             </span>
             <AppLink
-              href={`/posts/${post.slug}`}
+              href={postPath(post.slug)}
               className="line-clamp-1 flex-1 text-sm text-text-base transition-colors group-hover:text-primary"
             >
               {post.title}

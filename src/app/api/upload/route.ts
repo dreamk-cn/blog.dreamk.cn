@@ -57,7 +57,7 @@ export const POST = withAdmin(async (request, admin) => {
     mimeType,
     size: file.size,
     category: uploadCategoryToMediaCategory(category),
-    userId: admin.session.user.id as string,
+    userId: admin.session.user.id,
   });
 
   return ok(
