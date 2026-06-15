@@ -42,6 +42,7 @@ const rawEnvSchema = z
     DEEPSEEK_API_KEY: z.string().optional(),
     DEEPSEEK_SLUG_MODEL: z.string().optional(),
     DEEPSEEK_EXCERPT_MODEL: z.string().optional(),
+    DEEPSEEK_AGENT_MODEL: z.string().optional(),
     CACHE_DRIVER: z.string().optional(),
     AUTH_REGISTER_RATE_MAX: z.string().optional(),
     AUTH_REGISTER_RATE_WINDOW_SEC: z.string().optional(),
@@ -228,11 +229,13 @@ function buildEnv(raw: RawEnv) {
 
   const apiKey = trimOptional(raw.DEEPSEEK_API_KEY);
   const excerptModel = trimOptional(raw.DEEPSEEK_EXCERPT_MODEL) ?? DEEPSEEK_DEFAULT_MODEL;
+  const agentModel = trimOptional(raw.DEEPSEEK_AGENT_MODEL) ?? excerptModel;
   const ai = apiKey
     ? {
         apiKey,
         slugModel: trimOptional(raw.DEEPSEEK_SLUG_MODEL) ?? excerptModel,
         excerptModel,
+        agentModel,
       }
     : null;
 

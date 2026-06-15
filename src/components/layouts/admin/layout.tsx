@@ -1,6 +1,7 @@
 "use client";
 // author: https://github.com/Siumauricio/nextui-dashboard-template
 import React from "react";
+import { AdminAgentAssistant } from "@/components/admin/agent/admin-agent-assistant";
 import { useLockedBody } from "../../hooks/useBodyLock";
 import { NavbarWrapper } from "./navbar/navbar";
 import { SidebarWrapper } from "./sidebar/sidebar";
@@ -30,6 +31,7 @@ export const Layout = ({ children }: Props) => {
         <section className='flex'>
           <SidebarWrapper />
           <NavbarWrapper>{children}</NavbarWrapper>
+          <AdminAgentAssistant />
         </section>
       </SidebarContext.Provider>
     </NoSsr>
