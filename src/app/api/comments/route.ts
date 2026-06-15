@@ -6,6 +6,7 @@ import {
   CommentDeleteSchema,
   CommentUpdateStatusSchema,
 } from "@/schemas/comment";
+import { PUBLIC_CACHE_TAGS, revalidatePublicCache, shouldRevalidatePublicComments } from "@/lib/public-cache";
 import { notifyParentOnCommentApproved } from "@/services/comment-notify";
 import { listComments, softDeleteComments, updateCommentStatus } from "@/services/comment-service";
 import { NextResponse } from "next/server";
@@ -57,6 +58,10 @@ export const PUT = withAdmin(async (request) => {
     });
   }
 
+  if (shouldRevalidatePublicComments(result.previousStatus, status)) {
+    revalidatePublicCache(PUBLIC_CACHE_TAGS.comments);
+  }
+
   return ok(result.updated, "更新评论状态成功");
 }, "更新评论状态失败");
 
@@ -66,5 +71,8 @@ export const DELETE = withAdmin(async (request) => {
 
   const { ids } = CommentDeleteSchema.parse(json ?? {});
   const { count } = await softDeleteComments(ids);
+  if (count > 0) {
+    revalidatePublicCache(PUBLIC_CACHE_TAGS.comments);
+  }
   return ok(null, `删除${count}条评论`);
 }, "删除评论失败");

@@ -3,14 +3,19 @@ export function commentDomId(commentId: string) {
   return `comment-${commentId}`;
 }
 
-export function parseCommentTargetFromLocation(): string | null {
+export function parseCommentTargetFromLocation(searchParams?: URLSearchParams | null): string | null {
   if (typeof window === "undefined") return null;
   const fromHash = /^#comment-(.+)$/.exec(window.location.hash);
   if (fromHash?.[1]) {
     return decodeURIComponent(fromHash[1]);
   }
-  const q = new URLSearchParams(window.location.search).get("comment");
-  return q?.trim() || null;
+  const params = searchParams ?? new URLSearchParams(window.location.search);
+  return params.get("comment")?.trim() || null;
+}
+
+/** 站内相对路径 + ?comment= + #comment- */
+export function postPathWithCommentAnchor(postPath: string, commentId: string) {
+  return appendCommentAnchorQuery(postPath, commentId);
 }
 
 /** 邮件与分享链接：绝对 URL + ?comment= + #comment-，兼容部分客户端丢 hash 的情况 */
@@ -21,9 +26,13 @@ export function postUrlWithCommentAnchor(basePostUrl: string, commentId: string)
     u.hash = commentDomId(commentId);
     return u.toString();
   } catch {
-    const hasQuery = basePostUrl.includes("?");
-    return `${basePostUrl}${hasQuery ? "&" : "?"}comment=${encodeURIComponent(commentId)}#${commentDomId(commentId)}`;
+    return appendCommentAnchorQuery(basePostUrl, commentId);
   }
+}
+
+function appendCommentAnchorQuery(pathOrUrl: string, commentId: string) {
+  const hasQuery = pathOrUrl.includes("?");
+  return `${pathOrUrl}${hasQuery ? "&" : "?"}comment=${encodeURIComponent(commentId)}#${commentDomId(commentId)}`;
 }
 
 /** 深链失效时去掉 ?comment= 与 #comment-，避免地址栏长期保留无效锚点 */

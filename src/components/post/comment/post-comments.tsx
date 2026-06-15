@@ -1,18 +1,81 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { Suspense, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Button, Spinner, TextArea, toast } from "@heroui/react";
 import type { ApiResponse } from "@/types/request";
 import { PostCommentItem } from "./post-comment-item";
-import type { CommentItem, ServerCommentPayload } from "./post-comments-types";
+import type { CommentItem } from "./post-comments-types";
+import {
+  COMMENT_REPLY_FETCH_MAX,
+  DEEP_LINK_ROOT_PREFIX_MAX,
+  fetchPublicRootComments,
+  fetchPublicRootReplies,
+  mapServerRepliesToItems,
+  mergePrefixRootComments,
+} from "./post-comments-api";
 import {
   mapServerCommentToItem,
   removeLoadedDescendantsFromReplies,
 } from "./post-comments-utils";
 import { useCommentDeepLink } from "./use-comment-deep-link";
 
-export function PostComments({
+export function PostComments(props: {
+  slug: string;
+  initialComments: CommentItem[];
+  rootPageSize: number;
+  replyPageSize: number;
+  initialTotalRootCount: number;
+  totalApprovedCommentCount: number;
+}) {
+  return (
+    <Suspense fallback={<PostCommentsFallback {...props} />}>
+      <PostCommentsInner {...props} />
+    </Suspense>
+  );
+}
+
+function PostCommentsFallback({
+  initialComments,
+  totalApprovedCommentCount,
+}: {
+  slug: string;
+  initialComments: CommentItem[];
+  rootPageSize: number;
+  replyPageSize: number;
+  initialTotalRootCount: number;
+  totalApprovedCommentCount: number;
+}) {
+  return (
+    <section
+      id="comments"
+      className="mt-8 rounded-2xl border border-default-200/70 bg-background p-6 shadow-sm dark:border-default-100/20 sm:p-8"
+    >
+      <div className="mb-6 flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-text-base">评论区</h2>
+        <span className="text-sm text-text-muted">{totalApprovedCommentCount} 条评论</span>
+      </div>
+      <div className="mt-8 space-y-4">
+        {initialComments.length === 0 ? (
+          <p className="rounded-xl bg-default-100/70 px-4 py-6 text-center text-sm text-text-muted dark:bg-default-100/10">
+            还没有评论，欢迎成为第一个留言的人。
+          </p>
+        ) : (
+          initialComments.map((comment) => (
+            <div
+              key={comment.id}
+              className="rounded-xl border border-default-200/70 bg-default-50/50 px-4 py-4 dark:border-default-100/20 dark:bg-default-100/5"
+            >
+              <p className="text-sm text-text-base">{comment.content}</p>
+            </div>
+          ))
+        )}
+      </div>
+    </section>
+  );
+}
+
+function PostCommentsInner({
   slug,
   initialComments,
   rootPageSize,
@@ -52,18 +115,11 @@ export function PostComments({
     if (!hasMoreRoots || loadingMore) return;
     setLoadingMore(true);
     try {
-      const skip = comments.length;
-      const params = new URLSearchParams({
-        slug,
-        skip: String(skip),
-        take: String(rootPageSize),
-        replyTake: String(replyPageSize),
+      const result = await fetchPublicRootComments(slug, {
+        skip: comments.length,
+        take: rootPageSize,
+        replyTake: replyPageSize,
       });
-      const response = await fetch(`/api/post/comment?${params.toString()}`);
-      const result = (await response.json()) as ApiResponse<{
-        comments: ServerCommentPayload[];
-        totalRootCount: number;
-      }>;
       if (result.code !== 200) {
         toast.danger("加载失败", { description: result.message || "请稍后再试" });
         return;
@@ -78,30 +134,108 @@ export function PostComments({
     }
   };
 
+  const loadRootAtIndex = async (rootIndex: number) => {
+    if (loadingMore || loadingReplyRootId) return;
+    setLoadingMore(true);
+    try {
+      if (rootIndex <= DEEP_LINK_ROOT_PREFIX_MAX) {
+        const result = await fetchPublicRootComments(slug, {
+          skip: 0,
+          take: rootIndex + 1,
+          replyTake: replyPageSize,
+        });
+        if (result.code !== 200) {
+          toast.danger("加载失败", { description: result.message || "请稍后再试" });
+          return;
+        }
+        const mapped = result.data.comments.map(mapServerCommentToItem);
+        if (mapped.length === 0) return;
+
+        setTotalRootCount(result.data.totalRootCount);
+        setComments((prev) => mergePrefixRootComments(prev, mapped));
+        return;
+      }
+
+      toast.info("该评论楼层较深", {
+        description: "列表可能不完整，但会尽量定位到链接中的评论。",
+      });
+
+      const result = await fetchPublicRootComments(slug, {
+        skip: rootIndex,
+        take: 1,
+        replyTake: replyPageSize,
+      });
+      if (result.code !== 200) {
+        toast.danger("加载失败", { description: result.message || "请稍后再试" });
+        return;
+      }
+      const mapped = result.data.comments.map(mapServerCommentToItem);
+      if (mapped.length === 0) return;
+
+      setTotalRootCount(result.data.totalRootCount);
+      setComments((prev) => {
+        const rootId = mapped[0]?.id;
+        if (!rootId || prev.some((item) => item.id === rootId)) {
+          return prev;
+        }
+        const next = [...prev];
+        next.splice(Math.min(rootIndex, next.length), 0, ...mapped);
+        return next;
+      });
+    } catch {
+      toast.danger("加载失败", { description: "网络异常，请稍后重试" });
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  const loadRepliesUpToIndex = async (rootId: string, replyFlatIndex: number) => {
+    const root = comments.find((item) => item.id === rootId);
+    if (!root || loadingReplyRootId) return;
+    const take = Math.min(replyFlatIndex + 1, COMMENT_REPLY_FETCH_MAX);
+    if (root.replies.length >= take) return;
+
+    setLoadingReplyRootId(rootId);
+    try {
+      const result = await fetchPublicRootReplies(slug, rootId, { replySkip: 0, replyTake: take });
+      if (result.code !== 200) {
+        toast.danger("加载失败", { description: result.message || "请稍后再试" });
+        return;
+      }
+      const mapped = mapServerRepliesToItems(result.data.replies);
+      setComments((prev) =>
+        prev.map((item) =>
+          item.id === rootId
+            ? {
+                ...item,
+                replies: mapped,
+                totalReplyCount: result.data.totalReplyCount,
+              }
+            : item,
+        ),
+      );
+    } catch {
+      toast.danger("加载失败", { description: "网络异常，请稍后重试" });
+    } finally {
+      setLoadingReplyRootId(null);
+    }
+  };
+
   const loadMoreRepliesForRoot = async (rootId: string) => {
     const root = comments.find((c) => c.id === rootId);
     const replyCap = root ? (root.totalReplyCount ?? root.replies.length) : 0;
     if (!root || replyCap <= root.replies.length || loadingReplyRootId) return;
     setLoadingReplyRootId(rootId);
     try {
-      const params = new URLSearchParams({
-        slug,
-        rootId,
-        replySkip: String(root.replies.length),
-        replyTake: String(replyPageSize),
+      const result = await fetchPublicRootReplies(slug, rootId, {
+        replySkip: root.replies.length,
+        replyTake: replyPageSize,
       });
-      const response = await fetch(`/api/post/comment?${params.toString()}`);
-      const result = (await response.json()) as ApiResponse<{
-        replies: ServerCommentPayload[];
-        totalReplyCount: number;
-      }>;
       if (result.code !== 200) {
         toast.danger("加载失败", { description: result.message || "请稍后再试" });
         return;
       }
-      const mapped = result.data.replies.map((r) =>
-        mapServerCommentToItem({ ...r, replies: r.replies ?? [] }),
-      );
+      const mapped = mapServerRepliesToItems(result.data.replies);
       setComments((prev) =>
         prev.map((c) =>
           c.id === rootId
@@ -120,13 +254,14 @@ export function PostComments({
     }
   };
 
-  const { flashCommentId } = useCommentDeepLink({
+  const { flashCommentId, deepLinkLoading } = useCommentDeepLink({
     slug,
     comments,
     loadingMore,
     loadingReplyRootId,
-    loadMoreComments,
     loadMoreRepliesForRoot,
+    loadRootAtIndex,
+    loadRepliesUpToIndex,
   });
 
   const createDisplayComment = (comment: CommentItem): CommentItem => ({
@@ -277,24 +412,15 @@ export function PostComments({
             );
           } else {
             const newTotal = replyCap + 1;
-            const params = new URLSearchParams({
-              slug,
-              rootId,
-              replySkip: "0",
-              replyTake: String(Math.min(newTotal, 500)),
+            const refetch = await fetchPublicRootReplies(slug, rootId, {
+              replySkip: 0,
+              replyTake: Math.min(newTotal, COMMENT_REPLY_FETCH_MAX),
             });
-            const refetchResponse = await fetch(`/api/post/comment?${params.toString()}`);
-            const refetch = (await refetchResponse.json()) as ApiResponse<{
-              replies: ServerCommentPayload[];
-              totalReplyCount: number;
-            }>;
             if (refetch.code !== 200) {
               toast.danger("留言失败", { description: refetch.message || "请稍后再试" });
               return false;
             }
-            const mapped = refetch.data.replies.map((r) =>
-              mapServerCommentToItem({ ...r, replies: r.replies ?? [] }),
-            );
+            const mapped = mapServerRepliesToItems(refetch.data.replies);
             setComments((prev) =>
               prev.map((item) =>
                 item.id === rootId
@@ -386,6 +512,12 @@ export function PostComments({
       </div>
 
       <div className="mt-8 space-y-4">
+        {deepLinkLoading ? (
+          <div className="flex items-center justify-center gap-2 rounded-xl bg-default-100/70 px-4 py-3 text-sm text-text-muted dark:bg-default-100/10">
+            <Spinner color="current" size="sm" />
+            正在定位评论…
+          </div>
+        ) : null}
         {comments.length === 0 ? (
           <p className="rounded-xl bg-default-100/70 px-4 py-6 text-center text-sm text-text-muted dark:bg-default-100/10">
             还没有评论，欢迎成为第一个留言的人。

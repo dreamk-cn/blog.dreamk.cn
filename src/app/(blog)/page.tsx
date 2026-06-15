@@ -2,15 +2,18 @@ import type { Metadata } from "next";
 import { PostCard } from "@/components/post/post-card";
 import { ProfileSidebar } from "@/components/layouts/blog/profile-sidebar";
 import { HotPosts } from "@/components/post/hot-posts";
+import { RecentComments } from "@/components/post/recent-comments";
 import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
 import { AppLink } from "@/components/ui/app-link";
 import { siteConfig } from "@/config/site";
 import { buildCanonical } from "@/lib/seo";
 import { listPublicCategories } from "@/services/category-service";
 import { listApprovedFriendLinks } from "@/services/friend-link-service";
+import { listRecentApprovedComments } from "@/services/comment-service";
 import { listHotPublicPosts, listRecentPublicPosts } from "@/services/post-service";
 
 const HOME_RECENT_POSTS_LIMIT = 6;
+const HOME_RECENT_COMMENTS_LIMIT = 8;
 
 export const metadata: Metadata = {
   description: siteConfig.description,
@@ -18,9 +21,10 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [posts, hotPosts, categories, friendLinks] = await Promise.all([
+  const [posts, hotPosts, recentComments, categories, friendLinks] = await Promise.all([
     listRecentPublicPosts(HOME_RECENT_POSTS_LIMIT),
     listHotPublicPosts(8),
+    listRecentApprovedComments(HOME_RECENT_COMMENTS_LIMIT),
     listPublicCategories(16),
     listApprovedFriendLinks(),
   ]);
@@ -61,6 +65,7 @@ export default async function Home() {
 
         <aside className="order-2 space-y-4 lg:order-none">
           <HotPosts posts={hotPosts} />
+          <RecentComments comments={recentComments} />
         </aside>
       </div>
     </div>

@@ -1,5 +1,10 @@
 import { $Enums, type Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
+import {
+  PUBLIC_CACHE_TAGS,
+  PUBLIC_CONTENT_REVALIDATE_SEC,
+  cachePublicContent,
+} from "@/lib/public-cache";
 
 type CommentStatus = $Enums.CommentStatus;
 
@@ -192,6 +197,38 @@ export async function listApprovedRepliesForRootSlug(
   });
 
   return { replies, totalReplyCount };
+}
+
+export function listRecentApprovedComments(limit: number) {
+  return cachePublicContent(
+    () =>
+      prisma.comment.findMany({
+        where: {
+          status: "APPROVED",
+          post: {
+            status: "PUBLISHED",
+          },
+        },
+        orderBy: { createdAt: "desc" },
+        take: limit,
+        select: {
+          id: true,
+          content: true,
+          createdAt: true,
+          user: {
+            select: commentUserSelect,
+          },
+          post: {
+            select: {
+              title: true,
+              slug: true,
+            },
+          },
+        },
+      }),
+    ["listRecentApprovedComments", String(limit)],
+    { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.comments] },
+  );
 }
 
 export async function countApprovedCommentsByPostSlug(slug: string) {

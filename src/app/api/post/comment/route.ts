@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
 import { consumeAnonymousCommentRateLimit } from "@/lib/cache";
 import { fail, ok, tooManyRequests } from "@/lib/api-response";
+import { PUBLIC_CACHE_TAGS, revalidatePublicCache } from "@/lib/public-cache";
 import { getRequestIp } from "@/lib/request-ip";
 import { parseJson, withRoute } from "@/lib/route-handler";
 import {
@@ -95,6 +96,10 @@ export const POST = withRoute(async (request) => {
     console.error("[notifyOnCommentCreated]", err);
   });
 
+  if (status === "APPROVED") {
+    revalidatePublicCache(PUBLIC_CACHE_TAGS.comments);
+  }
+
   return ok(
     { comment: created, status },
     status === "APPROVED" ? "评论发布成功" : "留言已提交，等待审核",
@@ -115,6 +120,10 @@ export const DELETE = withRoute(async (request) => {
   const deleted = await softDeleteOwnCommentBySlug({ slug, id, userId });
   if (!deleted) {
     return fail(ResponseCode.FAIL, "评论不存在或无权限删除");
+  }
+
+  if (deleted.deletedApprovedCount > 0) {
+    revalidatePublicCache(PUBLIC_CACHE_TAGS.comments);
   }
 
   return ok(deleted, "评论删除成功");
