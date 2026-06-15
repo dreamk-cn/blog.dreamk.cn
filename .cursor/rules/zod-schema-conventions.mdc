@@ -1,0 +1,15 @@
+---
+description: Zod schema 命名与校验模式约定
+globs: src/schemas/**/*.ts
+alwaysApply: false
+---
+
+# Zod Schema 约定
+
+- 可选 / query 字段统一包 `zValue()`（`src/schemas/index.ts` 的 preprocess，空值转 `undefined`）。
+- 分页列表 extend `SearchPageSchema`（`src/schemas/page.ts`）；仅分页用 `PageSchema`。
+- 导出命名：`*Schema`（如 `PostCreateSchema`）；字段名与 service / route 入参一致。
+- 枚举优先对齐 Prisma `$Enums`（`import { $Enums } from "@/generated/prisma"`），避免魔法字符串。
+- 互斥或组合约束用 `.superRefine`；错误 `message` 用中文，与 route 层 `zodFail` 衔接。
+- Schema 只做结构校验，不写业务逻辑、不访问数据库。
+- 例：`PostDetailSchema` 要求 `id` 与 `slug` 不能同时为空；列表 schema extend 分页 + `keyword` + `sortOrder`。

@@ -11,11 +11,14 @@ description: >-
 
 ## 开始前
 
-1. 判断改动属于 **博客前台** `(blog)` 还是 **管理后台** `(admin)`，沿用对应布局与密度。
-2. 读 1–2 个同类现有组件（见 [components.md](components.md)），复制结构与 class 命名，不引入第二套 UI 库。
-3. 需要 HeroUI v3 API 时，用 MCP `user-heroui-react`：`get_component_docs` → 再写代码。勿用 v2 文档。
+1. 若改动涉及 API、schema、service 或 Prisma，先用 `.cursor/skills/blog-fullstack/SKILL.md`；本 skill **只管视觉与交互**。
+2. 判断改动属于 **博客前台** `(blog)` 还是 **管理后台** `(admin)`，沿用对应布局与密度。
+3. 读 1–2 个同类现有组件（见 [components.md](components.md)），复制结构与 class 命名，不引入第二套 UI 库。
+4. 需要 HeroUI v3 API 时，用 MCP `user-heroui-react`：`get_component_docs` → 再写代码。勿用 v2 文档。
 
-与路由、数据、API 相关的约定见 `.cursor/rules/react-next-app-router.mdc` 等；本 skill 只约束视觉与交互。
+与路由、数据相关的通用约定见 `.cursor/rules/react-next-app-router.mdc` 等。
+
+**维护**：调整 `src/components` 或路由目录结构时，同步更新 [components.md](components.md)。
 
 ## 技术栈（固定）
 

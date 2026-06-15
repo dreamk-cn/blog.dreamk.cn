@@ -62,6 +62,14 @@ components/
 
 新增组件前用 MCP `list_components` / `get_component_docs` 确认 v3 API（复合子组件名可能与 v2 不同）。
 
+## 评论与公开内容
+
+| 模块 | 路径 |
+|------|------|
+| 最近留言 | `src/components/post/recent-comments.tsx` |
+| 评论深链 | `src/components/post/comment/use-comment-deep-link.ts` |
+| 公开缓存常量 | `src/lib/public-cache.ts`（读侧 TTL、写后 tag 失效） |
+
 ## 与 UI 相关的 hooks
 
 | Hook | 路径 |

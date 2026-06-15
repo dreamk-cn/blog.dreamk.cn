@@ -1,0 +1,32 @@
+---
+description: 公开内容 Data Cache 读写与失效约定
+globs: src/lib/public-cache.ts, src/services/**/*.ts, src/app/api/**/*.ts, src/app/(blog)/**/*.tsx
+alwaysApply: false
+---
+
+# 公开内容缓存约定
+
+工具入口：`src/lib/public-cache.ts`
+
+## 读（公开列表/详情）
+
+- 在 **service** 层用 `cachePublicContent(fn, key, { revalidate, tags })` 包装公开读查询。
+- 默认 revalidate：`PUBLIC_CONTENT_REVALIDATE_SEC`（300s）；About 页可用 `PUBLIC_ABOUT_REVALIDATE_SEC`（30s）。
+- Tag 复用 `PUBLIC_CACHE_TAGS`（`posts`、`categories`、`friendLinks`、`comments`、`sitemap`）。
+- 单资源可加细粒度 tag，如 `public:post:${slug}`、`public:category:${slug}`。
+
+## 写后失效
+
+- 写操作影响 **前台可见数据** 时，在 **route** 调用 `revalidatePublicCache(...tags)`。
+- 评论状态变更：用 `shouldRevalidatePublicComments(previousStatus, nextStatus)` 判断是否失效 `PUBLIC_CACHE_TAGS.comments`。
+- 当前仅评论相关 route 主动失效；新增文章/分类/友链等写接口若需即时刷新前台，应补 `revalidatePublicCache`（否则依赖 TTL 过期）。
+
+## 禁止
+
+- 不在 page/component 直接调用 `unstable_cache`；统一走 service + `cachePublicContent`。
+- 不在 service 中调用 `revalidateTag`；失效由 route 在写成功后触发。
+
+## 参考
+
+- 读侧：`src/services/post-service.ts`、`src/services/comment-service.ts`
+- 写后失效：`src/app/api/comments/route.ts`（管理员审核/删除）、`src/app/api/post/comment/route.ts`（游客提交/删除评论）
