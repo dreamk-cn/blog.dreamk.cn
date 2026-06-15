@@ -1,7 +1,9 @@
 import { Prisma } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
-import { PUBLIC_CACHE_TAGS, PUBLIC_CONTENT_REVALIDATE_SEC, cachePublicContent } from "@/lib/public-cache";
+import { PUBLIC_CACHE_TAGS, PUBLIC_CONTENT_REVALIDATE_SEC, cachePublicContent, publicCategoryCacheTag } from "@/lib/public-cache";
 import { normalizeSlug } from "@/lib/slug";
+import { decodeRouteSlug } from "@/lib/site-url";
+import { resolveArchivePage, sortTaxonomyByPostCount } from "@/lib/taxonomy";
 import { buildPublicPostWhere, postListInclude } from "@/services/post-service";
 
 export async function listCategories(keyword = "") {
@@ -67,10 +69,14 @@ async function queryCategoryBySlug(slug: string) {
 }
 
 export function findCategoryBySlug(slug: string) {
+  const routeSlug = decodeRouteSlug(slug);
   return cachePublicContent(
-    () => queryCategoryBySlug(slug),
-    ["findCategoryBySlug", slug],
-    { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.categories, `public:category:${slug}`] },
+    () => queryCategoryBySlug(routeSlug),
+    ["findCategoryBySlug", routeSlug],
+    {
+      revalidate: PUBLIC_CONTENT_REVALIDATE_SEC,
+      tags: [PUBLIC_CACHE_TAGS.categories, publicCategoryCacheTag(routeSlug)],
+    },
   );
 }
 
@@ -127,15 +133,12 @@ export function listPublicCategoriesWithPostCount() {
           .map((item) => [item.categoryId as string, item._count._all]),
       );
 
-      return categories
-        .map((category) => ({
+      return sortTaxonomyByPostCount(
+        categories.map((category) => ({
           ...category,
           postCount: postCountMap.get(category.id) ?? 0,
-        }))
-        .sort((a, b) => {
-          if (b.postCount !== a.postCount) return b.postCount - a.postCount;
-          return a.name.localeCompare(b.name, "zh-CN");
-        });
+        })),
+      );
     },
     ["listPublicCategoriesWithPostCount"],
     { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.categories, PUBLIC_CACHE_TAGS.posts] },
@@ -147,11 +150,12 @@ export function getPublicCategoryPostListPage(params: {
   page: number;
   pageSize: number;
 }) {
+  const routeSlug = decodeRouteSlug(params.slug);
   const safePage = Number.isFinite(params.page) && params.page > 0 ? Math.floor(params.page) : 1;
 
   return cachePublicContent(
     async () => {
-      const category = await queryCategoryBySlug(params.slug);
+      const category = await queryCategoryBySlug(routeSlug);
       if (!category) {
         return null;
       }
@@ -162,9 +166,11 @@ export function getPublicCategoryPostListPage(params: {
       } satisfies Prisma.PostWhereInput;
 
       const total = await prisma.post.count({ where });
-      const totalPages = Math.max(1, Math.ceil(total / params.pageSize));
-      const currentPage = Math.min(safePage, totalPages);
-      const skip = (currentPage - 1) * params.pageSize;
+      const { totalPages, currentPage, skip } = resolveArchivePage({
+        page: safePage,
+        pageSize: params.pageSize,
+        total,
+      });
 
       const posts = await prisma.post.findMany({
         include: postListInclude,
@@ -182,10 +188,10 @@ export function getPublicCategoryPostListPage(params: {
         currentPage,
       };
     },
-    ["getPublicCategoryPostListPage", params.slug, String(safePage), String(params.pageSize)],
+    ["getPublicCategoryPostListPage", routeSlug, String(safePage), String(params.pageSize)],
     {
       revalidate: PUBLIC_CONTENT_REVALIDATE_SEC,
-      tags: [PUBLIC_CACHE_TAGS.categories, PUBLIC_CACHE_TAGS.posts, `public:category:${params.slug}`],
+      tags: [PUBLIC_CACHE_TAGS.categories, PUBLIC_CACHE_TAGS.posts, publicCategoryCacheTag(routeSlug)],
     },
   );
 }

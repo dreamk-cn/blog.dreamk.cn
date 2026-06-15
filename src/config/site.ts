@@ -14,6 +14,10 @@ export const siteConfig = {
       href: "/categories",
     },
     {
+      label: "标签",
+      href: "/tags",
+    },
+    {
       label: "博客",
       href: "/posts",
     },

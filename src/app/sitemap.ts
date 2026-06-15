@@ -1,15 +1,16 @@
 import type { MetadataRoute } from "next";
 import { contentConfig } from "@/config/content";
 import { PUBLIC_CACHE_TAGS, PUBLIC_CONTENT_REVALIDATE_SEC, cachePublicContent } from "@/lib/public-cache";
-import { absoluteUrl, postAbsoluteUrl } from "@/lib/site-url";
+import { ARCHIVE_PAGE_SIZE } from "@/lib/taxonomy";
+import { absoluteUrl, categoryPagePath, categoryPath, postAbsoluteUrl, tagPath } from "@/lib/site-url";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 /** 与 `posts-list.tsx` 一致 */
 const POST_LIST_PAGE_SIZE = 10;
-/** 与 `category-post-list.tsx` 一致 */
-const CATEGORY_PAGE_SIZE = 10;
+/** 与归档列表页一致 */
+const ARCHIVE_LIST_PAGE_SIZE = ARCHIVE_PAGE_SIZE;
 
 function pickLatestDate(...dates: Array<Date | null | undefined>) {
   return dates.filter((date): date is Date => Boolean(date)).sort((a, b) => b.getTime() - a.getTime())[0];
@@ -21,7 +22,7 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
     slug: { notIn: [...contentConfig.excludedPostSlugsForPublicFeed] },
   };
 
-  const [posts, postListTotal, categories, categoryCounts, latestPublicPost, aboutPage] = await Promise.all([
+  const [posts, postListTotal, categories, categoryCounts, tags, latestPublicPost, aboutPage] = await Promise.all([
     prisma.post.findMany({
       where: publicPostWhere,
       select: { slug: true, updatedAt: true, publishedAt: true },
@@ -39,6 +40,18 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
         categoryId: { not: null },
       },
       _count: { _all: true },
+    }),
+    prisma.tag.findMany({
+      select: {
+        slug: true,
+        updatedAt: true,
+        _count: {
+          select: {
+            posts: { where: publicPostWhere },
+          },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
     }),
     prisma.post.findFirst({
       where: publicPostWhere,
@@ -67,6 +80,7 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
     latestPublicPost?.createdAt,
   );
   const latestCategoryModified = pickLatestDate(...categories.map((category) => category.updatedAt));
+  const latestTagModified = pickLatestDate(...tags.map((tag) => tag.updatedAt));
   const aboutPageModified = pickLatestDate(aboutPage?.updatedAt, aboutPage?.publishedAt, aboutPage?.createdAt);
 
   const staticRoutes: MetadataRoute.Sitemap = [
@@ -75,6 +89,12 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
     {
       url: absoluteUrl("/categories"),
       lastModified: latestCategoryModified ?? latestPostModified,
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: absoluteUrl("/tags"),
+      lastModified: latestTagModified ?? latestPostModified,
       changeFrequency: "weekly",
       priority: 0.8,
     },
@@ -111,10 +131,10 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
   const categoryEntries: MetadataRoute.Sitemap = [];
   for (const cat of categories) {
     const total = countByCategoryId.get(cat.id) ?? 0;
-    const totalPages = Math.max(1, Math.ceil(total / CATEGORY_PAGE_SIZE));
+    const totalPages = Math.max(1, Math.ceil(total / ARCHIVE_LIST_PAGE_SIZE));
 
     categoryEntries.push({
-      url: absoluteUrl(`/categories/${encodeURIComponent(cat.slug)}`),
+      url: absoluteUrl(categoryPath(cat.slug)),
       lastModified: cat.updatedAt,
       changeFrequency: "weekly",
       priority: 0.75,
@@ -122,7 +142,7 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
 
     for (let page = 2; page <= totalPages; page++) {
       categoryEntries.push({
-        url: absoluteUrl(`/categories/${encodeURIComponent(cat.slug)}/page/${page}`),
+        url: absoluteUrl(categoryPagePath(cat.slug, page)),
         lastModified: cat.updatedAt,
         changeFrequency: "weekly",
         priority: 0.65,
@@ -130,12 +150,21 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  return [...staticRoutes, ...postEntries, ...postListPages, ...categoryEntries];
+  const tagEntries: MetadataRoute.Sitemap = tags
+    .filter((tag) => tag._count.posts > 0)
+    .map((tag) => ({
+      url: absoluteUrl(tagPath(tag.slug)),
+      lastModified: tag.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.75,
+    }));
+
+  return [...staticRoutes, ...postEntries, ...postListPages, ...categoryEntries, ...tagEntries];
 }
 
 export default function sitemap(): Promise<MetadataRoute.Sitemap> {
   return cachePublicContent(buildSitemapEntries, ["sitemap"], {
     revalidate: PUBLIC_CONTENT_REVALIDATE_SEC,
-    tags: [PUBLIC_CACHE_TAGS.sitemap, PUBLIC_CACHE_TAGS.posts, PUBLIC_CACHE_TAGS.categories],
+    tags: [PUBLIC_CACHE_TAGS.sitemap, PUBLIC_CACHE_TAGS.posts, PUBLIC_CACHE_TAGS.categories, PUBLIC_CACHE_TAGS.tags],
   });
 }

@@ -1,6 +1,9 @@
 import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
 import { fail, ok } from "@/lib/api-response";
+import { prisma } from "@/lib/prisma";
+import { collectPostSlugs, collectTagSlugs, isPostWithTags } from "@/lib/post-revalidation";
+import { revalidatePostAndTagCaches } from "@/lib/public-cache";
 import { parseJson, withAdmin, withRoute } from "@/lib/route-handler";
 import { PostCreateSchema, PostDeleteSchema, PostDetailSchema, PostUpdateSchema } from "@/schemas/post";
 import { createPost, deletePosts, getPostDetail, updatePost } from "@/services/post-service";
@@ -70,6 +73,13 @@ export const POST = withAdmin(async (request, admin) => {
     return fail(ResponseCode.FAIL, newPost.error);
   }
 
+  if (isPostWithTags(newPost)) {
+    revalidatePostAndTagCaches({
+      postSlugs: [newPost.slug],
+      tagSlugs: collectTagSlugs(newPost.tags),
+    });
+  }
+
   return ok(newPost, "创建文章成功");
 }, { logLabel: "创建文章失败", prismaMessages: POST_PRISMA_MESSAGES });
 
@@ -93,6 +103,11 @@ export const PUT = withAdmin(async (request) => {
     tags,
     publishedAt,
   } = parsed;
+
+  const existingPost = await prisma.post.findUnique({
+    where: { id },
+    select: { slug: true, tags: { select: { slug: true } } },
+  });
 
   const updatedPost = await updatePost({
     id,
@@ -118,6 +133,13 @@ export const PUT = withAdmin(async (request) => {
     return fail(ResponseCode.FAIL, updatedPost.error);
   }
 
+  if (isPostWithTags(updatedPost)) {
+    revalidatePostAndTagCaches({
+      postSlugs: collectPostSlugs(existingPost, updatedPost),
+      tagSlugs: collectTagSlugs(existingPost?.tags, updatedPost.tags),
+    });
+  }
+
   return ok(updatedPost, "更新文章成功");
 }, { logLabel: "更新文章失败", prismaMessages: POST_PRISMA_MESSAGES });
 
@@ -126,7 +148,16 @@ export const DELETE = withAdmin(async (request) => {
   if (json instanceof NextResponse) return json;
 
   const { ids } = PostDeleteSchema.parse(json ?? {});
+  const postsToDelete = await prisma.post.findMany({
+    where: { id: { in: ids } },
+    select: { slug: true, tags: { select: { slug: true } } },
+  });
   const { count } = await deletePosts(ids);
+
+  revalidatePostAndTagCaches({
+    postSlugs: collectPostSlugs(postsToDelete),
+    tagSlugs: collectTagSlugs(...postsToDelete.map((post) => post.tags)),
+  });
 
   return ok(null, `删除${count}条文章`);
 }, "删除文章失败");

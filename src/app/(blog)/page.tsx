@@ -8,6 +8,7 @@ import { AppLink } from "@/components/ui/app-link";
 import { siteConfig } from "@/config/site";
 import { buildCanonical } from "@/lib/seo";
 import { listPublicCategories } from "@/services/category-service";
+import { listPublicTags } from "@/services/tag-service";
 import { listApprovedFriendLinks } from "@/services/friend-link-service";
 import { listRecentApprovedComments } from "@/services/comment-service";
 import { listHotPublicPosts, listRecentPublicPosts } from "@/services/post-service";
@@ -21,15 +22,16 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [posts, hotPosts, recentComments, categories, friendLinks] = await Promise.all([
+  const [posts, hotPosts, recentComments, categories, tags, friendLinks] = await Promise.all([
     listRecentPublicPosts(HOME_RECENT_POSTS_LIMIT),
     listHotPublicPosts(8),
     listRecentApprovedComments(HOME_RECENT_COMMENTS_LIMIT),
     listPublicCategories(16),
+    listPublicTags(16),
     listApprovedFriendLinks(),
   ]);
 
-  const profileSidebarEl = <ProfileSidebar categories={categories} friendLinks={friendLinks} />;
+  const profileSidebarEl = <ProfileSidebar categories={categories} tags={tags} friendLinks={friendLinks} />;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-4">

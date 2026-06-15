@@ -92,6 +92,33 @@ export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]): JsonLd {
   };
 }
 
+type CollectionPageJsonLdInput = {
+  name: string;
+  description: string;
+  path: string;
+  items: Array<{ name: string; path: string }>;
+};
+
+export function buildCollectionPageJsonLd(input: CollectionPageJsonLdInput): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: input.name,
+    description: input.description,
+    url: absoluteUrl(input.path),
+    inLanguage: "zh-CN",
+    mainEntity: {
+      "@type": "ItemList",
+      itemListElement: input.items.map((item, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        name: item.name,
+        url: absoluteUrl(item.path),
+      })),
+    },
+  };
+}
+
 export function buildArticleJsonLd(input: ArticleJsonLdInput): JsonLd {
   const keywords = input.tags?.filter(Boolean) ?? [];
 

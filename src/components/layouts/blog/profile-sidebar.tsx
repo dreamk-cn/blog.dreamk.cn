@@ -4,8 +4,9 @@ import { Avatar, Card, Separator } from "@heroui/react";
 import { AppLink } from "@/components/ui/app-link";
 import { siteConfig } from "@/config/site";
 import { ClientChip } from "@/components/ui/heroui-client";
-import type { Category } from "@/generated/prisma";
+import type { Category, Tag } from "@/generated/prisma";
 import { getTagColor } from "@/lib/tag-color";
+import { tagPath } from "@/lib/site-url";
 
 type FriendLinkItem = {
   id: string;
@@ -15,9 +16,11 @@ type FriendLinkItem = {
 
 export function ProfileSidebar({
   categories,
+  tags,
   friendLinks,
 }: {
   categories: Pick<Category, "id" | "name" | "slug">[];
+  tags: Pick<Tag, "id" | "name" | "slug">[];
   friendLinks: FriendLinkItem[];
 }) {
 
@@ -56,6 +59,25 @@ export function ProfileSidebar({
               <AppLink key={category.id} href={`/categories/${category.slug}`}>
                 <ClientChip variant="soft" color={getTagColor(category.name)}>
                   <ClientChip.Label>{category.name}</ClientChip.Label>
+                </ClientChip>
+              </AppLink>
+            ))
+          )}
+        </div>
+      </Card.Content>
+
+      <Separator />
+
+      <Card.Content className="px-4 py-4">
+        <div className="mb-3 text-md font-semibold text-text-base">标签</div>
+        <div className="flex flex-wrap gap-2">
+          {tags.length === 0 ? (
+            <span className="text-sm text-text-muted">暂无标签</span>
+          ) : (
+            tags.map((tag) => (
+              <AppLink key={tag.id} href={tagPath(tag.slug)}>
+                <ClientChip variant="soft" color={getTagColor(tag.name)}>
+                  <ClientChip.Label>{tag.name}</ClientChip.Label>
                 </ClientChip>
               </AppLink>
             ))

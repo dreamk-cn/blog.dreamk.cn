@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { cache } from "react";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/config/site";
+import { AppLink } from "@/components/ui/app-link";
 import { ArticleMarkdown } from "@/components/post/article-markdown";
 import { PostCoverGallery } from "@/components/post/post-cover-gallery";
 import { formatDateTime } from "@/lib/format-datetime";
-import { postPath } from "@/lib/site-url";
+import { postPath, categoryPath, tagPath } from "@/lib/site-url";
 import { getCoverUrls } from "@/lib/post-cover";
 import { PostComments } from "@/components/post/comment";
 import { MobilePostToc, PostViewTracker } from "@/components/post/mobile-post-toc";
@@ -111,7 +112,7 @@ export default async function PostDetail({ params }: PageProps) {
     { name: "首页", path: "/" },
     { name: "文章", path: "/posts" },
     ...(post.category
-      ? [{ name: post.category.name, path: `/categories/${encodeURIComponent(post.category.slug)}` }]
+      ? [{ name: post.category.name, path: categoryPath(post.category.slug) }]
       : []),
     { name: post.title, path: postPath(post.slug) },
   ];
@@ -168,12 +169,13 @@ export default async function PostDetail({ params }: PageProps) {
                     <div className="mt-6 flex flex-wrap items-center gap-2">
                       <span className="text-xs font-medium uppercase tracking-wide text-text-sub">标签</span>
                       {post.tags.map((tag) => (
-                        <span
+                        <AppLink
                           key={tag.id}
-                          className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+                          href={tagPath(tag.slug)}
+                          className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
                         >
                           {tag.name}
-                        </span>
+                        </AppLink>
                       ))}
                     </div>
                   )}

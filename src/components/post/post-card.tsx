@@ -7,6 +7,7 @@ import { AppLink } from "@/components/ui/app-link";
 import { Card } from "@heroui/react";
 import { getPrimaryCoverUrl, type CoverMediaItem } from "@/lib/post-cover";
 import { formatDate } from "@/lib/format-datetime";
+import { tagPath } from "@/lib/site-url";
 import type { Post, Tag } from "@/generated/prisma";
 
 type PostWithTags = Post & {
@@ -46,9 +47,11 @@ export function PostCard({ post }: { post: PostWithTags }) {
         </div>
         <div className="flex items-center gap-1">
           {post.tags.slice(0, 3).map((tag) => (
-            <ClientChip key={tag.id} color={getTagColor(tag.name)} variant="soft" size="sm">
-              <ClientChip.Label>{tag.name}</ClientChip.Label>
-            </ClientChip>
+            <AppLink key={tag.id} href={tagPath(tag.slug)}>
+              <ClientChip color={getTagColor(tag.name)} variant="soft" size="sm">
+                <ClientChip.Label>{tag.name}</ClientChip.Label>
+              </ClientChip>
+            </AppLink>
           ))}
         </div>
       </Card.Footer>

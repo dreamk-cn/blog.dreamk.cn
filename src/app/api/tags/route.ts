@@ -1,5 +1,6 @@
 import { ResponseCode } from '@/config/response-code';
 import { fail, ok } from '@/lib/api-response';
+import { revalidateTaxonomyWriteCaches } from '@/lib/public-cache';
 import { parseJson, withAdmin, withRoute } from '@/lib/route-handler';
 import { TagCreateSchema, TagUpdateSchema, TagDeleteSchema } from '@/schemas/tag';
 import { createTag, deleteTag, listTags, updateTag } from '@/services/tag-service';
@@ -18,6 +19,7 @@ export const POST = withAdmin(async (request) => {
   const parsed = TagCreateSchema.parse(json ?? {});
   const result = await createTag(parsed);
   if (result.error) return fail(ResponseCode.FAIL, result.error);
+  revalidateTaxonomyWriteCaches('tags', [result.data.slug]);
   return ok(result.data, '创建标签成功');
 }, '创建标签失败');
 
@@ -27,6 +29,7 @@ export const PUT = withAdmin(async (request) => {
   const parsed = TagUpdateSchema.parse(json ?? {});
   const result = await updateTag(parsed);
   if (result.error) return fail(ResponseCode.FAIL, result.error);
+  revalidateTaxonomyWriteCaches('tags', [result.previousSlug, result.data.slug]);
   return ok(result.data, '更新标签成功');
 }, '更新标签失败');
 
@@ -36,5 +39,6 @@ export const DELETE = withAdmin(async (request) => {
   TagDeleteSchema.parse({ id });
   const result = await deleteTag(id!);
   if (result.error) return fail(ResponseCode.FAIL, result.error);
+  revalidateTaxonomyWriteCaches('tags', [result.data.slug]);
   return ok(result.data, '删除标签成功');
 }, '删除标签失败');

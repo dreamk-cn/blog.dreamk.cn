@@ -9,10 +9,51 @@ export const PUBLIC_ABOUT_REVALIDATE_SEC = 30;
 export const PUBLIC_CACHE_TAGS = {
   posts: "public:posts",
   categories: "public:categories",
+  tags: "public:tags",
   friendLinks: "public:friend-links",
   comments: "public:comments",
   sitemap: "public:sitemap",
 } as const;
+
+export function publicCategoryCacheTag(slug: string) {
+  return `public:category:${slug}`;
+}
+
+export function publicTagCacheTag(slug: string) {
+  return `public:tag:${slug}`;
+}
+
+/** 分类/标签写操作后失效相关公开缓存 */
+export function revalidateTaxonomyWriteCaches(
+  taxonomy: "categories" | "tags",
+  slugs: string[],
+) {
+  const listTag = taxonomy === "categories" ? PUBLIC_CACHE_TAGS.categories : PUBLIC_CACHE_TAGS.tags;
+  const slugTag = taxonomy === "categories" ? publicCategoryCacheTag : publicTagCacheTag;
+
+  revalidatePublicCache(listTag, PUBLIC_CACHE_TAGS.sitemap, PUBLIC_CACHE_TAGS.posts);
+  for (const slug of slugs) {
+    if (slug) {
+      revalidatePublicCache(slugTag(slug));
+    }
+  }
+}
+
+/** 文章或标签变更后失效相关公开缓存 */
+export function revalidatePostAndTagCaches(options?: { postSlugs?: string[]; tagSlugs?: string[] }) {
+  const tags: string[] = [
+    PUBLIC_CACHE_TAGS.posts,
+    PUBLIC_CACHE_TAGS.tags,
+    PUBLIC_CACHE_TAGS.sitemap,
+  ];
+  for (const slug of options?.postSlugs ?? []) {
+    tags.push(`public:post:${slug}`);
+  }
+  for (const slug of options?.tagSlugs ?? []) {
+    tags.push(publicTagCacheTag(slug));
+  }
+  revalidatePublicCache(...tags);
+}
 
 type CachePublicContentOptions = {
   revalidate: number;

@@ -5,9 +5,9 @@ import {
   buildTaxonomyNotFoundMetadata,
   buildTaxonomyPagedMetadata,
 } from "@/lib/taxonomy-metadata";
-import { categoryPagePath, categoryPath } from "@/lib/site-url";
-import { renderCategoryPostListPage } from "../../category-post-list";
-import { findCategoryBySlug } from "@/services/category-service";
+import { tagPagePath, tagPath } from "@/lib/site-url";
+import { renderTagPostListPage } from "../../tag-post-list";
+import { findTagBySlug } from "@/services/tag-service";
 
 type PageProps = {
   params: Promise<{
@@ -19,23 +19,23 @@ type PageProps = {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug, page } = await params;
   const pageNo = Number(page);
-  const category = await findCategoryBySlug(slug);
+  const tag = await findTagBySlug(slug);
 
-  if (!category) {
+  if (!tag) {
     return buildTaxonomyNotFoundMetadata(
-      "category",
-      categoryPagePath(slug, Number.isInteger(pageNo) && pageNo > 0 ? pageNo : 1),
+      "tag",
+      tagPagePath(slug, Number.isInteger(pageNo) && pageNo > 0 ? pageNo : 1),
     );
   }
 
   if (!Number.isInteger(pageNo) || pageNo < 1) {
-    return buildTaxonomyDetailMetadata("category", category, categoryPath);
+    return buildTaxonomyDetailMetadata("tag", tag, tagPath);
   }
 
-  return buildTaxonomyPagedMetadata("category", category, pageNo, categoryPagePath);
+  return buildTaxonomyPagedMetadata("tag", tag, pageNo, tagPagePath);
 }
 
-export default async function CategoryDetailPaged({ params }: PageProps) {
+export default async function TagDetailPaged({ params }: PageProps) {
   const { slug, page } = await params;
   const pageNo = Number(page);
 
@@ -44,8 +44,8 @@ export default async function CategoryDetailPaged({ params }: PageProps) {
   }
 
   if (pageNo === 1) {
-    redirect(categoryPath(slug));
+    redirect(tagPath(slug));
   }
 
-  return renderCategoryPostListPage(slug, pageNo);
+  return renderTagPostListPage(slug, pageNo);
 }

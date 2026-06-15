@@ -1,109 +1,42 @@
-import { AppLink } from "@/components/ui/app-link";
 import { notFound } from "next/navigation";
-import { PostCard } from "@/components/post/post-card";
-import { ClientCard, ClientCardBody } from "@/components/ui/heroui-client";
-import { buildPageNumbers } from "@/lib/pagination";
-import { getPublicCategoryPostListPage } from "@/services/category-service";
-
-const PAGE_SIZE = 10;
-
-function buildPageHref(categorySlug: string, page: number) {
-  if (page <= 1) return `/categories/${categorySlug}`;
-  return `/categories/${categorySlug}/page/${page}`;
-}
+import { ArchivePostList } from "@/components/post/archive-post-list";
+import { ARCHIVE_PAGE_SIZE } from "@/lib/taxonomy";
+import { getTaxonomyCopy } from "@/lib/taxonomy-metadata";
+import { categoryPagePath } from "@/lib/site-url";import { getPublicCategoryPostListPage } from "@/services/category-service";
 
 export async function renderCategoryPostListPage(slug: string, requestedPage: number) {
   const pageData = await getPublicCategoryPostListPage({
     slug,
     page: requestedPage,
-    pageSize: PAGE_SIZE,
+    pageSize: ARCHIVE_PAGE_SIZE,
   });
   if (!pageData) {
     notFound();
   }
 
   const { category, posts, total, totalPages, currentPage } = pageData;
-
-  const pageNumbers = buildPageNumbers(currentPage, totalPages);
-  const hasPrev = currentPage > 1;
-  const hasNext = currentPage < totalPages;
+  const copy = getTaxonomyCopy("category");
+  const listPath = categoryPagePath(category.slug, currentPage);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-4">
-      <main className="space-y-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight text-text-base">{category.name}</h1>
-          <p className="text-sm text-text-muted">共 {total} 篇文章</p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {posts.map((post) => (
-            <PostCard key={post.id} post={post} />
-          ))}
-        </div>
-
-        {posts.length === 0 && (
-          <ClientCard className="shadow-sm">
-            <ClientCardBody className="py-10 text-center text-text-muted">该分类下还没有发布文章</ClientCardBody>
-          </ClientCard>
-        )}
-
-        <nav aria-label="分类文章分页导航" className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
-          {hasPrev ? (
-            <AppLink
-              href={buildPageHref(category.slug, currentPage - 1)}
-              rel="prev"
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-text-base transition-colors hover:border-primary hover:text-primary"
-            >
-              上一页
-            </AppLink>
-          ) : (
-            <span className="cursor-not-allowed rounded-md border border-border px-3 py-1.5 text-sm text-text-sub opacity-60">
-              上一页
-            </span>
-          )}
-
-          {pageNumbers.map((page, index) => {
-            const prevPage = pageNumbers[index - 1];
-            const showEllipsis = prevPage && page - prevPage > 1;
-
-            return (
-              <div key={page} className="flex items-center gap-2">
-                {showEllipsis && <span className="px-1 text-text-sub">...</span>}
-                <AppLink
-                  href={buildPageHref(category.slug, page)}
-                  aria-current={page === currentPage ? "page" : undefined}
-                  className={`rounded-md border px-3 py-1.5 text-sm transition-colors ${
-                    page === currentPage
-                      ? "border-primary bg-primary text-white"
-                      : "border-border text-text-base hover:border-primary hover:text-primary"
-                  }`}
-                >
-                  {page}
-                </AppLink>
-              </div>
-            );
-          })}
-
-          {hasNext ? (
-            <AppLink
-              href={buildPageHref(category.slug, currentPage + 1)}
-              rel="next"
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-text-base transition-colors hover:border-primary hover:text-primary"
-            >
-              下一页
-            </AppLink>
-          ) : (
-            <span className="cursor-not-allowed rounded-md border border-border px-3 py-1.5 text-sm text-text-sub opacity-60">
-              下一页
-            </span>
-          )}
-
-          <span className="ml-auto text-sm text-text-muted">
-            第 {currentPage} / {totalPages} 页，共 {total} 篇
-          </span>
-        </nav>
-      </main>
-    </div>
+    <ArchivePostList
+      title={category.name}
+      total={total}
+      posts={posts}
+      emptyMessage={copy.emptyArchive}
+      paginationAriaLabel={copy.paginationAriaLabel}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      buildPageHref={(page) => categoryPagePath(category.slug, page)}
+      seo={{
+        breadcrumbItems: [
+          { name: "首页", path: "/" },
+          { name: copy.label, path: "/categories" },
+          { name: category.name, path: listPath },
+        ],
+        collectionDescription: copy.browse(category.name),
+        listPath,
+      }}
+    />
   );
 }
