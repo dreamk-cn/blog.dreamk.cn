@@ -46,7 +46,7 @@ function isPrettyCodeBlockProps(props: Record<string, unknown>): boolean {
 
 const mdBase: Components = {
   h1: ({ children, className, ...props }) => (
-    <h1 className={`mt-10 text-3xl font-bold tracking-tight text-text-base first:mt-0 ${className ?? ""}`} {...props}>
+    <h1 className={`scroll-mt-28 text-3xl font-bold tracking-tight text-text-base ${className ?? ""}`} {...props}>
       {children}
     </h1>
   ),
@@ -72,7 +72,7 @@ const mdBase: Components = {
   ),
   blockquote: ({ children, className, ...props }) => (
     <blockquote
-      className={`my-6 border-l-4 border-primary/40 bg-default-100/60 py-3 pl-4 pr-4 text-default-700 italic dark:bg-default-100/10 ${className ?? ""}`}
+      className={`mb-6 border-l-4 border-primary/40 bg-default-100/60 py-3 pl-4 pr-4 text-default-700 italic dark:bg-default-100/10 ${className ?? ""}`}
       {...props}
     >
       {children}
@@ -120,7 +120,7 @@ const mdBase: Components = {
     }
     return (
       <pre
-        className={`overflow-x-auto rounded-xl border border-default-200/80 bg-default-100/80 p-4 text-[13px] leading-6 dark:bg-default-50/10 ${cls}`}
+        className={`mb-6 overflow-x-auto rounded-xl border border-default-200/80 bg-default-100/80 p-4 text-[13px] leading-6 dark:bg-default-50/10 ${cls}`}
         {...domProps}
       >
         {children}
@@ -129,7 +129,7 @@ const mdBase: Components = {
   },
   figure: ({ children, className, ...props }) => (
     <figure
-      className={`my-6 overflow-hidden rounded-xl border border-default-200/80 dark:border-default-100/15 ${className ?? ""}`}
+      className={`mb-6 overflow-hidden rounded-xl border border-default-200/80 dark:border-default-100/15 ${className ?? ""}`}
       {...withoutNodeProps(props as Record<string, unknown>)}
     >
       {children}
@@ -143,9 +143,9 @@ const mdBase: Components = {
       {children}
     </figcaption>
   ),
-  hr: ({ className, ...props }) => <hr className={`my-10 border-default-200/80 ${className ?? ""}`} {...props} />,
+  hr: ({ className, ...props }) => <hr className={`mb-10 border-default-200/80 ${className ?? ""}`} {...props} />,
   table: ({ children, className, ...props }) => (
-    <div className="my-6 overflow-x-auto rounded-xl border border-default-200/80">
+    <div className="mb-6 overflow-x-auto rounded-xl border border-default-200/80">
       <table className={`w-full min-w-[520px] border-collapse text-sm ${className ?? ""}`} {...props}>
         {children}
       </table>
@@ -180,7 +180,7 @@ const mdBase: Components = {
     // eslint-disable-next-line @next/next/no-img-element
     <img
       alt={alt ?? ""}
-      className={`my-6 h-auto max-w-full rounded-xl border border-default-200/60 object-contain dark:border-default-100/15 ${className ?? ""}`}
+      className={`mb-6 h-auto max-w-full rounded-xl border border-default-200/60 object-contain dark:border-default-100/15 ${className ?? ""}`}
       {...props}
     />
   ),
@@ -191,7 +191,7 @@ export function createArticleMarkdownComponents(): Components {
     function Heading({ children, className, ...props }: ComponentProps<typeof Tag>) {
       const Comp = Tag;
       return (
-        <Comp className={`${classes} ${className ?? ""}`} {...props}>
+        <Comp className={`scroll-mt-28 ${classes} ${className ?? ""}`} {...props}>
           {children}
         </Comp>
       );
@@ -199,10 +199,10 @@ export function createArticleMarkdownComponents(): Components {
 
   return {
     ...mdBase,
-    h2: attach("h2", "mt-12 scroll-mt-28 pb-2 text-2xl font-bold tracking-tight text-text-base"),
-    h3: attach("h3", "mt-10 scroll-mt-28 text-xl font-semibold tracking-tight text-text-base"),
-    h4: attach("h4", "mt-8 scroll-mt-28 text-lg font-semibold text-text-base"),
-    h5: attach("h5", "mt-6 scroll-mt-28 text-base font-semibold text-text-base"),
-    h6: attach("h6", "mt-6 scroll-mt-28 text-sm font-semibold text-text-muted"),
+    h2: attach("h2", "pb-2 text-2xl font-bold tracking-tight text-text-base"),
+    h3: attach("h3", "text-xl font-semibold tracking-tight text-text-base"),
+    h4: attach("h4", "text-lg font-semibold text-text-base"),
+    h5: attach("h5", "text-base font-semibold text-text-base"),
+    h6: attach("h6", "text-sm font-semibold text-text-muted"),
   };
 }

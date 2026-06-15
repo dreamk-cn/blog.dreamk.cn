@@ -146,6 +146,53 @@ body {
   padding: 0 1rem;
 }
 
+/*
+ * Article markdown vertical rhythm
+ * - Opening block flush with body padding (no phantom gap on leading h1 / media / code)
+ * - Top margin only when a block is not the first direct child
+ * - Heading top margin already separates sections; following blocks should not add extra mt
+ */
+.article-md > :first-child {
+  margin-top: 0 !important;
+}
+
+.article-md > h1:not(:first-child) {
+  margin-top: 2.5rem;
+}
+
+.article-md > h2:not(:first-child) {
+  margin-top: 3rem;
+}
+
+.article-md > h3:not(:first-child) {
+  margin-top: 2.5rem;
+}
+
+.article-md > h4:not(:first-child) {
+  margin-top: 2rem;
+}
+
+.article-md > h5:not(:first-child),
+.article-md > h6:not(:first-child) {
+  margin-top: 1.5rem;
+}
+
+.article-md > blockquote:not(:first-child),
+.article-md > figure:not(:first-child),
+.article-md > img:not(:first-child),
+.article-md > div:not(:first-child),
+.article-md > pre:not(:first-child) {
+  margin-top: 1.5rem;
+}
+
+.article-md > hr:not(:first-child) {
+  margin-top: 2.5rem;
+}
+
+.article-md > :is(h1, h2, h3, h4, h5, h6) + * {
+  margin-top: 0;
+}
+
 /* Blockquote: Markdown 会将每行包裹在<p>标签中，且每个都带有 mb-5 样式 —— 去掉最后一个块的底部外边距 */
 .article-md blockquote > *:last-child {
   margin-bottom: 0;
