@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import { siteConfig } from "@/config/site";
 import { buildCanonical, buildNoIndexRobots } from "@/lib/seo";
 import { AdminLayoutShell } from "./layout-shell";
 
 export const metadata: Metadata = {
   title: "后台管理",
-  description: "Dreamk 博客后台管理页面。",
+  description: `${siteConfig.name} 博客后台管理页面。`,
   alternates: buildCanonical("/admin"),
   robots: buildNoIndexRobots(),
 };

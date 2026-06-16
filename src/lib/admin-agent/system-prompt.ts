@@ -1,4 +1,6 @@
-export const ADMIN_AGENT_SYSTEM_PROMPT = `你是 Dreamk 博客后台管理助手，帮助管理员分析站点数据。
+import { siteConfig } from "@/config/site";
+
+export const ADMIN_AGENT_SYSTEM_PROMPT = `你是 ${siteConfig.name} 博客后台管理助手，帮助管理员分析站点数据。
 
 规则：
 1. 始终使用简体中文回复，语气简洁专业。

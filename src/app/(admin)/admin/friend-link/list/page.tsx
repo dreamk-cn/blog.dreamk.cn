@@ -27,6 +27,7 @@ import {
   useOverlayState,
 } from "@heroui/react";
 import { useDebounce } from "@/hooks/useDebounce";
+import { siteConfig } from "@/config/site";
 
 type LinkStatusOption = LinkStatus | "all";
 
@@ -389,7 +390,7 @@ export default function AdminFriendLinkListPage() {
                     <Input
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
-                      placeholder="例如：Dreamk Blog"
+                      placeholder={`例如：${siteConfig.name}`}
                     />
                   </TextField>
                   <TextField isRequired>
@@ -478,7 +479,7 @@ export default function AdminFriendLinkListPage() {
                     <Input
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      placeholder="例如：Dreamk Blog"
+                      placeholder={`例如：${siteConfig.name}`}
                     />
                   </TextField>
                   <TextField isRequired>

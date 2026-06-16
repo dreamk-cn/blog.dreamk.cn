@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { siteConfig } from "@/config/site";
 import {
   buildCanonical,
   buildNoIndexRobots,
@@ -46,7 +47,7 @@ export async function generateMetadata({
 
   return {
     title: `文章列表 - 第 ${safePageNo} 页`,
-    description: `浏览 Dreamk 博客文章列表第 ${safePageNo} 页。`,
+    description: `浏览 ${siteConfig.name} 博客文章列表第 ${safePageNo} 页。`,
     alternates: buildCanonical(`/posts/page/${safePageNo}`),
   };
 }

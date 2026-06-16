@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { siteConfig } from "@/config/site";
 import {
   buildCanonical,
   buildNoIndexRobots,
@@ -35,7 +36,7 @@ export async function generateMetadata({
 
   return {
     title: "文章列表",
-    description: "浏览 Dreamk 博客的全部文章，按发布时间持续更新。",
+    description: `浏览 ${siteConfig.name} 博客的全部文章，按发布时间持续更新。`,
     alternates: buildCanonical("/posts"),
   };
 }

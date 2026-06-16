@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { TaxonomyIndexGrid } from "@/components/post/taxonomy-index-grid";
+import { siteConfig } from "@/config/site";
 import { buildCanonical, buildIndexRobots } from "@/lib/seo";
 import { getTaxonomyCopy } from "@/lib/taxonomy-metadata";
 import { categoryPath } from "@/lib/site-url";
@@ -9,7 +10,7 @@ const copy = getTaxonomyCopy("category");
 
 export const metadata: Metadata = {
   title: copy.label,
-  description: "浏览 Dreamk 博客的全部分类，按主题快速找到相关文章。",
+  description: `浏览 ${siteConfig.name} 博客的全部分类，按主题快速找到相关文章。`,
   alternates: buildCanonical("/categories"),
   robots: buildIndexRobots(),
 };

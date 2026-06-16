@@ -35,8 +35,8 @@ export function ProfileSidebar({
             <Avatar.Fallback>{siteConfig.name.slice(0, 1)}</Avatar.Fallback>
           </Avatar>
         </div>
-        <h2 className="text-2xl font-semibold leading-tight text-text-base">{siteConfig.name}&apos;s Blog</h2>
-        <p className="mt-2 text-sm text-text-muted">Web Developer & Designer</p>
+        <h2 className="text-2xl font-semibold leading-tight text-text-base">{siteConfig.name}</h2>
+        <p className="mt-2 text-sm text-text-muted">{siteConfig.tagline}</p>
         <div className="mt-3 flex justify-center gap-3 text-sm text-text-base">
           <AppLink
             href={siteConfig.links.github}
