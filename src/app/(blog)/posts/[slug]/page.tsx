@@ -217,7 +217,7 @@ export default async function PostDetail({ params }: PageProps) {
           <aside className="fixed left-1/2 top-28 z-20 hidden h-[calc(100vh-7.5rem)] w-[280px] min-h-0 -translate-x-0 ml-[27rem] 2xl:block">
             <div className="flex max-h-full flex-col rounded-2xl border border-border bg-background p-5 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
               <h2 className="mb-3 shrink-0 text-sm font-semibold tracking-wide text-text-base">目录</h2>
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
                 <PostTableOfContents items={toc} />
               </div>
             </div>

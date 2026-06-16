@@ -70,7 +70,7 @@ export function MobilePostToc({ items }: { items: MarkdownTocItem[] }) {
               关闭
             </button>
           </div>
-          <div className="max-h-[calc(100vh-4rem)] overflow-y-auto pr-1 [scrollbar-width:thin]">
+          <div className="max-h-[calc(100vh-4rem)] overflow-y-auto pr-1">
             <PostTableOfContents items={items} />
           </div>
         </aside>

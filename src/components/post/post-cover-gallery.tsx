@@ -215,7 +215,7 @@ function CoverCarousel({ urls, alt, variant, className, priority }: CoverCarouse
       {showThumbnails && (
         <div
           ref={thumbStripRef}
-          className="flex gap-2 overflow-x-auto border-t border-border bg-background/90 p-3 [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5"
+          className="flex gap-2 overflow-x-auto border-t border-border bg-background/90 p-3"
         >
           {urls.map((url, index) => {
             const { src } = resolvePostCoverSrc(url);
