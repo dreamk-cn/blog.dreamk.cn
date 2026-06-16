@@ -272,6 +272,25 @@ export const TagIcon = ({ size = 20, width, height, ...props }: IconSvgProps) =>
   </svg>
 )
 
+export const FolderIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    {...props}
+  >
+    <path
+      d="M3.75 7.5V18.75C3.75 19.5784 4.42157 20.25 5.25 20.25H18.75C19.5784 20.25 20.25 19.5784 20.25 18.75V9.75C20.25 8.92157 19.5784 8.25 18.75 8.25H12.75L10.5 6H5.25C4.42157 6 3.75 6.67157 3.75 7.5Z"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
 export const CategoryIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
   <svg
     viewBox="0 0 24 24"

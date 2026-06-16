@@ -73,6 +73,7 @@ export function buildPublicPostWhere(keyword?: string): Prisma.PostWhereInput {
 
 export const postListInclude = {
   tags: true,
+  category: true,
   coverMedia: postCoverMediaInclude,
 } satisfies Prisma.PostInclude;
 

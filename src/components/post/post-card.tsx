@@ -1,17 +1,18 @@
 "use client";
 
-import { ClientChip } from "../ui/heroui-client";
+import { FolderIcon } from "@/components/icons";
 import { PostCover } from "@/components/post/post-cover";
 import { getTagColor } from "@/lib/tag-color";
 import { AppLink } from "@/components/ui/app-link";
-import { Card } from "@heroui/react";
+import { Card, Chip, Separator } from "@heroui/react";
 import { getPrimaryCoverUrl, type CoverMediaItem } from "@/lib/post-cover";
 import { formatDate } from "@/lib/format-datetime";
-import { postPath, tagPath } from "@/lib/site-url";
-import type { Post, Tag } from "@/generated/prisma";
+import { postPath, tagPath, categoryPath } from "@/lib/site-url";
+import type { Category, Post, Tag } from "@/generated/prisma";
 
 type PostWithTags = Post & {
   tags: Tag[];
+  category?: Category | null;
   coverMedia?: CoverMediaItem[];
 };
 
@@ -45,12 +46,27 @@ export function PostCard({ post }: { post: PostWithTags }) {
             发布于 {formatDate(post.publishedAt)}
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex min-w-0 items-center gap-1">
+          {post.category && (
+            <>
+              <AppLink href={categoryPath(post.category.slug)}>
+                <Chip color={getTagColor(post.category.name)} variant="soft" size="sm">
+                  <Chip.Label className="inline-flex items-center gap-0.5">
+                    <FolderIcon size={10} className="shrink-0" />
+                    {post.category.name}
+                  </Chip.Label>
+                </Chip>
+              </AppLink>
+              {post.tags.length > 0 && (
+                <Separator orientation="vertical" className="mx-1 h-4 shrink-0 self-center" />
+              )}
+            </>
+          )}
           {post.tags.slice(0, 3).map((tag) => (
             <AppLink key={tag.id} href={tagPath(tag.slug)}>
-              <ClientChip color={getTagColor(tag.name)} variant="soft" size="sm">
-                <ClientChip.Label>{tag.name}</ClientChip.Label>
-              </ClientChip>
+              <Chip color={getTagColor(tag.name)} variant="soft" size="sm">
+                <Chip.Label>{tag.name}</Chip.Label>
+              </Chip>
             </AppLink>
           ))}
         </div>
