@@ -2,9 +2,13 @@ import { notFound } from "next/navigation";
 import { ArchivePostList } from "@/components/post/archive-post-list";
 import { ARCHIVE_PAGE_SIZE } from "@/lib/taxonomy";
 import { getTaxonomyCopy } from "@/lib/taxonomy-metadata";
-import { categoryPagePath } from "@/lib/site-url";import { getPublicCategoryPostListPage } from "@/services/category-service";
+import { categoryPagePath } from "@/lib/site-url";
+import { getPublicCategoryPostListPage } from "@/services/category-service";
 
-export async function renderCategoryPostListPage(slug: string, requestedPage: number) {
+export async function renderCategoryPostListPage(
+  slug: string,
+  requestedPage: number,
+) {
   const pageData = await getPublicCategoryPostListPage({
     slug,
     page: requestedPage,

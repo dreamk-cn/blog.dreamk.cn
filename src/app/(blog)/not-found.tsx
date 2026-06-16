@@ -4,7 +4,9 @@ export default function BlogNotFound() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-24 text-center">
       <p className="text-sm font-medium text-primary">404</p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-text-base">页面未找到</h1>
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-text-base">
+        页面未找到
+      </h1>
       <p className="mx-auto mt-3 max-w-md text-sm text-text-muted">
         该文章不存在、尚未发布，或链接已失效。
       </p>

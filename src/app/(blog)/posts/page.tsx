@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { buildCanonical, buildNoIndexRobots, normalizeMetaDescription } from "@/lib/seo";
+import {
+  buildCanonical,
+  buildNoIndexRobots,
+  normalizeMetaDescription,
+} from "@/lib/seo";
 import { renderPostsListPage } from "./posts-list";
 
 type PageProps = {
@@ -10,15 +14,21 @@ type PageProps = {
   }>;
 };
 
-export async function generateMetadata({ searchParams }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: PageProps): Promise<Metadata> {
   const resolvedSearchParams = await searchParams;
   const keyword = resolvedSearchParams.keyword?.trim() ?? "";
 
   if (keyword) {
     return {
       title: `搜索：${keyword}`,
-      description: normalizeMetaDescription(`站内搜索“${keyword}”的文章结果页。`),
-      alternates: buildCanonical(`/posts?keyword=${encodeURIComponent(keyword)}`),
+      description: normalizeMetaDescription(
+        `站内搜索“${keyword}”的文章结果页。`,
+      ),
+      alternates: buildCanonical(
+        `/posts?keyword=${encodeURIComponent(keyword)}`,
+      ),
       robots: buildNoIndexRobots({ follow: true }),
     };
   }
@@ -35,7 +45,11 @@ export default async function Posts({ searchParams }: PageProps) {
   const pageFromQuery = Number(resolvedSearchParams.page);
   const keyword = resolvedSearchParams.keyword?.trim() ?? "";
 
-  if (resolvedSearchParams.page && Number.isFinite(pageFromQuery) && pageFromQuery > 1) {
+  if (
+    resolvedSearchParams.page &&
+    Number.isFinite(pageFromQuery) &&
+    pageFromQuery > 1
+  ) {
     const pagePath = `/posts/page/${Math.floor(pageFromQuery)}`;
     const params = new URLSearchParams();
     if (keyword) {

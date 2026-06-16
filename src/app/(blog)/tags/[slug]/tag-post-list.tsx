@@ -5,7 +5,10 @@ import { getTaxonomyCopy } from "@/lib/taxonomy-metadata";
 import { tagPagePath } from "@/lib/site-url";
 import { getPublicTagPostListPage } from "@/services/tag-service";
 
-export async function renderTagPostListPage(slug: string, requestedPage: number) {
+export async function renderTagPostListPage(
+  slug: string,
+  requestedPage: number,
+) {
   const pageData = await getPublicTagPostListPage({
     slug,
     page: requestedPage,

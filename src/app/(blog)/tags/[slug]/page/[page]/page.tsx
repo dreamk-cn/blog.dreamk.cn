@@ -16,7 +16,9 @@ type PageProps = {
   }>;
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug, page } = await params;
   const pageNo = Number(page);
   const tag = await findTagBySlug(slug);

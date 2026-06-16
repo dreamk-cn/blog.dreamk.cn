@@ -13,7 +13,9 @@ type PageProps = {
   searchParams: Promise<{ page?: string }>;
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const category = await findCategoryBySlug(slug);
 
@@ -24,11 +26,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return buildTaxonomyDetailMetadata("category", category, categoryPath);
 }
 
-export default async function CategoryDetail({ params, searchParams }: PageProps) {
-  const [{ slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+export default async function CategoryDetail({
+  params,
+  searchParams,
+}: PageProps) {
+  const [{ slug }, resolvedSearchParams] = await Promise.all([
+    params,
+    searchParams,
+  ]);
   const pageFromQuery = Number(resolvedSearchParams.page);
 
-  if (resolvedSearchParams.page && Number.isFinite(pageFromQuery) && pageFromQuery > 1) {
+  if (
+    resolvedSearchParams.page &&
+    Number.isFinite(pageFromQuery) &&
+    pageFromQuery > 1
+  ) {
     redirect(categoryPagePath(slug, Math.floor(pageFromQuery)));
   }
 

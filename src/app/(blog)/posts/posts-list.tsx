@@ -12,12 +12,16 @@ function buildPageHref(page: number, keyword?: string) {
     query.set("keyword", keyword);
   }
 
-  if (page <= 1) return `/posts${query.toString() ? `?${query.toString()}` : ""}`;
+  if (page <= 1)
+    return `/posts${query.toString() ? `?${query.toString()}` : ""}`;
   const pagePath = `/posts/page/${page}`;
   return `${pagePath}${query.toString() ? `?${query.toString()}` : ""}`;
 }
 
-export async function renderPostsListPage(requestedPage: number, keyword?: string) {
+export async function renderPostsListPage(
+  requestedPage: number,
+  keyword?: string,
+) {
   const normalizedKeyword = keyword?.trim() ?? "";
   const { posts, total, totalPages, currentPage } = await listPublicPostsPage({
     page: requestedPage,
@@ -32,10 +36,15 @@ export async function renderPostsListPage(requestedPage: number, keyword?: strin
   return (
     <div className="mx-auto max-w-7xl px-4 py-4">
       <main className="space-y-4">
-        <h1 className="text-2xl font-semibold tracking-tight text-text-base">文章列表</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-text-base">
+          文章列表
+        </h1>
         {normalizedKeyword && (
           <p className="text-sm text-text-muted">
-            搜索关键词：<span className="font-medium text-text-base">{normalizedKeyword}</span>
+            搜索关键词：
+            <span className="font-medium text-text-base">
+              {normalizedKeyword}
+            </span>
           </p>
         )}
 
@@ -47,11 +56,16 @@ export async function renderPostsListPage(requestedPage: number, keyword?: strin
 
         {posts.length === 0 && (
           <ClientCard className="shadow-sm">
-            <ClientCardBody className="py-10 text-center text-text-muted">还没有发布文章</ClientCardBody>
+            <ClientCardBody className="py-10 text-center text-text-muted">
+              还没有发布文章
+            </ClientCardBody>
           </ClientCard>
         )}
 
-        <nav aria-label="文章分页导航" className="flex flex-wrap items-center gap-2 border-t border-border pt-4">
+        <nav
+          aria-label="文章分页导航"
+          className="flex flex-wrap items-center gap-2 border-t border-border pt-4"
+        >
           {hasPrev ? (
             <AppLink
               href={buildPageHref(currentPage - 1, normalizedKeyword)}
@@ -72,7 +86,9 @@ export async function renderPostsListPage(requestedPage: number, keyword?: strin
 
             return (
               <div key={page} className="flex items-center gap-2">
-                {showEllipsis && <span className="px-1 text-text-sub">...</span>}
+                {showEllipsis && (
+                  <span className="px-1 text-text-sub">...</span>
+                )}
                 <AppLink
                   href={buildPageHref(page, normalizedKeyword)}
                   aria-current={page === currentPage ? "page" : undefined}

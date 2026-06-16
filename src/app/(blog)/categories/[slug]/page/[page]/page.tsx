@@ -16,7 +16,9 @@ type PageProps = {
   }>;
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug, page } = await params;
   const pageNo = Number(page);
   const category = await findCategoryBySlug(slug);
@@ -24,7 +26,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!category) {
     return buildTaxonomyNotFoundMetadata(
       "category",
-      categoryPagePath(slug, Number.isInteger(pageNo) && pageNo > 0 ? pageNo : 1),
+      categoryPagePath(
+        slug,
+        Number.isInteger(pageNo) && pageNo > 0 ? pageNo : 1,
+      ),
     );
   }
 
@@ -32,7 +37,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return buildTaxonomyDetailMetadata("category", category, categoryPath);
   }
 
-  return buildTaxonomyPagedMetadata("category", category, pageNo, categoryPagePath);
+  return buildTaxonomyPagedMetadata(
+    "category",
+    category,
+    pageNo,
+    categoryPagePath,
+  );
 }
 
 export default async function CategoryDetailPaged({ params }: PageProps) {

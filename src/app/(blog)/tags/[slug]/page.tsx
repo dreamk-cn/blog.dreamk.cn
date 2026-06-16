@@ -13,7 +13,9 @@ type PageProps = {
   searchParams: Promise<{ page?: string }>;
 };
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const tag = await findTagBySlug(slug);
 
@@ -25,10 +27,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function TagDetail({ params, searchParams }: PageProps) {
-  const [{ slug }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+  const [{ slug }, resolvedSearchParams] = await Promise.all([
+    params,
+    searchParams,
+  ]);
   const pageFromQuery = Number(resolvedSearchParams.page);
 
-  if (resolvedSearchParams.page && Number.isFinite(pageFromQuery) && pageFromQuery > 1) {
+  if (
+    resolvedSearchParams.page &&
+    Number.isFinite(pageFromQuery) &&
+    pageFromQuery > 1
+  ) {
     redirect(tagPagePath(slug, Math.floor(pageFromQuery)));
   }
 

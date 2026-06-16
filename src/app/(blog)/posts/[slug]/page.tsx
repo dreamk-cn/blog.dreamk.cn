@@ -9,10 +9,16 @@ import { formatDateTime } from "@/lib/format-datetime";
 import { postPath, categoryPath, tagPath } from "@/lib/site-url";
 import { getCoverUrls } from "@/lib/post-cover";
 import { PostComments } from "@/components/post/comment";
-import { MobilePostToc, PostViewTracker } from "@/components/post/mobile-post-toc";
+import {
+  MobilePostToc,
+  PostViewTracker,
+} from "@/components/post/mobile-post-toc";
 import { PostTocActiveProvider } from "@/components/post/post-toc-active-context";
 import { PostTableOfContents } from "@/components/post/post-table-of-contents";
-import { estimateArticleCharCount, extractMarkdownToc } from "@/lib/markdown-toc";
+import {
+  estimateArticleCharCount,
+  extractMarkdownToc,
+} from "@/lib/markdown-toc";
 import {
   buildArticleJsonLd,
   buildBreadcrumbJsonLd,
@@ -21,7 +27,10 @@ import {
   normalizeMetaDescription,
   stringifyJsonLd,
 } from "@/lib/seo";
-import { countApprovedCommentsByPostSlug, listApprovedCommentsBySlug } from "@/services/comment-service";
+import {
+  countApprovedCommentsByPostSlug,
+  listApprovedCommentsBySlug,
+} from "@/services/comment-service";
 import { getPublishedPostBySlug } from "@/services/post-service";
 
 const POST_COMMENT_ROOT_PAGE_SIZE = 20;
@@ -32,7 +41,9 @@ type PageProps = {
 
 const getCachedPublishedPostBySlug = cache(getPublishedPostBySlug);
 
-function buildPostDescription(post: NonNullable<Awaited<ReturnType<typeof getPublishedPostBySlug>>>) {
+function buildPostDescription(
+  post: NonNullable<Awaited<ReturnType<typeof getPublishedPostBySlug>>>,
+) {
   if (post.excerpt?.trim()) {
     return normalizeMetaDescription(post.excerpt);
   }
@@ -46,7 +57,9 @@ function buildPostDescription(post: NonNullable<Awaited<ReturnType<typeof getPub
   return normalizeMetaDescription(parts.join("，"));
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const post = await getCachedPublishedPostBySlug(slug);
 
@@ -64,7 +77,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ? {
           openGraph: {
             images: coverUrls.map((cover) => ({
-              url: cover.startsWith("http") ? cover : new URL(cover, getMetadataBase()).toString(),
+              url: cover.startsWith("http")
+                ? cover
+                : new URL(cover, getMetadataBase()).toString(),
             })),
           },
         }
@@ -143,21 +158,35 @@ export default async function PostDetail({ params }: PageProps) {
                   className="rounded-none border-b border-border"
                 />
                 <div className="border-b border-border px-6 py-8 sm:px-10 sm:py-10">
-                  <h1 className="text-3xl font-bold leading-tight tracking-tight text-text-base sm:text-4xl">{post.title}</h1>
+                  <h1 className="text-3xl font-bold leading-tight tracking-tight text-text-base sm:text-4xl">
+                    {post.title}
+                  </h1>
 
                   <div className="mt-6 flex flex-wrap items-center gap-x-1 gap-y-2 text-sm text-text-muted">
-                    <span className="whitespace-nowrap">{formatDateTime(published)}</span>
-                    <span className="mx-2 hidden text-text-sub sm:inline">·</span>
-                    <span className="whitespace-nowrap">{post.viewCount} 浏览</span>
-                    <span className="mx-2 hidden text-text-sub sm:inline">·</span>
+                    <span className="whitespace-nowrap">
+                      {formatDateTime(published)}
+                    </span>
+                    <span className="mx-2 hidden text-text-sub sm:inline">
+                      ·
+                    </span>
+                    <span className="whitespace-nowrap">
+                      {post.viewCount} 浏览
+                    </span>
+                    <span className="mx-2 hidden text-text-sub sm:inline">
+                      ·
+                    </span>
                     <span className="whitespace-nowrap">{charCount} 字</span>
-                    <span className="mx-2 hidden text-text-sub sm:inline">·</span>
+                    <span className="mx-2 hidden text-text-sub sm:inline">
+                      ·
+                    </span>
                     <span className="whitespace-nowrap">
                       作者：<span className="text-text-base">{authorName}</span>
                     </span>
                     {post.category && (
                       <>
-                        <span className="mx-2 hidden text-text-sub sm:inline">·</span>
+                        <span className="mx-2 hidden text-text-sub sm:inline">
+                          ·
+                        </span>
                         <span className="rounded-full bg-canvas px-2.5 py-0.5 text-xs font-medium text-text-base">
                           {post.category.name}
                         </span>
@@ -167,7 +196,9 @@ export default async function PostDetail({ params }: PageProps) {
 
                   {post.tags.length > 0 && (
                     <div className="mt-6 flex flex-wrap items-center gap-2">
-                      <span className="text-xs font-medium uppercase tracking-wide text-text-sub">标签</span>
+                      <span className="text-xs font-medium uppercase tracking-wide text-text-sub">
+                        标签
+                      </span>
                       {post.tags.map((tag) => (
                         <AppLink
                           key={tag.id}
@@ -216,7 +247,9 @@ export default async function PostDetail({ params }: PageProps) {
 
           <aside className="fixed left-1/2 top-28 z-20 hidden h-[calc(100vh-7.5rem)] w-[280px] min-h-0 -translate-x-0 ml-[27rem] 2xl:block">
             <div className="flex max-h-full flex-col rounded-2xl border border-border bg-background p-5 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
-              <h2 className="mb-3 shrink-0 text-sm font-semibold tracking-wide text-text-base">目录</h2>
+              <h2 className="mb-3 shrink-0 text-sm font-semibold tracking-wide text-text-base">
+                目录
+              </h2>
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1">
                 <PostTableOfContents items={toc} />
               </div>

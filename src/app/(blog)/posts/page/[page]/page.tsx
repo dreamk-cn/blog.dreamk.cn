@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { buildCanonical, buildNoIndexRobots, normalizeMetaDescription } from "@/lib/seo";
+import {
+  buildCanonical,
+  buildNoIndexRobots,
+  normalizeMetaDescription,
+} from "@/lib/seo";
 import { renderPostsListPage } from "../../posts-list";
 
 type PageProps = {
@@ -12,8 +16,14 @@ type PageProps = {
   }>;
 };
 
-export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
-  const [{ page }, resolvedSearchParams] = await Promise.all([params, searchParams]);
+export async function generateMetadata({
+  params,
+  searchParams,
+}: PageProps): Promise<Metadata> {
+  const [{ page }, resolvedSearchParams] = await Promise.all([
+    params,
+    searchParams,
+  ]);
   const keyword = resolvedSearchParams.keyword?.trim() ?? "";
   const pageNo = Number(page);
   const safePageNo = Number.isInteger(pageNo) && pageNo > 1 ? pageNo : 2;
@@ -24,8 +34,12 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
     return {
       title: `搜索：${keyword} - 第 ${safePageNo} 页`,
-      description: normalizeMetaDescription(`站内搜索“${keyword}”的文章结果第 ${safePageNo} 页。`),
-      alternates: buildCanonical(`/posts/page/${safePageNo}?${query.toString()}`),
+      description: normalizeMetaDescription(
+        `站内搜索“${keyword}”的文章结果第 ${safePageNo} 页。`,
+      ),
+      alternates: buildCanonical(
+        `/posts/page/${safePageNo}?${query.toString()}`,
+      ),
       robots: buildNoIndexRobots({ follow: true }),
     };
   }
