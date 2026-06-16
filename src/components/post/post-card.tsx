@@ -2,6 +2,7 @@
 
 import { FolderIcon } from "@/components/icons";
 import { PostCover } from "@/components/post/post-cover";
+import { PostFeaturedBadge } from "@/components/post/post-featured-badge";
 import { getTagColor } from "@/lib/tag-color";
 import { AppLink } from "@/components/ui/app-link";
 import { Card, Chip, Separator } from "@heroui/react";
@@ -18,12 +19,20 @@ type PostWithTags = Post & {
 
 export function PostCard({ post }: { post: PostWithTags }) {
   const postHref = postPath(post.slug);
+  const isFeatured = post.featured;
 
   return (
     <Card className="group overflow-hidden p-0 shadow-sm transition-shadow hover:shadow-md">
-      <AppLink href={postHref} className="block">
-        <PostCover coverUrl={getPrimaryCoverUrl(post.coverMedia)} alt={post.title} variant="card" />
-      </AppLink>
+      <div className="relative">
+        <AppLink href={postHref} className="block">
+          <PostCover coverUrl={getPrimaryCoverUrl(post.coverMedia)} alt={post.title} variant="card" />
+        </AppLink>
+        {isFeatured ? (
+          <div className="pointer-events-none absolute left-3 top-3 z-10">
+            <PostFeaturedBadge />
+          </div>
+        ) : null}
+      </div>
       <Card.Header className="flex-col items-start px-5 pb-0 pt-4">
         <AppLink
           href={postHref}

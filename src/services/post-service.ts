@@ -21,7 +21,11 @@ type PostTagInput = { id?: string; name?: string; slug?: string };
 const deepseekSlugModel = env.ai?.slugModel ?? "deepseek-v4-flash";
 const deepseekExcerptModel = env.ai?.excerptModel ?? "deepseek-v4-flash";
 
-const publicPostOrderBy: Prisma.PostOrderByWithRelationInput[] = [{ publishedAt: "desc" }, { createdAt: "desc" }];
+export const publicPostOrderBy: Prisma.PostOrderByWithRelationInput[] = [
+  { featured: "desc" },
+  { publishedAt: "desc" },
+  { createdAt: "desc" },
+];
 
 function toTagConnectOrCreate(tags: PostTagInput[]): Prisma.TagCreateOrConnectWithoutPostsInput[] {
   return tags.map((tag) => {
@@ -83,12 +87,10 @@ export function listRecentPublicPosts(limit: number) {
       prisma.post.findMany({
         include: postListInclude,
         where: buildPublicPostWhere(),
-        orderBy: {
-          publishedAt: "desc",
-        },
+        orderBy: publicPostOrderBy,
         take: limit,
       }),
-    ["listRecentPublicPosts", String(limit)],
+    ["listRecentPublicPosts:v2", String(limit)],
     { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.posts] },
   );
 }
@@ -141,7 +143,7 @@ export function listPublicPostsPage(params: { page: number; pageSize: number; ke
         currentPage,
       };
     },
-    ["listPublicPostsPage", String(safePage), String(params.pageSize), normalizedKeyword],
+    ["listPublicPostsPage:v2", String(safePage), String(params.pageSize), normalizedKeyword],
     { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.posts] },
   );
 }

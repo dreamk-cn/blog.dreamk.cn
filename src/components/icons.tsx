@@ -291,6 +291,38 @@ export const FolderIcon = ({ size = 20, width, height, ...props }: IconSvgProps)
   </svg>
 )
 
+export const PinIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size || width}
+    height={size || height}
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    {...props}
+  >
+    <path
+      d="M15.75 3.75L20.25 8.25L12 16.5L7.5 12L15.75 3.75Z"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M7.5 12L5.25 20.25L12 16.5"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M9.75 9.75L14.25 14.25"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+    />
+  </svg>
+)
+
 export const CategoryIcon = ({ size = 20, width, height, ...props }: IconSvgProps) => (
   <svg
     viewBox="0 0 24 24"
