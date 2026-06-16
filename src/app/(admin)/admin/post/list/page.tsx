@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import { FolderIcon } from '@/components/icons';
+import { getTagColor } from '@/lib/tag-color';
 import { request } from '@/lib/request';
 import type { Post, Category, Tag } from '@/generated/prisma';
 import {
@@ -263,12 +265,23 @@ export default function Posts() {
                           <span className="text-xs text-text-muted">{item.slug}</span>
                         </div>
                       </Table.Cell>
-                      <Table.Cell className="text-text-muted">{item.category?.name || '-'}</Table.Cell>
+                      <Table.Cell>
+                        {item.category ? (
+                          <Chip className="text-nowrap" size="sm" variant="soft" color={getTagColor(item.category.name)}>
+                            <Chip.Label className="inline-flex items-center gap-0.5">
+                              <FolderIcon size={10} className="shrink-0" />
+                              {item.category.name}
+                            </Chip.Label>
+                          </Chip>
+                        ) : (
+                          <span className="text-default-400 text-text-muted">-</span>
+                        )}
+                      </Table.Cell>
                       <Table.Cell>
                         {item.tags?.length ? (
                           <div className="flex flex-wrap gap-1">
                             {item.tags.map((t) => (
-                              <Chip key={t.id} size="sm" variant="soft" color="accent">
+                              <Chip key={t.id} className="text-nowrap" size="sm" variant="soft" color="accent">
                                 <Chip.Label className="text-text-base">{t.name}</Chip.Label>
                               </Chip>
                             ))}
@@ -279,6 +292,7 @@ export default function Posts() {
                       </Table.Cell>
                       <Table.Cell>
                         <Chip
+                          className="text-nowrap"
                           size="sm"
                           variant="soft"
                           color={
