@@ -6,7 +6,10 @@ async function getDashboardPageData() {
   const sessionPromise = auth();
 
   try {
-    const [session, stats] = await Promise.all([sessionPromise, getDashboardStats()]);
+    const [session, stats] = await Promise.all([
+      sessionPromise,
+      getDashboardStats(),
+    ]);
     return {
       stats,
       error: null,

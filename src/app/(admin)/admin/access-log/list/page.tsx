@@ -2,13 +2,28 @@
 
 import { StringSelect } from "@/components/admin/string-select";
 import { PaginatedFooter } from "@/components/admin/paginated-footer";
-import { AdminListLayout, AdminListBody, AdminListFooter, AdminListHeader, AdminListTable, adminTableHeaderClassName } from "@/components/admin/admin-list-layout";
+import {
+  AdminListLayout,
+  AdminListBody,
+  AdminListFooter,
+  AdminListHeader,
+  AdminListTable,
+  adminTableHeaderClassName,
+} from "@/components/admin/admin-list-layout";
 import type { AccessLog, VisitorKind } from "@/generated/prisma";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatDateTime } from "@/lib/format-datetime";
 import { request } from "@/lib/request";
 import type { AccessLogUserPreview } from "@/services/access-log-service";
-import { Button, Chip, Input, Label, Spinner, Table, TextField } from "@heroui/react";
+import {
+  Button,
+  Chip,
+  Input,
+  Label,
+  Spinner,
+  Table,
+  TextField,
+} from "@heroui/react";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -40,7 +55,9 @@ export default function AdminAccessLogListPage() {
   const router = useRouter();
   const pathname = usePathname();
   const [items, setItems] = useState<AccessLog[]>([]);
-  const [usersById, setUsersById] = useState<Record<string, AccessLogUserPreview>>({});
+  const [usersById, setUsersById] = useState<
+    Record<string, AccessLogUserPreview>
+  >({});
   const [total, setTotal] = useState(0);
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -86,178 +103,200 @@ export default function AdminAccessLogListPage() {
       void fetchLogs();
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pageNo, pageSize, pathnameDebounced, ipDebounced, sortOrder, visitorKind]);
+  }, [
+    pageNo,
+    pageSize,
+    pathnameDebounced,
+    ipDebounced,
+    sortOrder,
+    visitorKind,
+  ]);
 
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
+  const totalPages = useMemo(
+    () => Math.max(1, Math.ceil(total / pageSize)),
+    [total, pageSize],
+  );
 
   return (
     <AdminListLayout error={error} errorTitle="加载失败">
       <AdminListHeader>
-      <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-bold text-text-base">访问日志</h1>
-        <div className="flex flex-wrap items-end gap-3">
-          <TextField className="w-full sm:max-w-[240px]">
-            <Label className="text-text-muted">路径</Label>
-            <Input
-              placeholder="如 /posts/"
-              value={pathnameFilter}
-              onChange={(e) => {
+        <div className="flex flex-col gap-4">
+          <h1 className="text-2xl font-bold text-text-base">访问日志</h1>
+          <div className="flex flex-wrap items-end gap-3">
+            <TextField className="w-full sm:max-w-[240px]">
+              <Label className="text-text-muted">路径</Label>
+              <Input
+                placeholder="如 /posts/"
+                value={pathnameFilter}
+                onChange={(e) => {
+                  setPageNo(1);
+                  setPathnameFilter(e.target.value);
+                }}
+              />
+            </TextField>
+
+            <TextField className="w-full sm:max-w-[180px]">
+              <Label className="text-text-muted">IP</Label>
+              <Input
+                placeholder="客户端 IP"
+                value={ipFilter}
+                onChange={(e) => {
+                  setPageNo(1);
+                  setIpFilter(e.target.value);
+                }}
+              />
+            </TextField>
+
+            <StringSelect
+              className="w-36"
+              label="访客类型"
+              selectedId={visitorKind}
+              onSelectionChange={(id) => {
                 setPageNo(1);
-                setPathnameFilter(e.target.value);
+                setVisitorKind(id as VisitorKind | "all");
               }}
+              options={[
+                { id: "all", label: "全部" },
+                { id: "HUMAN", label: "人类" },
+                { id: "CRAWLER", label: "爬虫" },
+                { id: "PREVIEW", label: "预览" },
+                { id: "UNKNOWN", label: "未知" },
+              ]}
             />
-          </TextField>
 
-          <TextField className="w-full sm:max-w-[180px]">
-            <Label className="text-text-muted">IP</Label>
-            <Input
-              placeholder="客户端 IP"
-              value={ipFilter}
-              onChange={(e) => {
+            <StringSelect
+              className="w-28"
+              label="排序"
+              selectedId={sortOrder}
+              onSelectionChange={(id) => {
                 setPageNo(1);
-                setIpFilter(e.target.value);
+                setSortOrder(id as SortOrder);
               }}
+              options={[
+                { id: "desc", label: "倒序" },
+                { id: "asc", label: "正序" },
+              ]}
             />
-          </TextField>
 
-          <StringSelect
-            className="w-36"
-            label="访客类型"
-            selectedId={visitorKind}
-            onSelectionChange={(id) => {
-              setPageNo(1);
-              setVisitorKind(id as VisitorKind | "all");
-            }}
-            options={[
-              { id: "all", label: "全部" },
-              { id: "HUMAN", label: "人类" },
-              { id: "CRAWLER", label: "爬虫" },
-              { id: "PREVIEW", label: "预览" },
-              { id: "UNKNOWN", label: "未知" },
-            ]}
-          />
-
-          <StringSelect
-            className="w-28"
-            label="排序"
-            selectedId={sortOrder}
-            onSelectionChange={(id) => {
-              setPageNo(1);
-              setSortOrder(id as SortOrder);
-            }}
-            options={[
-              { id: "desc", label: "倒序" },
-              { id: "asc", label: "正序" },
-            ]}
-          />
-
-          <Button
-            size="sm"
-            variant="secondary"
-            onPress={() => {
-              setPathnameFilter("");
-              setIpFilter("");
-              setVisitorKind("all");
-              setSortOrder("desc");
-              setPageNo(1);
-              setPageSize(20);
-              router.replace(pathname, { scroll: false });
-            }}
-          >
-            清空
-          </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onPress={() => {
+                setPathnameFilter("");
+                setIpFilter("");
+                setVisitorKind("all");
+                setSortOrder("desc");
+                setPageNo(1);
+                setPageSize(20);
+                router.replace(pathname, { scroll: false });
+              }}
+            >
+              清空
+            </Button>
+          </div>
         </div>
-      </div>
       </AdminListHeader>
 
       <AdminListBody>
         <AdminListTable aria-label="访问日志列表" className="rounded-lg">
-              <Table.Header className={adminTableHeaderClassName}>
-                <Table.Column isRowHeader>时间</Table.Column>
-                <Table.Column>路径</Table.Column>
-                <Table.Column>IP</Table.Column>
-                <Table.Column>用户</Table.Column>
-                <Table.Column>类型</Table.Column>
-                <Table.Column>Bot</Table.Column>
-                <Table.Column>User-Agent</Table.Column>
-              </Table.Header>
-              <Table.Body>
-                {loading ? (
-                  <Table.Row>
-                    <Table.Cell colSpan={7}>
-                      <div className="flex justify-center py-3">
-                        <Spinner color="accent" aria-label="加载中" />
+          <Table.Header className={adminTableHeaderClassName}>
+            <Table.Column isRowHeader>时间</Table.Column>
+            <Table.Column>路径</Table.Column>
+            <Table.Column>IP</Table.Column>
+            <Table.Column>用户</Table.Column>
+            <Table.Column>类型</Table.Column>
+            <Table.Column>Bot</Table.Column>
+            <Table.Column>User-Agent</Table.Column>
+          </Table.Header>
+          <Table.Body>
+            {loading ? (
+              <Table.Row>
+                <Table.Cell colSpan={7}>
+                  <div className="flex justify-center py-3">
+                    <Spinner color="accent" aria-label="加载中" />
+                  </div>
+                </Table.Cell>
+              </Table.Row>
+            ) : items.length === 0 ? (
+              <Table.Row>
+                <Table.Cell colSpan={7}>
+                  <span className="text-text-muted">暂无数据</span>
+                </Table.Cell>
+              </Table.Row>
+            ) : (
+              items.map((item) => {
+                const user = item.userId ? usersById[item.userId] : null;
+                const kindMeta = visitorKindMap[item.visitorKind];
+                return (
+                  <Table.Row key={item.id}>
+                    <Table.Cell className="whitespace-nowrap text-xs text-text-muted">
+                      {formatDateTime(item.createdAt)}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="max-w-[280px]">
+                        <span className="break-all font-mono text-sm text-text-base">
+                          {item.pathname}
+                          {item.query || ""}
+                        </span>
                       </div>
                     </Table.Cell>
-                  </Table.Row>
-                ) : items.length === 0 ? (
-                  <Table.Row>
-                    <Table.Cell colSpan={7}>
-                      <span className="text-text-muted">暂无数据</span>
+                    <Table.Cell>
+                      <span className="whitespace-nowrap font-mono text-sm text-text-base">
+                        {item.ip || "-"}
+                      </span>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <div className="flex max-w-[200px] flex-col">
+                        {user ? (
+                          <>
+                            <span className="line-clamp-1 text-primary">
+                              {user.name || user.email}
+                            </span>
+                            <span className="line-clamp-1 text-xs text-text-muted">
+                              {user.email}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-sm text-text-muted">-</span>
+                        )}
+                      </div>
+                    </Table.Cell>
+                    <Table.Cell>
+                      <Chip size="sm" variant="soft" color={kindMeta.color}>
+                        <Chip.Label>{kindMeta.label}</Chip.Label>
+                      </Chip>
+                    </Table.Cell>
+                    <Table.Cell className="text-xs text-text-muted">
+                      {item.botName || "-"}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span
+                        className="line-clamp-2 max-w-[320px] text-xs text-text-muted"
+                        title={item.userAgent || undefined}
+                      >
+                        {shortText(item.userAgent, 100)}
+                      </span>
                     </Table.Cell>
                   </Table.Row>
-                ) : (
-                  items.map((item) => {
-                    const user = item.userId ? usersById[item.userId] : null;
-                    const kindMeta = visitorKindMap[item.visitorKind];
-                    return (
-                      <Table.Row key={item.id}>
-                        <Table.Cell className="whitespace-nowrap text-xs text-text-muted">
-                          {formatDateTime(item.createdAt)}
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="max-w-[280px]">
-                            <span className="break-all font-mono text-sm text-text-base">
-                              {item.pathname}
-                              {item.query || ""}
-                            </span>
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <span className="whitespace-nowrap font-mono text-sm text-text-base">
-                            {item.ip || "-"}
-                          </span>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <div className="flex max-w-[200px] flex-col">
-                            {user ? (
-                              <>
-                                <span className="line-clamp-1 text-primary">{user.name || user.email}</span>
-                                <span className="line-clamp-1 text-xs text-text-muted">{user.email}</span>
-                              </>
-                            ) : (
-                              <span className="text-sm text-text-muted">-</span>
-                            )}
-                          </div>
-                        </Table.Cell>
-                        <Table.Cell>
-                          <Chip size="sm" variant="soft" color={kindMeta.color}>
-                            <Chip.Label>{kindMeta.label}</Chip.Label>
-                          </Chip>
-                        </Table.Cell>
-                        <Table.Cell className="text-xs text-text-muted">{item.botName || "-"}</Table.Cell>
-                        <Table.Cell>
-                          <span className="line-clamp-2 max-w-[320px] text-xs text-text-muted" title={item.userAgent || undefined}>
-                            {shortText(item.userAgent, 100)}
-                          </span>
-                        </Table.Cell>
-                      </Table.Row>
-                    );
-                  })
-                )}
-              </Table.Body>
+                );
+              })
+            )}
+          </Table.Body>
         </AdminListTable>
       </AdminListBody>
 
       <AdminListFooter>
-      <PaginatedFooter
-        total={total}
-        pageNo={pageNo}
-        pageSize={pageSize}
-        totalPages={totalPages}
-        onPageChange={setPageNo}
-        onPageSizeChange={(size) => { setPageNo(1); setPageSize(size); }}
-      />
+        <PaginatedFooter
+          total={total}
+          pageNo={pageNo}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          onPageChange={setPageNo}
+          onPageSizeChange={(size) => {
+            setPageNo(1);
+            setPageSize(size);
+          }}
+        />
       </AdminListFooter>
     </AdminListLayout>
   );

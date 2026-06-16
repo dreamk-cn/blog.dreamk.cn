@@ -9,6 +9,10 @@ export const metadata: Metadata = {
   robots: buildNoIndexRobots(),
 };
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return <AdminLayoutShell>{children}</AdminLayoutShell>;
 }

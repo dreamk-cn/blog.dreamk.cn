@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import { Spinner } from '@heroui/react'
+import { Spinner } from "@heroui/react";
 
 export default function Loading() {
   return (
@@ -10,5 +10,5 @@ export default function Loading() {
         <p className="text-sm text-default-500">正在加载...</p>
       </div>
     </div>
-  )
+  );
 }

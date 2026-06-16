@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { PostForm } from "@/components/post/post-form";
 import { useSearchParams } from "next/navigation";
@@ -9,11 +9,13 @@ import type { Post, Category, Tag } from "@/generated/prisma";
 
 export default function PostCreatePage() {
   const searchParams = useSearchParams();
-  const type = searchParams.get('type') === 'edit' ? 'edit' : 'create';
-  const id = searchParams.get('id');
-  const slug = searchParams.get('slug');
+  const type = searchParams.get("type") === "edit" ? "edit" : "create";
+  const id = searchParams.get("id");
+  const slug = searchParams.get("slug");
 
-  const [article, setArticle] = useState<Post & { tags: Tag[], category: Category } | undefined>(undefined);
+  const [article, setArticle] = useState<
+    (Post & { tags: Tag[]; category: Category }) | undefined
+  >(undefined);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [metaLoading, setMetaLoading] = useState(true);
@@ -24,8 +26,8 @@ export default function PostCreatePage() {
     const fetchCategoriesAndTags = async () => {
       try {
         const [categoriesResponse, tagsResponse] = await Promise.all([
-          request.get<Category[]>('/categories'),
-          request.get<Tag[]>('/tags'),
+          request.get<Category[]>("/categories"),
+          request.get<Tag[]>("/tags"),
         ]);
 
         if (categoriesResponse.code === 200) {
@@ -36,7 +38,7 @@ export default function PostCreatePage() {
           setTags(tagsResponse.data || []);
         }
       } catch (err) {
-        console.error('获取分类和标签失败:', err);
+        console.error("获取分类和标签失败:", err);
       } finally {
         setMetaLoading(false);
       }
@@ -46,24 +48,24 @@ export default function PostCreatePage() {
   }, []);
 
   useEffect(() => {
-    if (type !== 'edit' || (!id && !slug)) return;
+    if (type !== "edit" || (!id && !slug)) return;
 
     const fetchArticle = async () => {
       setArticleLoading(true);
       setError(null);
       try {
-        const response = await request.get<Post & { tags: Tag[], category: Category }>(
-          `/post?${id ? `id=${id}` : `slug=${slug}`}`,
-        );
+        const response = await request.get<
+          Post & { tags: Tag[]; category: Category }
+        >(`/post?${id ? `id=${id}` : `slug=${slug}`}`);
 
         if (response.code === 200) {
           setArticle(response.data);
         } else {
-          setError('获取文章失败: ' + response.message);
+          setError("获取文章失败: " + response.message);
         }
       } catch (err) {
-        console.error('获取文章失败:', err);
-        setError('网络错误，请稍后再试');
+        console.error("获取文章失败:", err);
+        setError("网络错误，请稍后再试");
       } finally {
         setArticleLoading(false);
       }
@@ -72,16 +74,18 @@ export default function PostCreatePage() {
     void fetchArticle();
   }, [type, id, slug]);
 
-  if (metaLoading || (type === 'edit' && articleLoading)) {
+  if (metaLoading || (type === "edit" && articleLoading)) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 p-6">
         <Spinner size="lg" />
-        <p className="text-sm text-text-muted">{type === 'edit' ? '正在加载文章…' : '正在加载表单…'}</p>
+        <p className="text-sm text-text-muted">
+          {type === "edit" ? "正在加载文章…" : "正在加载表单…"}
+        </p>
       </div>
     );
   }
 
-  if (error && type === 'edit') {
+  if (error && type === "edit") {
     return (
       <div className="p-4 sm:p-6">
         <Alert status="danger">

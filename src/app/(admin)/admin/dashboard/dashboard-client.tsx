@@ -3,14 +3,7 @@
 import { AppLink } from "@/components/ui/app-link";
 import { useRouter } from "next/navigation";
 import type { DashboardStats } from "@/services/admin-dashboard-stats";
-import {
-  Alert,
-  Avatar,
-  Button,
-  Card,
-  Chip,
-  Separator,
-} from "@heroui/react";
+import { Alert, Avatar, Button, Card, Chip, Separator } from "@heroui/react";
 import {
   AreaChart,
   Area,
@@ -45,7 +38,9 @@ const STATUS_LABEL: Record<string, string> = {
   ARCHIVED: "已归档",
 };
 
-function postStatusChipColor(status: string): "success" | "warning" | "default" {
+function postStatusChipColor(
+  status: string,
+): "success" | "warning" | "default" {
   if (status === "PUBLISHED") return "success";
   if (status === "ARCHIVED") return "warning";
   return "default";
@@ -60,9 +55,19 @@ interface StatCardProps {
   badgeTone?: "success" | "warning" | "danger" | "default" | "accent";
 }
 
-function StatCard({ label, value, icon, href, badge, badgeTone = "warning" }: StatCardProps) {
+function StatCard({
+  label,
+  value,
+  icon,
+  href,
+  badge,
+  badgeTone = "warning",
+}: StatCardProps) {
   const inner = (
-    <Card className={`h-full shadow-sm transition-shadow ${href ? "group-hover:shadow-md" : ""}`} variant="default">
+    <Card
+      className={`h-full shadow-sm transition-shadow ${href ? "group-hover:shadow-md" : ""}`}
+      variant="default"
+    >
       <Card.Content className="flex flex-col gap-3 p-5">
         <div className="flex items-start justify-between gap-2">
           <span className="text-2xl leading-none" aria-hidden>
@@ -75,7 +80,9 @@ function StatCard({ label, value, icon, href, badge, badgeTone = "warning" }: St
           ) : null}
         </div>
         <div>
-          <p className="text-3xl font-bold text-text-base tabular-nums">{value}</p>
+          <p className="text-3xl font-bold text-text-base tabular-nums">
+            {value}
+          </p>
           <p className="mt-0.5 text-sm text-text-muted">{label}</p>
         </div>
       </Card.Content>
@@ -107,9 +114,14 @@ function ChartTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <Card className="border border-border px-3 py-2 shadow-lg" variant="transparent">
+    <Card
+      className="border border-border px-3 py-2 shadow-lg"
+      variant="transparent"
+    >
       <Card.Content className="p-0 text-xs">
-        {label ? <p className="mb-1 font-medium text-text-base">{label}</p> : null}
+        {label ? (
+          <p className="mb-1 font-medium text-text-base">{label}</p>
+        ) : null}
         {payload.map((p) => (
           <p key={p.name} style={{ color: p.color }}>
             {p.name}: <span className="font-bold">{p.value}</span>
@@ -127,7 +139,12 @@ type DashboardClientProps = {
   userImage?: string | null;
 };
 
-export default function DashboardClient({ stats, error, userName, userImage }: DashboardClientProps) {
+export default function DashboardClient({
+  stats,
+  error,
+  userName,
+  userImage,
+}: DashboardClientProps) {
   const router = useRouter();
 
   if (error || !stats) {
@@ -138,7 +155,11 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
             <Alert.Title>加载失败</Alert.Title>
             <Alert.Description>{error ?? "数据加载失败"}</Alert.Description>
           </Alert>
-          <Button className="mt-4 w-full" variant="secondary" onPress={() => router.refresh()}>
+          <Button
+            className="mt-4 w-full"
+            variant="secondary"
+            onPress={() => router.refresh()}
+          >
             重试
           </Button>
         </div>
@@ -172,7 +193,9 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
             <Avatar.Fallback>{userName?.slice(0, 1) ?? "管"}</Avatar.Fallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <Card.Title className="text-lg font-semibold text-text-base">欢迎回来，{userName ?? "管理员"}</Card.Title>
+            <Card.Title className="text-lg font-semibold text-text-base">
+              欢迎回来，{userName ?? "管理员"}
+            </Card.Title>
             <Card.Description className="mt-1 text-sm text-text-muted">
               {new Date().toLocaleDateString("zh-CN", {
                 weekday: "long",
@@ -186,7 +209,12 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
       </Card>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        <StatCard label="文章总数" value={stats.totalPosts} icon="📝" href="/admin/post/list" />
+        <StatCard
+          label="文章总数"
+          value={stats.totalPosts}
+          icon="📝"
+          href="/admin/post/list"
+        />
         <StatCard
           label="已发布"
           value={stats.publishedPosts}
@@ -195,23 +223,50 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
           badgeTone="warning"
           href="/admin/post/list"
         />
-        <StatCard label="总浏览量" value={stats.totalViews.toLocaleString()} icon="👁️" />
+        <StatCard
+          label="总浏览量"
+          value={stats.totalViews.toLocaleString()}
+          icon="👁️"
+        />
         <StatCard
           label="评论总数"
           value={stats.totalComments}
           icon="💬"
-          badge={stats.pendingComments > 0 ? `待审 ${stats.pendingComments}` : undefined}
+          badge={
+            stats.pendingComments > 0
+              ? `待审 ${stats.pendingComments}`
+              : undefined
+          }
           badgeTone="danger"
           href="/admin/comment/list"
         />
-        <StatCard label="用户数" value={stats.totalUsers} icon="👤" href="/admin/user/list" />
-        <StatCard label="分类数" value={stats.totalCategories} icon="📂" href="/admin/category/list" />
-        <StatCard label="标签数" value={stats.totalTags} icon="🏷️" href="/admin/tag/list" />
+        <StatCard
+          label="用户数"
+          value={stats.totalUsers}
+          icon="👤"
+          href="/admin/user/list"
+        />
+        <StatCard
+          label="分类数"
+          value={stats.totalCategories}
+          icon="📂"
+          href="/admin/category/list"
+        />
+        <StatCard
+          label="标签数"
+          value={stats.totalTags}
+          icon="🏷️"
+          href="/admin/tag/list"
+        />
         <StatCard
           label="友情链接"
           value={stats.totalFriendLinks}
           icon="🔗"
-          badge={stats.pendingFriendLinks > 0 ? `待审 ${stats.pendingFriendLinks}` : undefined}
+          badge={
+            stats.pendingFriendLinks > 0
+              ? `待审 ${stats.pendingFriendLinks}`
+              : undefined
+          }
           badgeTone="danger"
           href="/admin/friend-link/list"
         />
@@ -220,27 +275,41 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="shadow-sm lg:col-span-2" variant="default">
           <Card.Header className="flex flex-col gap-1 px-5 pb-0 pt-5">
-            <Card.Title className="text-base font-semibold text-text-base">最近 30 天新增文章</Card.Title>
+            <Card.Title className="text-base font-semibold text-text-base">
+              最近 30 天新增文章
+            </Card.Title>
           </Card.Header>
           <Card.Content className="px-2 pb-4 pt-2 sm:px-4">
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={postsChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart
+                data={postsChartData}
+                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+              >
                 <defs>
                   <linearGradient id="postGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #e2e8f0)" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--color-border, #e2e8f0)"
+                />
                 <XAxis
                   dataKey="label"
-                  tick={{ fontSize: 11, fill: "var(--color-text-muted, #94a3b8)" }}
+                  tick={{
+                    fontSize: 11,
+                    fill: "var(--color-text-muted, #94a3b8)",
+                  }}
                   interval={4}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "var(--color-text-muted, #94a3b8)" }}
+                  tick={{
+                    fontSize: 11,
+                    fill: "var(--color-text-muted, #94a3b8)",
+                  }}
                   tickLine={false}
                   axisLine={false}
                   allowDecimals={false}
@@ -263,11 +332,15 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
 
         <Card className="shadow-sm" variant="default">
           <Card.Header className="flex flex-col gap-1 px-5 pb-0 pt-5">
-            <Card.Title className="text-base font-semibold text-text-base">文章状态分布</Card.Title>
+            <Card.Title className="text-base font-semibold text-text-base">
+              文章状态分布
+            </Card.Title>
           </Card.Header>
           <Card.Content className="px-2 pb-4 pt-2 sm:px-4">
             {postStatusPie.length === 0 ? (
-              <div className="flex h-[220px] items-center justify-center text-sm text-text-muted">暂无数据</div>
+              <div className="flex h-[220px] items-center justify-center text-sm text-text-muted">
+                暂无数据
+              </div>
             ) : (
               <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
@@ -285,9 +358,15 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
                       if (!active || !payload?.length) return null;
                       const d = payload[0];
                       return (
-                        <Card className="border border-border px-3 py-2 shadow-lg" variant="transparent">
+                        <Card
+                          className="border border-border px-3 py-2 shadow-lg"
+                          variant="transparent"
+                        >
                           <Card.Content className="p-0 text-xs">
-                            <p style={{ color: d.payload.fill }} className="font-bold">
+                            <p
+                              style={{ color: d.payload.fill }}
+                              className="font-bold"
+                            >
                               {d.name}
                             </p>
                             <p className="text-text-base">数量: {d.value}</p>
@@ -299,7 +378,9 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
                   <Legend
                     iconType="circle"
                     iconSize={8}
-                    formatter={(value) => <span className="text-xs text-text-muted">{value}</span>}
+                    formatter={(value) => (
+                      <span className="text-xs text-text-muted">{value}</span>
+                    )}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -311,20 +392,35 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="shadow-sm" variant="default">
           <Card.Header className="flex flex-col gap-1 px-5 pb-0 pt-5">
-            <Card.Title className="text-base font-semibold text-text-base">评论状态分布</Card.Title>
+            <Card.Title className="text-base font-semibold text-text-base">
+              评论状态分布
+            </Card.Title>
           </Card.Header>
           <Card.Content className="px-2 pb-4 pt-2 sm:px-4">
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={commentStatusBar} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #e2e8f0)" vertical={false} />
+              <BarChart
+                data={commentStatusBar}
+                margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--color-border, #e2e8f0)"
+                  vertical={false}
+                />
                 <XAxis
                   dataKey="name"
-                  tick={{ fontSize: 11, fill: "var(--color-text-muted, #94a3b8)" }}
+                  tick={{
+                    fontSize: 11,
+                    fill: "var(--color-text-muted, #94a3b8)",
+                  }}
                   tickLine={false}
                   axisLine={false}
                 />
                 <YAxis
-                  tick={{ fontSize: 11, fill: "var(--color-text-muted, #94a3b8)" }}
+                  tick={{
+                    fontSize: 11,
+                    fill: "var(--color-text-muted, #94a3b8)",
+                  }}
                   tickLine={false}
                   axisLine={false}
                   allowDecimals={false}
@@ -333,11 +429,17 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
                   content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null;
                     return (
-                      <Card className="border border-border px-3 py-2 shadow-lg" variant="transparent">
+                      <Card
+                        className="border border-border px-3 py-2 shadow-lg"
+                        variant="transparent"
+                      >
                         <Card.Content className="p-0 text-xs">
                           <p className="font-medium text-text-base">{label}</p>
                           <p style={{ color: payload[0].payload.fill }}>
-                            数量: <span className="font-bold">{payload[0].value}</span>
+                            数量:{" "}
+                            <span className="font-bold">
+                              {payload[0].value}
+                            </span>
                           </p>
                         </Card.Content>
                       </Card>
@@ -352,24 +454,40 @@ export default function DashboardClient({ stats, error, userName, userImage }: D
 
         <Card className="shadow-sm lg:col-span-2" variant="default">
           <Card.Header className="flex flex-row items-center justify-between gap-3 px-5 pb-0 pt-5">
-            <Card.Title className="text-base font-semibold text-text-base">最近文章</Card.Title>
-            <Button size="sm" variant="ghost" onPress={() => router.push("/admin/post/list")}>
+            <Card.Title className="text-base font-semibold text-text-base">
+              最近文章
+            </Card.Title>
+            <Button
+              size="sm"
+              variant="ghost"
+              onPress={() => router.push("/admin/post/list")}
+            >
               查看全部
             </Button>
           </Card.Header>
           <Card.Content className="px-5 pb-5 pt-3">
             {stats.recentPosts.length === 0 ? (
-              <p className="py-6 text-center text-sm text-text-muted">暂无文章</p>
+              <p className="py-6 text-center text-sm text-text-muted">
+                暂无文章
+              </p>
             ) : (
               <ul className="flex flex-col">
                 {stats.recentPosts.map((post, index) => (
                   <li key={post.id}>
                     {index > 0 ? <Separator className="my-1" /> : null}
                     <div className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:gap-3">
-                      <Chip size="sm" variant="soft" color={postStatusChipColor(post.status)}>
-                        <Chip.Label>{STATUS_LABEL[post.status] ?? post.status}</Chip.Label>
+                      <Chip
+                        size="sm"
+                        variant="soft"
+                        color={postStatusChipColor(post.status)}
+                      >
+                        <Chip.Label>
+                          {STATUS_LABEL[post.status] ?? post.status}
+                        </Chip.Label>
                       </Chip>
-                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-base">{post.title}</span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-text-base">
+                        {post.title}
+                      </span>
                       <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-muted">
                         <span>浏览 {post.viewCount}</span>
                         <span>{formatFullDate(post.createdAt)}</span>

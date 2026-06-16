@@ -3,12 +3,29 @@
 import { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { StringSelect } from "@/components/admin/string-select";
-import { AdminListLayout, AdminListBody, AdminListHeader, AdminListOverlays, AdminListTable, adminTableHeaderClassName } from "@/components/admin/admin-list-layout";
+import {
+  AdminListLayout,
+  AdminListBody,
+  AdminListHeader,
+  AdminListOverlays,
+  AdminListTable,
+  adminTableHeaderClassName,
+} from "@/components/admin/admin-list-layout";
 import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
 import { SearchIcon } from "@/components/icons";
 import { request } from "@/lib/request";
 import type { FriendLink, LinkStatus } from "@/generated/prisma";
-import { Button, Input, InputGroup, Label, Modal, Spinner, Table, TextField, useOverlayState } from "@heroui/react";
+import {
+  Button,
+  Input,
+  InputGroup,
+  Label,
+  Modal,
+  Spinner,
+  Table,
+  TextField,
+  useOverlayState,
+} from "@heroui/react";
 import { useDebounce } from "@/hooks/useDebounce";
 
 type LinkStatusOption = LinkStatus | "all";
@@ -86,7 +103,9 @@ function FriendLinkTableRows({
       <Table.Cell className="text-text-base">{item.status}</Table.Cell>
       <Table.Cell className="text-text-base">{item.sortOrder}</Table.Cell>
       <Table.Cell>
-        <span className="text-xs text-text-muted">{new Date(item.createdAt).toLocaleString()}</span>
+        <span className="text-xs text-text-muted">
+          {new Date(item.createdAt).toLocaleString()}
+        </span>
       </Table.Cell>
       <Table.Cell>
         <div className="flex gap-2">
@@ -260,7 +279,11 @@ export default function AdminFriendLinkListPage() {
     if (!itemToDelete) return;
     try {
       setDeletingId(itemToDelete.id);
-      const res = await request.delete("/friend-links", { id: itemToDelete.id }, { showSuccessMessage: true });
+      const res = await request.delete(
+        "/friend-links",
+        { id: itemToDelete.id },
+        { showSuccessMessage: true },
+      );
       if (res.code === 200) {
         deleteModal.close();
         setItemToDelete(null);
@@ -275,51 +298,59 @@ export default function AdminFriendLinkListPage() {
 
   return (
     <>
-    <AdminListLayout error={listError}>
-      <AdminListHeader>
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-wrap items-end gap-3">
-          <TextField className="max-w-sm">
-            <Label className="text-text-muted">搜索</Label>
-            <InputGroup>
-              <InputGroup.Prefix>
-                <SearchIcon className="text-base text-text-muted" />
-              </InputGroup.Prefix>
-              <InputGroup.Input
-                value={keyword}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setKeyword(e.target.value)}
-                placeholder="搜索名称、URL、邮箱"
+      <AdminListLayout error={listError}>
+        <AdminListHeader>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-end gap-3">
+              <TextField className="max-w-sm">
+                <Label className="text-text-muted">搜索</Label>
+                <InputGroup>
+                  <InputGroup.Prefix>
+                    <SearchIcon className="text-base text-text-muted" />
+                  </InputGroup.Prefix>
+                  <InputGroup.Input
+                    value={keyword}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setKeyword(e.target.value)
+                    }
+                    placeholder="搜索名称、URL、邮箱"
+                  />
+                </InputGroup>
+              </TextField>
+              <StringSelect
+                className="w-40"
+                label="状态筛选"
+                selectedId={status}
+                onSelectionChange={(id) => setStatus(id as LinkStatusOption)}
+                options={linkStatusOptions}
               />
-            </InputGroup>
-          </TextField>
-          <StringSelect
-            className="w-40"
-            label="状态筛选"
-            selectedId={status}
-            onSelectionChange={(id) => setStatus(id as LinkStatusOption)}
-            options={linkStatusOptions}
-          />
-          <Button
-            size="sm"
-            variant="secondary"
-            onPress={() => {
-              setKeyword("");
-              setStatus("all");
-              router.replace(pathname, { scroll: false });
-            }}
-          >
-            清空
-          </Button>
-        </div>
-        <Button variant="primary" onPress={createModal.open}>
-          新增友链
-        </Button>
-      </div>
-      </AdminListHeader>
+              <Button
+                size="sm"
+                variant="secondary"
+                onPress={() => {
+                  setKeyword("");
+                  setStatus("all");
+                  router.replace(pathname, { scroll: false });
+                }}
+              >
+                清空
+              </Button>
+            </div>
+            <Button variant="primary" onPress={createModal.open}>
+              新增友链
+            </Button>
+          </div>
+        </AdminListHeader>
 
-      <AdminListBody>
-      <div className={isPending ? "h-full opacity-60 pointer-events-none transition-opacity" : "h-full transition-opacity"}>
-        <AdminListTable aria-label="友链列表">
+        <AdminListBody>
+          <div
+            className={
+              isPending
+                ? "h-full opacity-60 pointer-events-none transition-opacity"
+                : "h-full transition-opacity"
+            }
+          >
+            <AdminListTable aria-label="友链列表">
               <Table.Header className={adminTableHeaderClassName}>
                 <Table.Column isRowHeader>站点</Table.Column>
                 <Table.Column>URL</Table.Column>
@@ -337,144 +368,198 @@ export default function AdminFriendLinkListPage() {
                   onDelete={openDelete}
                 />
               </Table.Body>
-        </AdminListTable>
-      </div>
-      </AdminListBody>
-    </AdminListLayout>
+            </AdminListTable>
+          </div>
+        </AdminListBody>
+      </AdminListLayout>
 
-    <AdminListOverlays>
-      <Modal state={createModal}>
-        <Modal.Backdrop>
-          <Modal.Container>
-            <Modal.Dialog className="bg-canvas inset-ring-primary inset-ring-2">
-              <Modal.Header>
-                <Modal.Heading className="text-text-base">新增友链</Modal.Heading>
-              </Modal.Header>
-              <Modal.Body className="grid grid-cols-1 gap-3 p-2">
-                <TextField isRequired>
-                  <Label className="text-text-muted">站点名称</Label>
-                  <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="例如：Dreamk Blog" />
-                </TextField>
-                <TextField isRequired>
-                  <Label className="text-text-muted">站点 URL</Label>
-                  <Input value={newUrl} onChange={(e) => setNewUrl(e.target.value)} placeholder="https://example.com" />
-                </TextField>
-                <TextField>
-                  <Label className="text-text-muted">联系邮箱</Label>
-                  <Input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="demo@example.com" />
-                </TextField>
-                <TextField>
-                  <Label className="text-text-muted">头像 URL</Label>
-                  <Input value={newAvatar} onChange={(e) => setNewAvatar(e.target.value)} placeholder="https://example.com/logo.png" />
-                </TextField>
-                <TextField>
-                  <Label className="text-text-muted">描述</Label>
-                  <Input value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="站点简介" />
-                </TextField>
-                <div className="grid grid-cols-2 gap-3">
-                  <StringSelect
-                    label="状态"
-                    selectedId={newStatus}
-                    onSelectionChange={(id) => setNewStatus(id as LinkStatus)}
-                    options={linkStatusOptions.filter((item) => item.id !== "all")}
-                  />
-                  <TextField>
-                    <Label className="text-text-muted">排序值</Label>
+      <AdminListOverlays>
+        <Modal state={createModal}>
+          <Modal.Backdrop>
+            <Modal.Container>
+              <Modal.Dialog className="bg-canvas inset-ring-primary inset-ring-2">
+                <Modal.Header>
+                  <Modal.Heading className="text-text-base">
+                    新增友链
+                  </Modal.Heading>
+                </Modal.Header>
+                <Modal.Body className="grid grid-cols-1 gap-3 p-2">
+                  <TextField isRequired>
+                    <Label className="text-text-muted">站点名称</Label>
                     <Input
-                      type="number"
-                      value={newSortOrder}
-                      onChange={(e) => setNewSortOrder(e.target.value)}
-                      placeholder="0"
-                      className="text-text-base"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      placeholder="例如：Dreamk Blog"
                     />
                   </TextField>
-                </div>
-              </Modal.Body>
-              <Modal.Footer className="flex justify-end gap-2">
-                <Button variant="outline" onPress={createModal.close}>
-                  取消
-                </Button>
-                <Button variant="primary" isDisabled={creating || !newName.trim() || !newUrl.trim()} onPress={handleCreate}>
-                  {creating ? <Spinner color="current" size="sm" /> : null}
-                  {creating ? "提交中..." : "提交"}
-                </Button>
-              </Modal.Footer>
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
-
-      <Modal state={editModal}>
-        <Modal.Backdrop>
-          <Modal.Container>
-            <Modal.Dialog className="bg-canvas inset-ring-primary inset-ring-2">
-              <Modal.Header>
-                <Modal.Heading className="text-text-base">编辑友链</Modal.Heading>
-              </Modal.Header>
-              <Modal.Body className="grid grid-cols-1 gap-3 p-2">
-                <TextField isRequired>
-                  <Label className="text-text-muted">站点名称</Label>
-                  <Input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="例如：Dreamk Blog" />
-                </TextField>
-                <TextField isRequired>
-                  <Label className="text-text-muted">站点 URL</Label>
-                  <Input value={editUrl} onChange={(e) => setEditUrl(e.target.value)} placeholder="https://example.com" />
-                </TextField>
-                <TextField>
-                  <Label className="text-text-muted">联系邮箱</Label>
-                  <Input value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="demo@example.com" />
-                </TextField>
-                <TextField>
-                  <Label className="text-text-muted">头像 URL</Label>
-                  <Input
-                    value={editAvatar}
-                    onChange={(e) => setEditAvatar(e.target.value)}
-                    placeholder="https://example.com/logo.png"
-                  />
-                </TextField>
-                <TextField>
-                  <Label className="text-text-muted">描述</Label>
-                  <Input value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="站点简介" />
-                </TextField>
-                <div className="grid grid-cols-2 gap-3">
-                  <StringSelect
-                    label="状态"
-                    selectedId={editStatus}
-                    onSelectionChange={(id) => setEditStatus(id as LinkStatus)}
-                    options={linkStatusOptions.filter((item) => item.id !== "all")}
-                  />
-                  <TextField>
-                    <Label className="text-text-muted">排序值</Label>
+                  <TextField isRequired>
+                    <Label className="text-text-muted">站点 URL</Label>
                     <Input
-                      type="number"
-                      value={editSortOrder}
-                      onChange={(e) => setEditSortOrder(e.target.value)}
-                      placeholder="0"
+                      value={newUrl}
+                      onChange={(e) => setNewUrl(e.target.value)}
+                      placeholder="https://example.com"
                     />
                   </TextField>
-                </div>
-              </Modal.Body>
-              <Modal.Footer className="flex justify-end gap-2">
-                <Button variant="outline" onPress={editModal.close}>
-                  取消
-                </Button>
-                <Button variant="primary" isDisabled={updating || !editName.trim() || !editUrl.trim()} onPress={handleUpdate}>
-                  {updating ? "保存中..." : "保存"}
-                </Button>
-              </Modal.Footer>
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
+                  <TextField>
+                    <Label className="text-text-muted">联系邮箱</Label>
+                    <Input
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="demo@example.com"
+                    />
+                  </TextField>
+                  <TextField>
+                    <Label className="text-text-muted">头像 URL</Label>
+                    <Input
+                      value={newAvatar}
+                      onChange={(e) => setNewAvatar(e.target.value)}
+                      placeholder="https://example.com/logo.png"
+                    />
+                  </TextField>
+                  <TextField>
+                    <Label className="text-text-muted">描述</Label>
+                    <Input
+                      value={newDescription}
+                      onChange={(e) => setNewDescription(e.target.value)}
+                      placeholder="站点简介"
+                    />
+                  </TextField>
+                  <div className="grid grid-cols-2 gap-3">
+                    <StringSelect
+                      label="状态"
+                      selectedId={newStatus}
+                      onSelectionChange={(id) => setNewStatus(id as LinkStatus)}
+                      options={linkStatusOptions.filter(
+                        (item) => item.id !== "all",
+                      )}
+                    />
+                    <TextField>
+                      <Label className="text-text-muted">排序值</Label>
+                      <Input
+                        type="number"
+                        value={newSortOrder}
+                        onChange={(e) => setNewSortOrder(e.target.value)}
+                        placeholder="0"
+                        className="text-text-base"
+                      />
+                    </TextField>
+                  </div>
+                </Modal.Body>
+                <Modal.Footer className="flex justify-end gap-2">
+                  <Button variant="outline" onPress={createModal.close}>
+                    取消
+                  </Button>
+                  <Button
+                    variant="primary"
+                    isDisabled={creating || !newName.trim() || !newUrl.trim()}
+                    onPress={handleCreate}
+                  >
+                    {creating ? <Spinner color="current" size="sm" /> : null}
+                    {creating ? "提交中..." : "提交"}
+                  </Button>
+                </Modal.Footer>
+              </Modal.Dialog>
+            </Modal.Container>
+          </Modal.Backdrop>
+        </Modal>
 
-      <ConfirmDeleteModal
-        state={deleteModal}
-        entityLabel="友链"
-        entityName={itemToDelete?.name ?? ''}
-        isDeleting={deletingId !== null}
-        onConfirm={handleDelete}
-      />
-    </AdminListOverlays>
+        <Modal state={editModal}>
+          <Modal.Backdrop>
+            <Modal.Container>
+              <Modal.Dialog className="bg-canvas inset-ring-primary inset-ring-2">
+                <Modal.Header>
+                  <Modal.Heading className="text-text-base">
+                    编辑友链
+                  </Modal.Heading>
+                </Modal.Header>
+                <Modal.Body className="grid grid-cols-1 gap-3 p-2">
+                  <TextField isRequired>
+                    <Label className="text-text-muted">站点名称</Label>
+                    <Input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="例如：Dreamk Blog"
+                    />
+                  </TextField>
+                  <TextField isRequired>
+                    <Label className="text-text-muted">站点 URL</Label>
+                    <Input
+                      value={editUrl}
+                      onChange={(e) => setEditUrl(e.target.value)}
+                      placeholder="https://example.com"
+                    />
+                  </TextField>
+                  <TextField>
+                    <Label className="text-text-muted">联系邮箱</Label>
+                    <Input
+                      value={editEmail}
+                      onChange={(e) => setEditEmail(e.target.value)}
+                      placeholder="demo@example.com"
+                    />
+                  </TextField>
+                  <TextField>
+                    <Label className="text-text-muted">头像 URL</Label>
+                    <Input
+                      value={editAvatar}
+                      onChange={(e) => setEditAvatar(e.target.value)}
+                      placeholder="https://example.com/logo.png"
+                    />
+                  </TextField>
+                  <TextField>
+                    <Label className="text-text-muted">描述</Label>
+                    <Input
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      placeholder="站点简介"
+                    />
+                  </TextField>
+                  <div className="grid grid-cols-2 gap-3">
+                    <StringSelect
+                      label="状态"
+                      selectedId={editStatus}
+                      onSelectionChange={(id) =>
+                        setEditStatus(id as LinkStatus)
+                      }
+                      options={linkStatusOptions.filter(
+                        (item) => item.id !== "all",
+                      )}
+                    />
+                    <TextField>
+                      <Label className="text-text-muted">排序值</Label>
+                      <Input
+                        type="number"
+                        value={editSortOrder}
+                        onChange={(e) => setEditSortOrder(e.target.value)}
+                        placeholder="0"
+                      />
+                    </TextField>
+                  </div>
+                </Modal.Body>
+                <Modal.Footer className="flex justify-end gap-2">
+                  <Button variant="outline" onPress={editModal.close}>
+                    取消
+                  </Button>
+                  <Button
+                    variant="primary"
+                    isDisabled={updating || !editName.trim() || !editUrl.trim()}
+                    onPress={handleUpdate}
+                  >
+                    {updating ? "保存中..." : "保存"}
+                  </Button>
+                </Modal.Footer>
+              </Modal.Dialog>
+            </Modal.Container>
+          </Modal.Backdrop>
+        </Modal>
+
+        <ConfirmDeleteModal
+          state={deleteModal}
+          entityLabel="友链"
+          entityName={itemToDelete?.name ?? ""}
+          isDeleting={deletingId !== null}
+          onConfirm={handleDelete}
+        />
+      </AdminListOverlays>
     </>
   );
 }

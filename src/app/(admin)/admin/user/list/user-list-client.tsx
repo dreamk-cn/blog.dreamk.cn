@@ -2,17 +2,39 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Button, InputGroup, Table, TextField, Label, Modal, Spinner, useOverlayState } from "@heroui/react";
+import {
+  Button,
+  InputGroup,
+  Table,
+  TextField,
+  Label,
+  Modal,
+  Spinner,
+  useOverlayState,
+} from "@heroui/react";
 import { SearchIcon } from "@/components/icons";
 import { request } from "@/lib/request";
 import { StringSelect } from "@/components/admin/string-select";
-import { AdminListLayout, AdminListBody, AdminListHeader, AdminListOverlays, AdminListTable, adminTableHeaderClassName } from "@/components/admin/admin-list-layout";
+import {
+  AdminListLayout,
+  AdminListBody,
+  AdminListHeader,
+  AdminListOverlays,
+  AdminListTable,
+  adminTableHeaderClassName,
+} from "@/components/admin/admin-list-layout";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { AdminUserListItem } from "@/services/user-service";
 
-async function loadUsers(kw: string, status: string | undefined): Promise<{ data: AdminUserListItem[]; error: string | null }> {
+async function loadUsers(
+  kw: string,
+  status: string | undefined,
+): Promise<{ data: AdminUserListItem[]; error: string | null }> {
   try {
-    const res = await request.get<AdminUserListItem[]>("/users", { keyword: kw, status });
+    const res = await request.get<AdminUserListItem[]>("/users", {
+      keyword: kw,
+      status,
+    });
     if (res.code === 200) return { data: res.data || [], error: null };
     return { data: [], error: res.message || "获取用户失败" };
   } catch {
@@ -67,10 +89,14 @@ function UserTableRows({
         <span className="text-text-base">{u.role}</span>
       </Table.Cell>
       <Table.Cell>
-        <span className={u.status === "BAN" ? "text-error" : "text-text-muted"}>{u.status}</span>
+        <span className={u.status === "BAN" ? "text-error" : "text-text-muted"}>
+          {u.status}
+        </span>
       </Table.Cell>
       <Table.Cell>
-        <span className="text-xs text-text-muted">{new Date(u.createdAt).toLocaleString()}</span>
+        <span className="text-xs text-text-muted">
+          {new Date(u.createdAt).toLocaleString()}
+        </span>
       </Table.Cell>
       <Table.Cell>
         <div className="flex gap-2">
@@ -104,13 +130,18 @@ type AdminUserListClientProps = {
   initialError?: string | null;
 };
 
-export default function AdminUserListClient({ initialUsers, initialError = null }: AdminUserListClientProps) {
+export default function AdminUserListClient({
+  initialUsers,
+  initialError = null,
+}: AdminUserListClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const didHydrate = useRef(false);
   const [keyword, setKeyword] = useState("");
   const keywordDebounced = useDebounce(keyword, 300);
-  const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
+  const [statusFilter, setStatusFilter] = useState<string | undefined>(
+    undefined,
+  );
   const [refreshKey, setRefreshKey] = useState(0);
   const [isPending, startTransition] = useTransition();
 
@@ -183,57 +214,65 @@ export default function AdminUserListClient({ initialUsers, initialError = null 
 
   return (
     <>
-    <AdminListLayout error={listError}>
-      <AdminListHeader>
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex flex-wrap items-end gap-3">
-          <TextField className="max-w-sm">
-            <Label className="text-text-muted">搜索</Label>
-            <InputGroup>
-              <InputGroup.Prefix>
-                <SearchIcon className="text-base text-text-muted" />
-              </InputGroup.Prefix>
-              <InputGroup.Input
-                value={keyword}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setKeyword(e.target.value)}
-                placeholder="搜索姓名或邮箱"
+      <AdminListLayout error={listError}>
+        <AdminListHeader>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-end gap-3">
+              <TextField className="max-w-sm">
+                <Label className="text-text-muted">搜索</Label>
+                <InputGroup>
+                  <InputGroup.Prefix>
+                    <SearchIcon className="text-base text-text-muted" />
+                  </InputGroup.Prefix>
+                  <InputGroup.Input
+                    value={keyword}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                      setKeyword(e.target.value)
+                    }
+                    placeholder="搜索姓名或邮箱"
+                  />
+                </InputGroup>
+              </TextField>
+              <StringSelect
+                className="w-40"
+                label="状态筛选"
+                selectedId={statusSelectId}
+                onSelectionChange={(id) => {
+                  setStatusFilter(id === "all" ? undefined : id);
+                }}
+                options={[
+                  { id: "all", label: "全部" },
+                  { id: "VALID", label: "正常" },
+                  { id: "BAN", label: "封禁" },
+                  { id: "DELETED", label: "已删除" },
+                ]}
               />
-            </InputGroup>
-          </TextField>
-          <StringSelect
-            className="w-40"
-            label="状态筛选"
-            selectedId={statusSelectId}
-            onSelectionChange={(id) => {
-              setStatusFilter(id === "all" ? undefined : id);
-            }}
-            options={[
-              { id: "all", label: "全部" },
-              { id: "VALID", label: "正常" },
-              { id: "BAN", label: "封禁" },
-              { id: "DELETED", label: "已删除" },
-            ]}
-          />
-          <Button
-            size="sm"
-            variant="secondary"
-            onPress={() => {
-              setKeyword("");
-              setStatusFilter(undefined);
-              setListUsers(initialUsers);
-              setListError(initialError);
-              router.replace(pathname, { scroll: false });
-            }}
-          >
-            清空
-          </Button>
-        </div>
-      </div>
-      </AdminListHeader>
+              <Button
+                size="sm"
+                variant="secondary"
+                onPress={() => {
+                  setKeyword("");
+                  setStatusFilter(undefined);
+                  setListUsers(initialUsers);
+                  setListError(initialError);
+                  router.replace(pathname, { scroll: false });
+                }}
+              >
+                清空
+              </Button>
+            </div>
+          </div>
+        </AdminListHeader>
 
-      <AdminListBody>
-      <div className={isPending ? "h-full opacity-60 pointer-events-none transition-opacity" : "h-full transition-opacity"}>
-        <AdminListTable aria-label="用户列表">
+        <AdminListBody>
+          <div
+            className={
+              isPending
+                ? "h-full opacity-60 pointer-events-none transition-opacity"
+                : "h-full transition-opacity"
+            }
+          >
+            <AdminListTable aria-label="用户列表">
               <Table.Header className={adminTableHeaderClassName}>
                 <Table.Column isRowHeader>姓名</Table.Column>
                 <Table.Column>邮箱</Table.Column>
@@ -251,47 +290,52 @@ export default function AdminUserListClient({ initialUsers, initialError = null 
                   onUnban={(u) => handleBanToggle(u, "VALID")}
                 />
               </Table.Body>
-        </AdminListTable>
-      </div>
-      </AdminListBody>
-    </AdminListLayout>
+            </AdminListTable>
+          </div>
+        </AdminListBody>
+      </AdminListLayout>
 
-    <AdminListOverlays>
-      <Modal state={banConfirmModal}>
-        <Modal.Backdrop>
-          <Modal.Container>
-            <Modal.Dialog className="bg-canvas inset-ring-error inset-ring-2">
-              <Modal.Header>
-                <Modal.Heading className="text-text-base">确认封禁用户</Modal.Heading>
-              </Modal.Header>
-              <Modal.Body>
-                <p className="text-text-base">
-                  确认要封禁用户 &quot;{userToBan?.name || userToBan?.email || "该用户"}&quot; 吗？
-                </p>
-              </Modal.Body>
-              <Modal.Footer className="flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onPress={() => {
-                    banConfirmModal.close();
-                    setUserToBan(null);
-                  }}
-                >
-                  取消
-                </Button>
-                <Button
-                  variant="danger"
-                  isDisabled={!userToBan || updatingId === userToBan.id}
-                  onPress={handleConfirmBan}
-                >
-                  {userToBan && updatingId === userToBan.id ? "封禁中..." : "确认封禁"}
-                </Button>
-              </Modal.Footer>
-            </Modal.Dialog>
-          </Modal.Container>
-        </Modal.Backdrop>
-      </Modal>
-    </AdminListOverlays>
+      <AdminListOverlays>
+        <Modal state={banConfirmModal}>
+          <Modal.Backdrop>
+            <Modal.Container>
+              <Modal.Dialog className="bg-canvas inset-ring-error inset-ring-2">
+                <Modal.Header>
+                  <Modal.Heading className="text-text-base">
+                    确认封禁用户
+                  </Modal.Heading>
+                </Modal.Header>
+                <Modal.Body>
+                  <p className="text-text-base">
+                    确认要封禁用户 &quot;
+                    {userToBan?.name || userToBan?.email || "该用户"}&quot; 吗？
+                  </p>
+                </Modal.Body>
+                <Modal.Footer className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onPress={() => {
+                      banConfirmModal.close();
+                      setUserToBan(null);
+                    }}
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    variant="danger"
+                    isDisabled={!userToBan || updatingId === userToBan.id}
+                    onPress={handleConfirmBan}
+                  >
+                    {userToBan && updatingId === userToBan.id
+                      ? "封禁中..."
+                      : "确认封禁"}
+                  </Button>
+                </Modal.Footer>
+              </Modal.Dialog>
+            </Modal.Container>
+          </Modal.Backdrop>
+        </Modal>
+      </AdminListOverlays>
     </>
   );
 }
