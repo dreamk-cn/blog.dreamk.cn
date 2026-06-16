@@ -37,7 +37,7 @@ export default async function Home() {
     <div className="mx-auto max-w-7xl px-4 py-4">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[280px_1fr_280px]">
         <aside className="hidden lg:block">
-          <div className="fixed top-20 h-[calc(100vh-8rem)] w-[280px] overflow-hidden">
+          <div className="fixed top-20 h-[calc(100vh-8rem)] w-[280px] overflow-hidden shadow-sm rounded-3xl">
             {profileSidebarEl}
           </div>
         </aside>

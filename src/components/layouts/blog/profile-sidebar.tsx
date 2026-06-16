@@ -14,6 +14,9 @@ type FriendLinkItem = {
   url: string;
 };
 
+const sectionClass = "flex min-h-0 shrink grow-0 basis-auto flex-col";
+const scrollAreaClass = "min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1";
+
 export function ProfileSidebar({
   categories,
   tags,
@@ -23,12 +26,9 @@ export function ProfileSidebar({
   tags: Pick<Tag, "id" | "name" | "slug">[];
   friendLinks: FriendLinkItem[];
 }) {
-
-  const scrollAreaClass = "min-h-0 flex-1 overflow-y-auto overscroll-contain pr-1";
-
   return (
-    <Card className="flex h-full flex-col overflow-hidden bg-background shadow-sm">
-      <Card.Content className="shrink-0 grow-0 p-4 text-center">
+    <Card className="flex h-full flex-col overflow-hidden bg-background">
+      <Card.Content className="shrink-0 grow-0 px-4 py-5 text-center">
         <div className="mx-auto mb-3">
           <Avatar color="accent" className="mx-auto h-20 w-20 border border-default-200 text-large shadow-sm">
             <Avatar.Image src={siteConfig.avatar} alt="" />
@@ -52,7 +52,7 @@ export function ProfileSidebar({
       <Separator />
 
       <div className="flex min-h-0 flex-1 flex-col">
-        <Card.Content className="flex min-h-0 flex-1 flex-col px-4 py-4">
+        <Card.Content className={`${sectionClass} px-4 py-4`}>
           <div className="mb-3 shrink-0 text-md font-semibold text-text-base">分类</div>
           <div className={scrollAreaClass}>
             <div className="flex flex-wrap gap-2">
@@ -73,7 +73,7 @@ export function ProfileSidebar({
 
         <Separator />
 
-        <Card.Content className="flex min-h-0 flex-1 flex-col px-4 py-4">
+        <Card.Content className={`${sectionClass} px-4 py-4`}>
           <div className="mb-3 shrink-0 text-md font-semibold text-text-base">标签</div>
           <div className={scrollAreaClass}>
             <div className="flex flex-wrap gap-2">
@@ -94,7 +94,7 @@ export function ProfileSidebar({
 
         <Separator />
 
-        <Card.Content className="flex min-h-0 flex-1 flex-col p-4">
+        <Card.Content className={`${sectionClass} p-4`}>
           <div className="mb-3 shrink-0 text-md font-semibold text-text-base">友链</div>
           <div className={scrollAreaClass}>
             <div className="flex flex-wrap gap-x-3 gap-y-2 px-1 text-sm">
