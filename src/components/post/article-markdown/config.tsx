@@ -78,11 +78,19 @@ const mdBase: Components = {
       {children}
     </blockquote>
   ),
-  a: ({ children, className, ...props }) => (
-    <a className={`${mdLink} ${className ?? ""}`} {...props}>
-      {children}
-    </a>
-  ),
+  a: ({ children, className, href, ...props }) => {
+    const isInPageAnchor = typeof href === "string" && href.startsWith("#");
+    return (
+      <a
+        className={`${mdLink} ${className ?? ""}`}
+        href={href}
+        {...(isInPageAnchor ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+        {...props}
+      >
+        {children}
+      </a>
+    );
+  },
   code: ({ className, children, ...props }) => {
     const domProps = withoutNodeProps(props as Record<string, unknown>);
     const cls = stringifyClassName(className);
