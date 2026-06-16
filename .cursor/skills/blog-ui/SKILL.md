@@ -99,10 +99,32 @@ description: >-
 
 | 模式 | 约定 |
 |------|------|
-| 列表页 | `Table` + `Pagination` + 筛选 `Input`/`StringSelect` + `Alert` 错误 + `Spinner` 加载 |
+| 列表页布局 | `AdminListLayout` + `AdminListHeader` / `AdminListBody` / `AdminListFooter`；表格用 `AdminListTable`；Modal 放 `AdminListOverlays`（layout 外） |
+| 列表页表格 | 滚动在 `Table.ScrollContainer` 内，表头 `className={adminTableHeaderClassName}`；**不要**在 `AdminListBody` 上滚（表头会一起滚走） |
+| 分页 | `PaginatedFooter`（`src/components/admin/paginated-footer.tsx`） |
 | 数据请求 | `request` from `@/lib/request`，错误文案中文、简短 |
 | 日期展示 | `toLocaleString('zh-CN', { ... })` 与列表页现有 formatter 一致 |
 | 侧栏样式 | 复用 `Sidebar`/`tv` variants，色板 `border-border bg-background text-text-base` |
+
+**后台列表页骨架**（参考 `admin/post/list/page.tsx`）：
+
+```tsx
+<AdminListLayout error={error}>
+  <AdminListHeader>{/* 标题 + 筛选 */}</AdminListHeader>
+  <AdminListBody>
+    <AdminListTable aria-label="…">
+      <Table.Header className={adminTableHeaderClassName}>…</Table.Header>
+      <Table.Body>…</Table.Body>
+    </AdminListTable>
+  </AdminListBody>
+  <AdminListFooter>
+    <PaginatedFooter … />
+  </AdminListFooter>
+</AdminListLayout>
+<AdminListOverlays>{/* Modal */}</AdminListOverlays>
+```
+
+网格视图（如媒体库）在 `AdminListBody` 上传 `className="overflow-y-auto"`。
 
 ## 实现检查清单
 
@@ -125,6 +147,8 @@ description: >-
 | 文章封面 | `src/components/post/post-cover.tsx`、`public/images/post-cover-placeholder.svg` |
 | 侧栏资料+分类 | `src/components/layouts/blog/profile-sidebar.tsx` |
 | 后台表格列表 | `src/app/(admin)/admin/post/list/page.tsx` |
+| 列表布局组件 | `src/components/admin/admin-list-layout.tsx` |
+| 列表分页脚 | `src/components/admin/paginated-footer.tsx` |
 | 主题切换 | `src/components/theme-switcher.tsx` |
 | Markdown 排版 | `src/components/post/article-markdown/config.tsx` |
 

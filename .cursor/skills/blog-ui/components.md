@@ -18,7 +18,7 @@ components/
 │   └── admin/         # layout, sidebar, navbar（含 tv 样式）
 ├── post/              # 卡片、封面、TOC、评论、Markdown、表单
 ├── auth/              # login-form, register-form
-├── admin/             # string-select 等后台小部件
+├── admin/             # 后台 UI：admin-list-layout、paginated-footer、string-select 等
 ├── buttons/           # login-button
 ├── ui/
 │   └── heroui-client.tsx   # Server 可用的 Client* 导出
@@ -55,6 +55,14 @@ components/
 | 文章 CRUD | `admin/post/list`, `admin/post/create` |
 | 分类/标签/评论/友链/用户 | `admin/*/list` |
 | 缓存 | `admin/cache/` |
+
+## 后台专用组件
+
+| 组件 | 路径 | 用途 |
+|------|------|------|
+| `AdminListLayout` 等 | `src/components/admin/admin-list-layout.tsx` | 列表页 flex 布局；`AdminListTable` 固定表头 + 表体滚动 |
+| `PaginatedFooter` | `src/components/admin/paginated-footer.tsx` | 列表底部分页与每页条数 |
+| `StringSelect` | `src/components/admin/string-select.tsx` | 后台筛选下拉 |
 
 ## HeroUI 常用组件（本项目已出现）
 
