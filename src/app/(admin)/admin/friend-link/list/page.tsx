@@ -3,7 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { StringSelect } from "@/components/admin/string-select";
-import { AdminListLayout } from "@/components/admin/admin-list-layout";
+import { AdminListLayout, AdminListBody, AdminListHeader, AdminListOverlays, AdminListTable, adminTableHeaderClassName } from "@/components/admin/admin-list-layout";
 import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
 import { SearchIcon } from "@/components/icons";
 import { request } from "@/lib/request";
@@ -274,7 +274,9 @@ export default function AdminFriendLinkListPage() {
   };
 
   return (
+    <>
     <AdminListLayout error={listError}>
+      <AdminListHeader>
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-wrap items-end gap-3">
           <TextField className="max-w-sm">
@@ -313,12 +315,12 @@ export default function AdminFriendLinkListPage() {
           新增友链
         </Button>
       </div>
+      </AdminListHeader>
 
-      <div className={isPending ? "opacity-60 pointer-events-none transition-opacity" : "transition-opacity"}>
-        <Table>
-          <Table.ScrollContainer>
-            <Table.Content aria-label="友链列表">
-              <Table.Header>
+      <AdminListBody>
+      <div className={isPending ? "h-full opacity-60 pointer-events-none transition-opacity" : "h-full transition-opacity"}>
+        <AdminListTable aria-label="友链列表">
+              <Table.Header className={adminTableHeaderClassName}>
                 <Table.Column isRowHeader>站点</Table.Column>
                 <Table.Column>URL</Table.Column>
                 <Table.Column>状态</Table.Column>
@@ -335,11 +337,12 @@ export default function AdminFriendLinkListPage() {
                   onDelete={openDelete}
                 />
               </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
-        </Table>
+        </AdminListTable>
       </div>
+      </AdminListBody>
+    </AdminListLayout>
 
+    <AdminListOverlays>
       <Modal state={createModal}>
         <Modal.Backdrop>
           <Modal.Container>
@@ -471,6 +474,7 @@ export default function AdminFriendLinkListPage() {
         isDeleting={deletingId !== null}
         onConfirm={handleDelete}
       />
-    </AdminListLayout>
+    </AdminListOverlays>
+    </>
   );
 }

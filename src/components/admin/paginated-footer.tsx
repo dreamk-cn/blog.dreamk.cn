@@ -36,14 +36,14 @@ export function PaginatedFooter({
   if (total === 0) return null;
 
   return (
-    <div className="flex items-center justify-between px-2 py-4">
+    <div className="flex items-center justify-between px-2">
       <div className="flex items-center gap-4">
         {summary ?? (
           <span className="shrink-0 text-sm text-text-muted">共 {total} 条数据</span>
         )}
         <StringSelect
           aria-label="每页条数"
-          className="w-32"
+          className="w-36"
           selectedId={String(pageSize)}
           onSelectionChange={(id) => onPageSizeChange(Number(id))}
           options={pageSizeOptions.map((o) => ({ id: String(o.value), label: o.label }))}

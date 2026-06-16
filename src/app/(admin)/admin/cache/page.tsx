@@ -2,6 +2,7 @@
 
 import { ANON_COMMENT_RATE_CACHE_KEY_PREFIX } from "@/lib/cache/cache-key-prefixes";
 import { PaginatedFooter } from "@/components/admin/paginated-footer";
+import { AdminListLayout, AdminListBody, AdminListFooter, AdminListHeader, AdminListOverlays, AdminListTable, adminTableHeaderClassName } from "@/components/admin/admin-list-layout";
 import { request } from "@/lib/request";
 import { useDebounce } from "@/hooks/useDebounce";
 import {
@@ -148,7 +149,9 @@ export default function AdminAppCachePage() {
   };
 
   return (
-    <div className="h-full space-y-4 bg-canvas p-4 text-text-base">
+    <>
+    <AdminListLayout>
+      <AdminListHeader>
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-2xl font-bold text-text-base">应用缓存</h1>
@@ -201,12 +204,11 @@ export default function AdminAppCachePage() {
           </Button>
         </div>
       </div>
+      </AdminListHeader>
 
-      <div className="rounded-lg">
-        <Table>
-          <Table.ScrollContainer className="max-h-[calc(100vh-320px)]">
-            <Table.Content aria-label="应用缓存列表">
-              <Table.Header>
+      <AdminListBody>
+        <AdminListTable aria-label="应用缓存列表" className="rounded-lg">
+              <Table.Header className={adminTableHeaderClassName}>
                 <Table.Column isRowHeader>键</Table.Column>
                 <Table.Column>值</Table.Column>
                 <Table.Column>过期时间</Table.Column>
@@ -269,11 +271,10 @@ export default function AdminAppCachePage() {
                   ))
                 )}
               </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
-        </Table>
-      </div>
+        </AdminListTable>
+      </AdminListBody>
 
+      <AdminListFooter>
       <PaginatedFooter
         total={total}
         pageNo={pageNo}
@@ -289,7 +290,10 @@ export default function AdminAppCachePage() {
           { value: 100, label: '100条/页' },
         ]}
       />
+      </AdminListFooter>
+    </AdminListLayout>
 
+    <AdminListOverlays>
       <Modal state={clearExpiredModal}>
         <Modal.Backdrop>
           <Modal.Container>
@@ -347,6 +351,7 @@ export default function AdminAppCachePage() {
           </Modal.Container>
         </Modal.Backdrop>
       </Modal>
-    </div>
+    </AdminListOverlays>
+    </>
   );
 }

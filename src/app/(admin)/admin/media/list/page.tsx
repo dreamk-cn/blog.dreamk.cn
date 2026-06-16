@@ -3,11 +3,10 @@
 import { useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  Alert,
-  Pagination,
   useOverlayState,
 } from '@heroui/react';
-import { StringSelect } from '@/components/admin/string-select';
+import { PaginatedFooter } from '@/components/admin/paginated-footer';
+import { AdminListLayout, AdminListBody, AdminListFooter, AdminListHeader, AdminListOverlays } from '@/components/admin/admin-list-layout';
 import { MediaDeleteModal } from '@/components/admin/media/media-delete-modal';
 import { MediaGridView } from '@/components/admin/media/media-grid-view';
 import { MediaPreviewModal } from '@/components/admin/media/media-preview-modal';
@@ -127,55 +126,10 @@ export default function AdminMediaListPage() {
     }
   };
 
-  const bottomContent = (
-    <div className="flex items-center justify-between px-2 py-4">
-      <div className="flex items-center gap-4">
-        <span className="shrink-0 text-sm text-text-muted">共 {total} 条数据</span>
-        <StringSelect
-          aria-label="每页条数"
-          className="w-32"
-          selectedId={String(pageSize)}
-          onSelectionChange={(id) => {
-            setPageNo(1);
-            setPageSize(Number(id));
-          }}
-          options={[
-            { id: '10', label: '10条/页' },
-            { id: '20', label: '20条/页' },
-            { id: '50', label: '50条/页' },
-          ]}
-        />
-      </div>
-      <Pagination>
-        <Pagination.Content className="gap-1">
-          <Pagination.Item>
-            <Pagination.Previous
-              isDisabled={pageNo <= 1}
-              onPress={() => setPageNo((page) => Math.max(1, page - 1))}
-            >
-              <Pagination.PreviousIcon />
-            </Pagination.Previous>
-          </Pagination.Item>
-          <Pagination.Item>
-            <span className="px-2 text-small text-default-600">
-              {pageNo} / {totalPages}
-            </span>
-          </Pagination.Item>
-          <Pagination.Item>
-            <Pagination.Next
-              isDisabled={pageNo >= totalPages}
-              onPress={() => setPageNo((page) => Math.min(totalPages, page + 1))}
-            >
-              <Pagination.NextIcon />
-            </Pagination.Next>
-          </Pagination.Item>
-        </Pagination.Content>
-      </Pagination>
-    </div>
-  );
-
   return (
-    <div className="space-y-4 bg-canvas p-4 h-full">
+    <>
+    <AdminListLayout error={errorMessage}>
+      <AdminListHeader>
       <MediaToolbar
         keyword={keyword}
         category={category}
@@ -207,7 +161,9 @@ export default function AdminMediaListPage() {
         onReset={handleReset}
         onUpload={() => uploadModal.open()}
       />
+      </AdminListHeader>
 
+      <AdminListBody className={viewMode === 'grid' ? 'overflow-y-auto' : undefined}>
       {viewMode === 'table' ? (
         <MediaTableView
           items={items}
@@ -225,16 +181,21 @@ export default function AdminMediaListPage() {
           onDelete={openDelete}
         />
       )}
+      </AdminListBody>
 
-      {errorMessage ? (
-        <Alert status="danger">
-          <Alert.Title>错误</Alert.Title>
-          <Alert.Description>{errorMessage}</Alert.Description>
-        </Alert>
-      ) : null}
+      <AdminListFooter>
+        <PaginatedFooter
+          total={total}
+          pageNo={pageNo}
+          pageSize={pageSize}
+          totalPages={totalPages}
+          onPageChange={setPageNo}
+          onPageSizeChange={(size) => { setPageNo(1); setPageSize(size); }}
+        />
+      </AdminListFooter>
+    </AdminListLayout>
 
-      {bottomContent}
-
+    <AdminListOverlays>
       <MediaUploadModal
         state={uploadModal}
         onUploaded={() => {
@@ -251,6 +212,7 @@ export default function AdminMediaListPage() {
         deleting={deletingId === deleteItem?.id}
         onConfirm={() => void handleDelete()}
       />
-    </div>
+    </AdminListOverlays>
+    </>
   );
 }

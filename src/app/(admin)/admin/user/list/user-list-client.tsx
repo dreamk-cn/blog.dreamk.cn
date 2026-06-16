@@ -2,10 +2,11 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Alert, Button, InputGroup, Table, TextField, Label, Modal, Spinner, useOverlayState } from "@heroui/react";
+import { Button, InputGroup, Table, TextField, Label, Modal, Spinner, useOverlayState } from "@heroui/react";
 import { SearchIcon } from "@/components/icons";
 import { request } from "@/lib/request";
 import { StringSelect } from "@/components/admin/string-select";
+import { AdminListLayout, AdminListBody, AdminListHeader, AdminListOverlays, AdminListTable, adminTableHeaderClassName } from "@/components/admin/admin-list-layout";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { AdminUserListItem } from "@/services/user-service";
 
@@ -181,7 +182,9 @@ export default function AdminUserListClient({ initialUsers, initialError = null 
   };
 
   return (
-    <div className="space-y-4 p-4 text-text-base bg-canvas h-full">
+    <>
+    <AdminListLayout error={listError}>
+      <AdminListHeader>
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-wrap items-end gap-3">
           <TextField className="max-w-sm">
@@ -226,12 +229,12 @@ export default function AdminUserListClient({ initialUsers, initialError = null 
           </Button>
         </div>
       </div>
+      </AdminListHeader>
 
-      <div className={isPending ? "opacity-60 pointer-events-none transition-opacity" : "transition-opacity"}>
-        <Table>
-          <Table.ScrollContainer>
-            <Table.Content aria-label="用户列表">
-              <Table.Header>
+      <AdminListBody>
+      <div className={isPending ? "h-full opacity-60 pointer-events-none transition-opacity" : "h-full transition-opacity"}>
+        <AdminListTable aria-label="用户列表">
+              <Table.Header className={adminTableHeaderClassName}>
                 <Table.Column isRowHeader>姓名</Table.Column>
                 <Table.Column>邮箱</Table.Column>
                 <Table.Column>角色</Table.Column>
@@ -248,18 +251,12 @@ export default function AdminUserListClient({ initialUsers, initialError = null 
                   onUnban={(u) => handleBanToggle(u, "VALID")}
                 />
               </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
-        </Table>
+        </AdminListTable>
       </div>
+      </AdminListBody>
+    </AdminListLayout>
 
-      {listError ? (
-        <Alert status="danger">
-          <Alert.Title>错误</Alert.Title>
-          <Alert.Description>{listError}</Alert.Description>
-        </Alert>
-      ) : null}
-
+    <AdminListOverlays>
       <Modal state={banConfirmModal}>
         <Modal.Backdrop>
           <Modal.Container>
@@ -294,6 +291,7 @@ export default function AdminUserListClient({ initialUsers, initialError = null 
           </Modal.Container>
         </Modal.Backdrop>
       </Modal>
-    </div>
+    </AdminListOverlays>
+    </>
   );
 }

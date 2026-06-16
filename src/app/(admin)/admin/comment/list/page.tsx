@@ -2,7 +2,7 @@
 
 import { StringSelect } from "@/components/admin/string-select";
 import { PaginatedFooter } from "@/components/admin/paginated-footer";
-import { AdminListLayout } from "@/components/admin/admin-list-layout";
+import { AdminListLayout, AdminListBody, AdminListFooter, AdminListHeader, AdminListTable, adminTableHeaderClassName } from "@/components/admin/admin-list-layout";
 import { request } from "@/lib/request";
 import type { Comment, Post, User } from "@/generated/prisma";
 import { Button, Chip, Input, Label, Spinner, Table, TextField } from "@heroui/react";
@@ -129,6 +129,7 @@ export default function AdminCommentListPage() {
 
   return (
     <AdminListLayout error={error}>
+      <AdminListHeader>
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold text-text-base">评论管理</h1>
         <div className="flex flex-wrap items-end gap-3">
@@ -191,12 +192,11 @@ export default function AdminCommentListPage() {
           </Button>
         </div>
       </div>
+      </AdminListHeader>
 
-      <div className="rounded-lg">
-        <Table>
-          <Table.ScrollContainer className="max-h-[calc(100vh-280px)]">
-            <Table.Content aria-label="评论列表">
-              <Table.Header>
+      <AdminListBody>
+        <AdminListTable aria-label="评论列表" className="rounded-lg">
+              <Table.Header className={adminTableHeaderClassName}>
                 <Table.Column isRowHeader>评论</Table.Column>
                 <Table.Column>文章</Table.Column>
                 <Table.Column>用户</Table.Column>
@@ -295,11 +295,10 @@ export default function AdminCommentListPage() {
                   ))
                 )}
               </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
-        </Table>
-      </div>
+        </AdminListTable>
+      </AdminListBody>
 
+      <AdminListFooter>
       <PaginatedFooter
         total={total}
         pageNo={pageNo}
@@ -308,6 +307,7 @@ export default function AdminCommentListPage() {
         onPageChange={setPageNo}
         onPageSizeChange={(size) => { setPageNo(1); setPageSize(size); }}
       />
+      </AdminListFooter>
 
     </AdminListLayout>
   );

@@ -2,12 +2,13 @@
 
 import { StringSelect } from "@/components/admin/string-select";
 import { PaginatedFooter } from "@/components/admin/paginated-footer";
+import { AdminListLayout, AdminListBody, AdminListFooter, AdminListHeader, AdminListTable, adminTableHeaderClassName } from "@/components/admin/admin-list-layout";
 import type { AccessLog, VisitorKind } from "@/generated/prisma";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatDateTime } from "@/lib/format-datetime";
 import { request } from "@/lib/request";
 import type { AccessLogUserPreview } from "@/services/access-log-service";
-import { Alert, Button, Chip, Input, Label, Spinner, Table, TextField } from "@heroui/react";
+import { Button, Chip, Input, Label, Spinner, Table, TextField } from "@heroui/react";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -90,7 +91,8 @@ export default function AdminAccessLogListPage() {
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
 
   return (
-    <div className="space-y-4 p-4 text-text-base bg-canvas h-full overflow-auto">
+    <AdminListLayout error={error} errorTitle="加载失败">
+      <AdminListHeader>
       <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold text-text-base">访问日志</h1>
         <div className="flex flex-wrap items-end gap-3">
@@ -166,19 +168,11 @@ export default function AdminAccessLogListPage() {
           </Button>
         </div>
       </div>
+      </AdminListHeader>
 
-      {error ? (
-        <Alert status="danger">
-          <Alert.Title>加载失败</Alert.Title>
-          <Alert.Description>{error}</Alert.Description>
-        </Alert>
-      ) : null}
-
-      <div className="rounded-l">
-        <Table>
-          <Table.ScrollContainer className="max-h-[calc(100vh-330px)]">
-            <Table.Content aria-label="访问日志列表">
-              <Table.Header>
+      <AdminListBody>
+        <AdminListTable aria-label="访问日志列表" className="rounded-lg">
+              <Table.Header className={adminTableHeaderClassName}>
                 <Table.Column isRowHeader>时间</Table.Column>
                 <Table.Column>路径</Table.Column>
                 <Table.Column>IP</Table.Column>
@@ -252,11 +246,10 @@ export default function AdminAccessLogListPage() {
                   })
                 )}
               </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
-        </Table>
-      </div>
+        </AdminListTable>
+      </AdminListBody>
 
+      <AdminListFooter>
       <PaginatedFooter
         total={total}
         pageNo={pageNo}
@@ -265,6 +258,7 @@ export default function AdminAccessLogListPage() {
         onPageChange={setPageNo}
         onPageSizeChange={(size) => { setPageNo(1); setPageSize(size); }}
       />
-    </div>
+      </AdminListFooter>
+    </AdminListLayout>
   );
 }

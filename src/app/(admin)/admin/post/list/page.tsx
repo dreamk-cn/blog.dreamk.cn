@@ -20,7 +20,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 import { StringSelect } from '@/components/admin/string-select';
 import { PaginatedFooter } from '@/components/admin/paginated-footer';
 import { ConfirmDeleteModal } from '@/components/admin/confirm-delete-modal';
-import { AdminListLayout } from '@/components/admin/admin-list-layout';
+import { AdminListLayout, AdminListBody, AdminListFooter, AdminListHeader, AdminListTable, adminTableHeaderClassName } from '@/components/admin/admin-list-layout';
 
 type PostItem = Post & { category: Category | null; tags: Tag[] };
 
@@ -224,13 +224,11 @@ export default function Posts() {
 
   return (
     <AdminListLayout error={error}>
-      {topContent}
+      <AdminListHeader>{topContent}</AdminListHeader>
 
-      <div className="rounded-lg bg-background">
-        <Table>
-          <Table.ScrollContainer className="max-h-[calc(100vh-280px)]">
-            <Table.Content aria-label="文章列表">
-              <Table.Header>
+      <AdminListBody>
+        <AdminListTable aria-label="文章列表" className="rounded-lg bg-background">
+              <Table.Header className={adminTableHeaderClassName}>
                 <Table.Column isRowHeader>标题</Table.Column>
                 <Table.Column>分类</Table.Column>
                 <Table.Column>标签</Table.Column>
@@ -351,19 +349,19 @@ export default function Posts() {
                   ))
                 )}
               </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
-        </Table>
-      </div>
+        </AdminListTable>
+      </AdminListBody>
 
-      <PaginatedFooter
+      <AdminListFooter>
+        <PaginatedFooter
         total={total}
         pageNo={pageNo}
         pageSize={pageSize}
         totalPages={totalPages}
         onPageChange={setPageNo}
         onPageSizeChange={(size) => { setPageNo(1); setPageSize(size); }}
-      />
+        />
+      </AdminListFooter>
 
       <ConfirmDeleteModal
         state={deleteModal}

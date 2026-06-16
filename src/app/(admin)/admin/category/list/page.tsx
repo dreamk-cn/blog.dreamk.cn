@@ -14,7 +14,7 @@ import {
   useOverlayState,
 } from '@heroui/react';
 import { SearchIcon } from '@/components/icons';
-import { AdminListLayout } from '@/components/admin/admin-list-layout';
+import { AdminListLayout, AdminListBody, AdminListHeader, AdminListOverlays, AdminListTable, adminTableHeaderClassName } from '@/components/admin/admin-list-layout';
 import { ConfirmDeleteModal } from '@/components/admin/confirm-delete-modal';
 import type { Category } from '@/generated/prisma';
 import { request } from '@/lib/request';
@@ -222,7 +222,9 @@ export default function AdminCategoryListPage() {
   };
 
   return (
+    <>
     <AdminListLayout error={listError}>
+      <AdminListHeader>
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-wrap items-end gap-2">
           <InputGroup className="max-w-sm">
@@ -251,12 +253,12 @@ export default function AdminCategoryListPage() {
           新增分类
         </Button>
       </div>
+      </AdminListHeader>
 
-      <div className={isPending ? 'opacity-60 pointer-events-none transition-opacity' : 'transition-opacity'}>
-        <Table>
-          <Table.ScrollContainer>
-            <Table.Content aria-label="分类列表">
-              <Table.Header>
+      <AdminListBody>
+      <div className={isPending ? 'h-full opacity-60 pointer-events-none transition-opacity' : 'h-full transition-opacity'}>
+        <AdminListTable aria-label="分类列表">
+              <Table.Header className={adminTableHeaderClassName}>
                 <Table.Column isRowHeader>名称</Table.Column>
                 <Table.Column>Slug</Table.Column>
                 <Table.Column>创建时间</Table.Column>
@@ -272,11 +274,12 @@ export default function AdminCategoryListPage() {
                   onDelete={openDelete}
                 />
               </Table.Body>
-            </Table.Content>
-          </Table.ScrollContainer>
-        </Table>
+        </AdminListTable>
       </div>
+      </AdminListBody>
+    </AdminListLayout>
 
+    <AdminListOverlays>
       <Modal state={createModal}>
         <Modal.Backdrop>
           <Modal.Container>
@@ -372,6 +375,7 @@ export default function AdminCategoryListPage() {
         isDeleting={deletingId !== null}
         onConfirm={handleDelete}
       />
-    </AdminListLayout>
+    </AdminListOverlays>
+    </>
   );
 }
