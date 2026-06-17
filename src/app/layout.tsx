@@ -8,10 +8,11 @@ import { buildCanonical, buildIndexRobots, buildSiteJsonLd, getMetadataBase, str
 export const metadata: Metadata = {
   metadataBase: getMetadataBase(),
   title: {
-    default: siteConfig.name,
-    template: `%s - ${siteConfig.name}`,
+    default: siteConfig.title,
+    template: `%s - ${siteConfig.title}`,
   },
   description: siteConfig.description,
+  keywords: siteConfig.keywords,
   alternates: buildCanonical("/"),
   robots: buildIndexRobots(),
   manifest: "/manifest.webmanifest",

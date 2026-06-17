@@ -68,6 +68,7 @@ export function buildSiteJsonLd(): JsonLd {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: siteConfig.name,
+    alternateName: [siteConfig.slug, siteConfig.title, `${siteConfig.slug}.cn`],
     description: siteConfig.description,
     url: getSiteOrigin(),
     inLanguage: "zh-CN",
@@ -134,6 +135,7 @@ export function buildArticleJsonLd(input: ArticleJsonLdInput): JsonLd {
     publisher: {
       "@type": "Person",
       name: siteConfig.name,
+      alternateName: siteConfig.slug,
     },
     mainEntityOfPage: absoluteUrl(input.path),
     url: absoluteUrl(input.path),
