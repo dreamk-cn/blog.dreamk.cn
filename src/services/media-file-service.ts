@@ -1,5 +1,5 @@
 import { MediaCategory, MediaSource, Prisma } from "@/generated/prisma";
-import { deleteObject } from "@/lib/oss";
+import { deleteObject, uploadImageToKey } from "@/lib/oss";
 import { prisma } from "@/lib/prisma";
 
 export type CreateMediaFileInput = {
@@ -258,6 +258,58 @@ export async function getMediaFileUsage(id: string) {
 type DeleteMediaFileResult =
   | { ok: true }
   | { error: string; usageCount?: number };
+
+const mediaReplaceSelect = {
+  id: true,
+  url: true,
+  source: true,
+  category: true,
+  originalName: true,
+  mimeType: true,
+  size: true,
+} satisfies Prisma.MediaFileSelect;
+
+export type MediaReplaceResult = Prisma.MediaFileGetPayload<{
+  select: typeof mediaReplaceSelect;
+}>;
+
+export async function replaceUploadedMediaFile(input: {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+  buffer: Buffer;
+}): Promise<{ data: MediaReplaceResult } | { error: string }> {
+  const file = await prisma.mediaFile.findFirst({
+    where: { id: input.id, status: "ACTIVE" },
+    select: {
+      id: true,
+      source: true,
+      key: true,
+    },
+  });
+
+  if (!file) return { error: "文件不存在或已删除" };
+  if (file.source !== "UPLOAD") return { error: "仅支持站内上传文件替换" };
+  if (!file.key) return { error: "文件存储信息缺失，无法替换" };
+
+  await uploadImageToKey(input.buffer, {
+    key: file.key,
+    contentType: input.mimeType,
+  });
+
+  const data = await prisma.mediaFile.update({
+    where: { id: input.id },
+    data: {
+      originalName: input.originalName,
+      mimeType: input.mimeType,
+      size: input.size,
+    },
+    select: mediaReplaceSelect,
+  });
+
+  return { data };
+}
 
 export async function deleteMediaFile(id: string): Promise<DeleteMediaFileResult> {
   const file = await prisma.mediaFile.findFirst({

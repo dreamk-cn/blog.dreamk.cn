@@ -17,7 +17,9 @@ type MediaTableViewProps = {
   items: MediaListItem[];
   loading: boolean;
   deletingId: string | null;
+  replacingId: string | null;
   onPreview: (item: MediaListItem) => void;
+  onReplace: (item: MediaListItem) => void;
   onDelete: (item: MediaListItem) => void;
 };
 
@@ -25,7 +27,9 @@ export function MediaTableView({
   items,
   loading,
   deletingId,
+  replacingId,
   onPreview,
+  onReplace,
   onDelete,
 }: MediaTableViewProps) {
   return (
@@ -90,7 +94,9 @@ export function MediaTableView({
                 <MediaActions
                   item={item}
                   deleting={deletingId === item.id}
+                  replacing={replacingId === item.id}
                   onPreview={onPreview}
+                  onReplace={onReplace}
                   onDelete={onDelete}
                 />
               </Table.Cell>

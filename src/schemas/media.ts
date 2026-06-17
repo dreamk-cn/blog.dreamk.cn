@@ -42,3 +42,7 @@ export const MediaListSchema = SearchPageSchema.extend({
 export const MediaDeleteSchema = z.object({
   id: zValue(z.string().min(1, "缺少文件 ID")),
 });
+
+export const MediaReplaceIdSchema = z.object({
+  id: zValue(z.string().min(1, "缺少文件 ID")),
+});

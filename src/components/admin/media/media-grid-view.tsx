@@ -16,7 +16,9 @@ type MediaGridViewProps = {
   items: MediaListItem[];
   loading: boolean;
   deletingId: string | null;
+  replacingId: string | null;
   onPreview: (item: MediaListItem) => void;
+  onReplace: (item: MediaListItem) => void;
   onDelete: (item: MediaListItem) => void;
 };
 
@@ -24,7 +26,9 @@ export function MediaGridView({
   items,
   loading,
   deletingId,
+  replacingId,
   onPreview,
+  onReplace,
   onDelete,
 }: MediaGridViewProps) {
   if (loading) {
@@ -75,7 +79,9 @@ export function MediaGridView({
               item={item}
               compact
               deleting={deletingId === item.id}
+              replacing={replacingId === item.id}
               onPreview={onPreview}
+              onReplace={onReplace}
               onDelete={onDelete}
             />
           </div>

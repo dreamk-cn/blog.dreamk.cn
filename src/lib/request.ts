@@ -342,6 +342,21 @@ class HttpClient {
     });
   }
 
+  async patchUpload<T>(url: string, formData: FormData, config?: RequestConfig): Promise<ApiResponse<T>> {
+    const { headers: extraHeaders, ...restConfig } = config ?? {};
+    return this.request<T>({
+      method: 'PATCH',
+      url,
+      data: formData,
+      timeout: 60000,
+      ...restConfig,
+      headers: {
+        ...extraHeaders,
+        'Content-Type': false,
+      },
+    });
+  }
+
   /**
    * 上传文件
    * @param url 请求地址

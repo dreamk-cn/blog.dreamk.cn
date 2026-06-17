@@ -72,17 +72,24 @@ export async function uploadImage(
   input: { category: OssUploadCategory; contentType: string; extension: string },
 ) {
   const key = buildObjectKey(input.category, input.extension);
+  return uploadImageToKey(buffer, { key, contentType: input.contentType });
+}
+
+export async function uploadImageToKey(
+  buffer: Buffer,
+  input: { key: string; contentType: string },
+) {
   const client = getOssClient();
 
-  await client.put(key, buffer, {
+  await client.put(input.key, buffer, {
     headers: {
       "Content-Type": input.contentType,
     },
   });
 
   return {
-    key,
-    url: buildPublicUrl(key),
+    key: input.key,
+    url: buildPublicUrl(input.key),
   };
 }
 

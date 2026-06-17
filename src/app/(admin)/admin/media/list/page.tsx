@@ -14,6 +14,7 @@ import {
 import { MediaDeleteModal } from "@/components/admin/media/media-delete-modal";
 import { MediaGridView } from "@/components/admin/media/media-grid-view";
 import { MediaPreviewModal } from "@/components/admin/media/media-preview-modal";
+import { MediaReplaceModal } from "@/components/admin/media/media-replace-modal";
 import { MediaTableView } from "@/components/admin/media/media-table-view";
 import {
   MediaToolbar,
@@ -55,13 +56,16 @@ export default function AdminMediaListPage() {
   );
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [replacingId, setReplacingId] = useState<string | null>(null);
   const [listError, setListError] = useState<string | null>(null);
 
   const [previewItem, setPreviewItem] = useState<MediaListItem | null>(null);
+  const [replaceItem, setReplaceItem] = useState<MediaListItem | null>(null);
   const [deleteItem, setDeleteItem] = useState<MediaListItem | null>(null);
 
   const uploadModal = useOverlayState();
   const previewModal = useOverlayState();
+  const replaceModal = useOverlayState();
   const deleteModal = useOverlayState();
 
   const { items, total, loading, error, refetch } = useMediaList({
@@ -105,6 +109,11 @@ export default function AdminMediaListPage() {
   const openDelete = (item: MediaListItem) => {
     setDeleteItem(item);
     deleteModal.open();
+  };
+
+  const openReplace = (item: MediaListItem) => {
+    setReplaceItem(item);
+    replaceModal.open();
   };
 
   const handleDelete = async () => {
@@ -183,7 +192,9 @@ export default function AdminMediaListPage() {
               items={items}
               loading={loading}
               deletingId={deletingId}
+              replacingId={replacingId}
               onPreview={openPreview}
+              onReplace={openReplace}
               onDelete={openDelete}
             />
           ) : (
@@ -191,7 +202,9 @@ export default function AdminMediaListPage() {
               items={items}
               loading={loading}
               deletingId={deletingId}
+              replacingId={replacingId}
               onPreview={openPreview}
+              onReplace={openReplace}
               onDelete={openDelete}
             />
           )}
@@ -222,6 +235,19 @@ export default function AdminMediaListPage() {
         />
 
         <MediaPreviewModal state={previewModal} item={previewItem} />
+
+        <MediaReplaceModal
+          state={replaceModal}
+          item={replaceItem}
+          replacing={replacingId === replaceItem?.id}
+          onReplacingChange={(replacing) => {
+            setReplacingId(replacing && replaceItem ? replaceItem.id : null);
+          }}
+          onReplaced={() => {
+            setReplaceItem(null);
+            void refetch();
+          }}
+        />
 
         <MediaDeleteModal
           state={deleteModal}
