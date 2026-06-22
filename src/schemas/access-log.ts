@@ -12,3 +12,9 @@ export const AccessLogListSchema = SearchPageSchema.extend({
   from: zValue(z.string().optional()),
   to: zValue(z.string().optional()),
 });
+
+export const accessLogPurgeScopeEnum = z.enum(["all", "7", "30", "60"]);
+
+export const AccessLogPurgeSchema = z.object({
+  scope: accessLogPurgeScopeEnum,
+});

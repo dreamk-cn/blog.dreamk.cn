@@ -78,6 +78,8 @@ export async function resolveAccessLogUsers(
   return Object.fromEntries(users.map((user) => [user.id, user]));
 }
 
+export type AccessLogPurgeScope = "all" | "7" | "30" | "60";
+
 export async function purgeOldAccessLogs(retentionDays: number) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - retentionDays);
@@ -87,4 +89,13 @@ export async function purgeOldAccessLogs(retentionDays: number) {
   });
 
   return result.count;
+}
+
+export async function purgeAccessLogs(scope: AccessLogPurgeScope) {
+  if (scope === "all") {
+    const result = await prisma.accessLog.deleteMany();
+    return result.count;
+  }
+
+  return purgeOldAccessLogs(Number(scope));
 }

@@ -1,7 +1,8 @@
 import { ok } from "@/lib/api-response";
-import { withAdmin } from "@/lib/route-handler";
-import { AccessLogListSchema } from "@/schemas/access-log";
-import { listAccessLogs } from "@/services/access-log-service";
+import { parseJson, withAdmin } from "@/lib/route-handler";
+import { AccessLogListSchema, AccessLogPurgeSchema } from "@/schemas/access-log";
+import { listAccessLogs, purgeAccessLogs } from "@/services/access-log-service";
+import { NextResponse } from "next/server";
 
 function parseDateBoundary(value: string, endOfDay: boolean): Date | undefined {
   const trimmed = value.trim();
@@ -53,3 +54,23 @@ export const GET = withAdmin(async (request) => {
     "获取访问日志成功",
   );
 }, "获取访问日志失败");
+
+const purgeScopeMessages: Record<
+  "all" | "7" | "30" | "60",
+  (count: number) => string
+> = {
+  all: (count) => `已清除全部访问日志（${count} 条）`,
+  "7": (count) => `已清除 7 天外的访问日志（${count} 条）`,
+  "30": (count) => `已清除 30 天外的访问日志（${count} 条）`,
+  "60": (count) => `已清除 60 天外的访问日志（${count} 条）`,
+};
+
+export const POST = withAdmin(async (request) => {
+  const json = await parseJson(request);
+  if (json instanceof NextResponse) return json;
+
+  const { scope } = AccessLogPurgeSchema.parse(json ?? {});
+  const deleted = await purgeAccessLogs(scope);
+
+  return ok({ deleted }, purgeScopeMessages[scope](deleted));
+}, "清除访问日志失败");

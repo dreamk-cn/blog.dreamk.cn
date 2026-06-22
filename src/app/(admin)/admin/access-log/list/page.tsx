@@ -1,12 +1,14 @@
 "use client";
 
 import { StringSelect } from "@/components/admin/string-select";
+import { ConfirmDeleteModal } from "@/components/admin/confirm-delete-modal";
 import { PaginatedFooter } from "@/components/admin/paginated-footer";
 import {
   AdminListLayout,
   AdminListBody,
   AdminListFooter,
   AdminListHeader,
+  AdminListOverlays,
   AdminListTable,
   adminTableHeaderClassName,
 } from "@/components/admin/admin-list-layout";
@@ -14,7 +16,10 @@ import type { AccessLog, VisitorKind } from "@/generated/prisma";
 import { useDebounce } from "@/hooks/useDebounce";
 import { formatDateTime } from "@/lib/format-datetime";
 import { request } from "@/lib/request";
-import type { AccessLogUserPreview } from "@/services/access-log-service";
+import type {
+  AccessLogPurgeScope,
+  AccessLogUserPreview,
+} from "@/services/access-log-service";
 import {
   Button,
   Chip,
@@ -23,6 +28,7 @@ import {
   Spinner,
   Table,
   TextField,
+  useOverlayState,
 } from "@heroui/react";
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
@@ -44,6 +50,13 @@ const visitorKindMap: Record<
   PREVIEW: { label: "预览", color: "accent" },
   UNKNOWN: { label: "未知", color: "default" },
 };
+
+const purgeScopeOptions: { id: AccessLogPurgeScope; label: string }[] = [
+  { id: "7", label: "7 天外" },
+  { id: "30", label: "30 天外" },
+  { id: "60", label: "60 天外" },
+  { id: "all", label: "全部" },
+];
 
 function shortText(text: string | null | undefined, length = 80) {
   if (!text) return "-";
@@ -67,6 +80,10 @@ export default function AdminAccessLogListPage() {
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [purgeScope, setPurgeScope] = useState<AccessLogPurgeScope>("30");
+  const [purgePending, setPurgePending] = useState(false);
+
+  const purgeModal = useOverlayState();
 
   const pathnameDebounced = useDebounce(pathnameFilter, 300);
   const ipDebounced = useDebounce(ipFilter, 300);
@@ -117,8 +134,36 @@ export default function AdminAccessLogListPage() {
     [total, pageSize],
   );
 
+  const purgeScopeLabel = useMemo(
+    () =>
+      purgeScopeOptions.find((option) => option.id === purgeScope)?.label ??
+      purgeScope,
+    [purgeScope],
+  );
+
+  const handlePurge = async () => {
+    setPurgePending(true);
+    try {
+      const res = await request.post<{ deleted: number }>(
+        "/access-logs",
+        { scope: purgeScope },
+        { showSuccessMessage: true },
+      );
+      if (res.code === 200) {
+        purgeModal.close();
+        setPageNo(1);
+        void fetchLogs();
+      }
+    } catch (err) {
+      console.error("清除访问日志失败:", err);
+    } finally {
+      setPurgePending(false);
+    }
+  };
+
   return (
-    <AdminListLayout error={error} errorTitle="加载失败">
+    <>
+      <AdminListLayout error={error} errorTitle="加载失败">
       <AdminListHeader>
         <div className="flex flex-col gap-4">
           <h1 className="text-2xl font-bold text-text-base">访问日志</h1>
@@ -192,6 +237,22 @@ export default function AdminAccessLogListPage() {
               }}
             >
               清空
+            </Button>
+
+            <StringSelect
+              className="w-32"
+              label="清除范围"
+              selectedId={purgeScope}
+              onSelectionChange={(id) => setPurgeScope(id as AccessLogPurgeScope)}
+              options={purgeScopeOptions}
+            />
+
+            <Button
+              size="sm"
+              variant="danger"
+              onPress={() => purgeModal.open()}
+            >
+              清除日志
             </Button>
           </div>
         </div>
@@ -299,5 +360,16 @@ export default function AdminAccessLogListPage() {
         />
       </AdminListFooter>
     </AdminListLayout>
+
+      <AdminListOverlays>
+        <ConfirmDeleteModal
+          state={purgeModal}
+          entityLabel="访问日志"
+          entityName={purgeScopeLabel}
+          isDeleting={purgePending}
+          onConfirm={() => void handlePurge()}
+        />
+      </AdminListOverlays>
+    </>
   );
 }
