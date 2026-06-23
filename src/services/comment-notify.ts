@@ -4,6 +4,7 @@ import {
   buildParentReplyReceivedEmail,
 } from "@/lib/comment-email-html";
 import { postUrlWithCommentAnchor } from "@/lib/comment-anchor";
+import { tryConsumeAdminCommentNotifyCooldown } from "@/lib/cache";
 import { normalizeEmail } from "@/lib/email";
 import { sendSmtpMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
@@ -61,37 +62,40 @@ export async function notifyOnCommentCreated(commentId: string): Promise<void> {
   const skipAdminNotify = Boolean(adminNorm && authorNorm && adminNorm === authorNorm);
 
   if (adminEmail && !skipAdminNotify) {
-    const pendingNote = row.status === "PENDING" ? "（待审核）" : "";
-    const pending = row.status === "PENDING";
-    const author = authorLabel(row.user);
-    if (!row.parentId) {
-      const { text, html } = buildAdminNewCommentEmail({
-        postTitle: post.title,
-        postUrl: link,
-        author,
-        preview: bodyPreview,
-        pending,
-      });
-      await sendSmtpMail({
-        to: adminEmail,
-        subject: `[博客] 文章有新评论${pendingNote}`,
-        text,
-        html,
-      });
-    } else {
-      const { text, html } = buildAdminNewReplyEmail({
-        postTitle: post.title,
-        postUrl: link,
-        author,
-        preview: bodyPreview,
-        pending,
-      });
-      await sendSmtpMail({
-        to: adminEmail,
-        subject: `[博客] 评论有新回复${pendingNote}`,
-        text,
-        html,
-      });
+    const allowAdminNotify = await tryConsumeAdminCommentNotifyCooldown(row.postId);
+    if (allowAdminNotify) {
+      const pendingNote = row.status === "PENDING" ? "（待审核）" : "";
+      const pending = row.status === "PENDING";
+      const author = authorLabel(row.user);
+      if (!row.parentId) {
+        const { text, html } = buildAdminNewCommentEmail({
+          postTitle: post.title,
+          postUrl: link,
+          author,
+          preview: bodyPreview,
+          pending,
+        });
+        await sendSmtpMail({
+          to: adminEmail,
+          subject: `[博客] 文章有新评论${pendingNote}`,
+          text,
+          html,
+        });
+      } else {
+        const { text, html } = buildAdminNewReplyEmail({
+          postTitle: post.title,
+          postUrl: link,
+          author,
+          preview: bodyPreview,
+          pending,
+        });
+        await sendSmtpMail({
+          to: adminEmail,
+          subject: `[博客] 评论有新回复${pendingNote}`,
+          text,
+          html,
+        });
+      }
     }
   }
 

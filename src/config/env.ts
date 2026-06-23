@@ -56,6 +56,9 @@ const rawEnvSchema = z
     AUTH_REGISTER_SEND_CODE_COOLDOWN_SEC: z.string().optional(),
     ANONYMOUS_COMMENT_RATE_MAX: z.string().optional(),
     ANONYMOUS_COMMENT_RATE_WINDOW_SEC: z.string().optional(),
+    POST_VIEW_RATE_MAX: z.string().optional(),
+    POST_VIEW_RATE_WINDOW_SEC: z.string().optional(),
+    COMMENT_NOTIFY_ADMIN_COOLDOWN_SEC: z.string().optional(),
     TRUST_PROXY: z.string().optional(),
     ACCESS_LOG_RETENTION_DAYS: z.string().optional(),
   })
@@ -264,6 +267,9 @@ function buildEnv(raw: RawEnv) {
     ),
     ANONYMOUS_COMMENT_RATE_MAX: readOptionalInt(raw.ANONYMOUS_COMMENT_RATE_MAX, 5),
     ANONYMOUS_COMMENT_RATE_WINDOW_SEC: readOptionalInt(raw.ANONYMOUS_COMMENT_RATE_WINDOW_SEC, 60, 1),
+    POST_VIEW_RATE_MAX: readOptionalInt(raw.POST_VIEW_RATE_MAX, 1),
+    POST_VIEW_RATE_WINDOW_SEC: readOptionalInt(raw.POST_VIEW_RATE_WINDOW_SEC, 86400, 1),
+    COMMENT_NOTIFY_ADMIN_COOLDOWN_SEC: readOptionalInt(raw.COMMENT_NOTIFY_ADMIN_COOLDOWN_SEC, 300, 0),
   } as const;
 
   return {
