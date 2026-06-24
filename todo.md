@@ -17,6 +17,13 @@
 - [x] **API Route 公共包装** — `src/lib/route-handler.ts`（`parseJson`、`handleRouteError`、`withAdmin`、`withRoute`）；已迁移 categories / tags / friend-links / users
 - [x] **NextAuth 凭证登录限流对齐** — `[...nextauth]/route.ts` 复用 `tooManyRequests`；`credentials-login.ts` 读 body `code`
 - [x] **API Route 全量迁移至 `route-handler`** — 除 `[...nextauth]` 外均已使用 `withRoute` / `withAdmin`；`route-handler` 支持 `mapError`（upload OSS）
+- [x] **`POST /api/post/view` 限流** — `post-view-rate-limit.ts` + `consumePostViewRateLimit`，按 IP + slug 固定窗口；`POST_VIEW_RATE_*` 见 `.env.example`
+- [x] **IP 限流信任链** — `request-ip.ts` 仅在 `TRUST_PROXY=true` 时信任 `X-Forwarded-For` / `X-Real-IP`
+- [x] **管理后台边缘鉴权（`proxy.ts`）** — `auth()` + ADMIN 角色校验 + `NextResponse.next()`；访问日志 `waitUntil`
+- [x] **前台 URL 统一** — `post-card.tsx`、`hot-posts.tsx` 等已用 `postPath()` / `categoryPath()`（`src/lib/site-url.ts`）
+- [x] **`requireAdmin()` 类型收窄（API 层）** — `AdminSession` + `withAdmin` 的 `AdminAuth`；`admin.session.user.id` 无需 `as string`（service 等处仍有少量 `as`）
+- [x] **目录整理（hooks / verify）** — 仅保留 `src/hooks/`；`src/components/hooks/`、`src/utils/verify.ts` 已移除
+- [x] **关键单元测试** — Vitest + `vite-tsconfig-paths`；覆盖 `normalizeSlug`、`buildPageNumbers`、`truncateText`、`readRateLimitEnvInt`、`mapPrismaError` 及 post/comment/auth/media/page schema（`pnpm test`）
 
 ---
 
@@ -37,15 +44,12 @@
 
 ### 测试与 CI
 
-- [ ] 补充单元测试：`normalizeSlug`、`buildPageNumbers`、`truncateText`、`readRateLimitEnvInt`、关键 Zod schema
 - [ ] 补充 API 集成测试：注册、评论、文章 CRUD
 - [ ] 添加 GitHub Actions：`prisma generate → lint → typecheck → test`
 
 ### 安全
 
-- [ ] **`POST /api/post/view` 加限流** — 复用 `consumeFixedWindowRateLimit`，按 IP + slug 限流，可选每日去重
-- [ ] **管理后台纵深防御** — `src/app/(admin)/layout.tsx` 服务端 `auth()` + `redirect()`；`proxy.ts` 补 `NextResponse.next()`、轻量 cookie 检查
-- [ ] **IP 限流信任链** — `src/lib/request-ip.ts` 仅在 `TRUST_PROXY=true` 时读 `X-Forwarded-For`
+- [ ] **管理后台 layout 二次鉴权** — `(admin)/layout.tsx` 服务端 `auth()` + `redirect()`（边缘层已由 `proxy.ts` 覆盖，layout 作纵深防御）
 
 ---
 
@@ -53,15 +57,9 @@
 
 ### 代码去重与结构
 
-- [ ] **Category / Tag 服务去重** — `category-service.ts` 与 `tag-service.ts` 结构几乎相同，可抽 factory 或共享内部模块
-- [ ] **前台 URL 统一** — `post-card.tsx`、`hot-posts.tsx` 改用 `postPath()`；分类 URL 可抽 `categoryPath(slug)`
+- [ ] **Category / Tag 服务去重** — `category-service.ts` 与 `tag-service.ts` 结构几乎相同，可抽 factory 或共享内部模块（已有 `taxonomy-helpers` 部分共享）
 - [ ] **拆分超大模块** — `post-service.ts`（查询 / 变更 / AI）、`post-form.tsx`（表单区块拆子组件）
 - [ ] **Admin 列表页抽象** — `useAdminListQuery` + 通用表格壳，减少各 list 页重复搜索/loading/modal/删除确认
-
-### 一致性与类型
-
-- [ ] **`requireAdmin()` 类型收窄** — 返回 `{ user: { id: string; role: 'ADMIN' } }`，去掉各处 `as string`
-- [ ] **目录整理** — 合并 `src/hooks/` 与 `src/components/hooks/`；`src/utils/verify.ts` 与 schemas 对齐
 
 ### 访问日志
 
@@ -69,7 +67,7 @@
 
 ### 配置（可选深化）
 
-- [ ] **`next.config.ts` 读 OSS_URL** — 可与 `env.public` 或薄 helper 共用，降低与 `env.ts` 的重复（注意构建阶段加载顺序）
+- [ ] **`next.config.ts` 与 `env` 共用 OSS_URL** — 已从 `process.env` 读并配 `images.remotePatterns`；待与 `env.public` 或薄 helper 去重复（注意构建阶段加载顺序）
 
 ---
 
@@ -86,10 +84,10 @@
 
 ## 建议实施顺序
 
-1. **快赢（1～2 天）** — view 限流、Prisma 错误映射、trust proxy
-2. **基础设施（约 1 周）** — route 包装器、admin 鉴权加固
+1. ~~**快赢**~~ — view 限流、Prisma 错误映射、trust proxy、前台 URL（已完成）
+2. **基础设施** — admin layout 二次鉴权、访问日志定期清理
 3. **质量网（持续）** — 测试 + CI
-4. **按需重构** — category/tag 去重、大文件拆分、admin 列表抽象；NextAuth 限流响应与标准 envelope 对齐（可选）
+4. **按需重构** — category/tag factory、大文件拆分、admin 列表抽象、`next.config` OSS 去重
 
 ---
 
