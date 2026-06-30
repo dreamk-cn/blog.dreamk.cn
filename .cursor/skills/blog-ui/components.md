@@ -17,6 +17,7 @@ components/
 │   ├── blog/          # navbar, footer, profile-sidebar
 │   └── admin/         # layout, sidebar, navbar（含 tv 样式）
 ├── post/              # 卡片、封面、TOC、评论、Markdown、表单
+├── markdown/          # Markdown 图片 Lightbox（MarkdownImage、Provider）
 ├── auth/              # login-form, register-form
 ├── admin/             # 后台 UI：admin-list-layout、paginated-footer、string-select 等
 ├── buttons/           # login-button
@@ -66,7 +67,7 @@ components/
 
 ## HeroUI 常用组件（本项目已出现）
 
-`Button`, `Card`, `Chip`, `Avatar`, `Dropdown`, `SearchField`, `Input`, `TextField`, `Label`, `Table`, `Pagination`, `Spinner`, `Alert`, `Link`, `Separator`, `Toast`（Provider 在根级）
+`Button`, `Card`, `Chip`, `Avatar`, `Dropdown`, `SearchField`, `Input`, `TextField`, `Label`, `Table`, `Pagination`, `Spinner`, `Alert`, `Link`, `Separator`, `Modal`, `Toast`（Provider 在根级）
 
 新增组件前用 MCP `list_components` / `get_component_docs` 确认 v3 API（复合子组件名可能与 v2 不同）。
 
@@ -74,6 +75,7 @@ components/
 
 | 模块 | 路径 |
 |------|------|
+| Markdown 图片 Lightbox | `src/components/markdown/` — `MarkdownImage`、`MarkdownImageLightboxProvider` |
 | 最近留言 | `src/components/post/recent-comments.tsx` |
 | 评论深链 | `src/components/post/comment/use-comment-deep-link.ts` |
 | 公开缓存常量 | `src/lib/public-cache.ts`（读侧 TTL、写后 tag 失效） |

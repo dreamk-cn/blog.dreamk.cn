@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import ReactMarkdown, { MarkdownHooks } from "react-markdown";
+import { MarkdownImageLightboxProvider } from "@/components/markdown";
 import {
   articleRemarkPlugins,
   articleRehypePlugins,
@@ -15,19 +16,21 @@ export function ArticleMarkdownClient({ content }: { content: string }) {
   const merged = useMemo(() => createArticleMarkdownComponents(), []);
 
   return (
-    <div className="article-md">
-      <MarkdownHooks
-        remarkPlugins={articleRemarkPlugins}
-        rehypePlugins={articleRehypePlugins}
-        components={merged}
-        fallback={
-          <ReactMarkdown remarkPlugins={articleRemarkPlugins} rehypePlugins={articleRehypeSlugOnly} components={merged}>
-            {body}
-          </ReactMarkdown>
-        }
-      >
-        {body}
-      </MarkdownHooks>
-    </div>
+    <MarkdownImageLightboxProvider>
+      <div className="article-md">
+        <MarkdownHooks
+          remarkPlugins={articleRemarkPlugins}
+          rehypePlugins={articleRehypePlugins}
+          components={merged}
+          fallback={
+            <ReactMarkdown remarkPlugins={articleRemarkPlugins} rehypePlugins={articleRehypeSlugOnly} components={merged}>
+              {body}
+            </ReactMarkdown>
+          }
+        >
+          {body}
+        </MarkdownHooks>
+      </div>
+    </MarkdownImageLightboxProvider>
   );
 }

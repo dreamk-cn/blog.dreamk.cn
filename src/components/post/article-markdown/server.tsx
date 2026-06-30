@@ -1,4 +1,5 @@
 import { MarkdownAsync } from "react-markdown";
+import { MarkdownImageLightboxProvider } from "@/components/markdown";
 import {
   articleRemarkPlugins,
   articleRehypePlugins,
@@ -10,13 +11,15 @@ export async function ArticleMarkdown({ content }: { content: string }) {
   const merged = createArticleMarkdownComponents();
 
   return (
-    <div className="article-md">
-      {await MarkdownAsync({
-        children: body,
-        remarkPlugins: articleRemarkPlugins,
-        rehypePlugins: articleRehypePlugins,
-        components: merged,
-      })}
-    </div>
+    <MarkdownImageLightboxProvider>
+      <div className="article-md">
+        {await MarkdownAsync({
+          children: body,
+          remarkPlugins: articleRemarkPlugins,
+          rehypePlugins: articleRehypePlugins,
+          components: merged,
+        })}
+      </div>
+    </MarkdownImageLightboxProvider>
   );
 }

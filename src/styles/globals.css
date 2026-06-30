@@ -214,6 +214,7 @@ html {
 .article-md > blockquote:not(:first-child),
 .article-md > figure:not(:first-child),
 .article-md > img:not(:first-child),
+.article-md > button[data-md-lightbox-trigger]:not(:first-child),
 .article-md > div:not(:first-child),
 .article-md > pre:not(:first-child) {
   margin-top: 1.5rem;

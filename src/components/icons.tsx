@@ -426,3 +426,79 @@ export const MediaIcon = ({ size = 20, width, height, ...props }: IconSvgProps) 
     <circle cx="9" cy="9.75" r="1" fill="currentColor" />
   </svg>
 )
+
+export const ChevronLeftIcon = (props: IconSvgProps) => (
+  <svg
+    aria-hidden="true"
+    fill="none"
+    focusable="false"
+    height="1em"
+    role="presentation"
+    viewBox="0 0 24 24"
+    width="1em"
+    {...props}
+  >
+    <path
+      d="m15 18-6-6 6-6"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+  </svg>
+)
+
+export const ChevronRightIcon = (props: IconSvgProps) => (
+  <svg
+    aria-hidden="true"
+    fill="none"
+    focusable="false"
+    height="1em"
+    role="presentation"
+    viewBox="0 0 24 24"
+    width="1em"
+    {...props}
+  >
+    <path
+      d="m9 18 6-6-6-6"
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="2"
+    />
+  </svg>
+)
+
+export const ZoomInIcon = (props: IconSvgProps) => (
+  <svg
+    aria-hidden="true"
+    fill="none"
+    focusable="false"
+    height="1em"
+    role="presentation"
+    viewBox="0 0 24 24"
+    width="1em"
+    {...props}
+  >
+    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
+    <path d="m21 21-4.3-4.3" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+    <path d="M11 8v6M8 11h6" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+  </svg>
+)
+
+export const ZoomOutIcon = (props: IconSvgProps) => (
+  <svg
+    aria-hidden="true"
+    fill="none"
+    focusable="false"
+    height="1em"
+    role="presentation"
+    viewBox="0 0 24 24"
+    width="1em"
+    {...props}
+  >
+    <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2" />
+    <path d="m21 21-4.3-4.3" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+    <path d="M8 11h6" stroke="currentColor" strokeLinecap="round" strokeWidth="2" />
+  </svg>
+)

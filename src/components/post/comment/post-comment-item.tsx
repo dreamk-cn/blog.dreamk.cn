@@ -1,8 +1,10 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import { Avatar, Button, Spinner, TextArea } from "@heroui/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { MarkdownImage, MarkdownImageLightboxProvider } from "@/components/markdown";
 import { commentDomId } from "@/lib/comment-anchor";
 import { formatDateTime } from "@/lib/format-datetime";
 import type { CommentItem } from "./post-comments-types";
@@ -12,6 +14,10 @@ type ReplyingState = {
   id: string;
   name: string;
   rootId: string;
+};
+
+const commentMarkdownComponents = {
+  img: (props: ComponentProps<typeof MarkdownImage>) => <MarkdownImage variant="comment" {...props} />,
 };
 
 export function PostCommentItem({
@@ -82,7 +88,13 @@ export function PostCommentItem({
         {isReply && comment.replyTo?.name ? (
           <p className="mb-2 text-xs text-primary">@{comment.replyTo.name}</p>
         ) : null}
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{comment.content}</ReactMarkdown>
+        <MarkdownImageLightboxProvider>
+          <div className="comment-md">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} components={commentMarkdownComponents}>
+              {comment.content}
+            </ReactMarkdown>
+          </div>
+        </MarkdownImageLightboxProvider>
       </div>
 
       <div className="mt-3 flex justify-end gap-2">

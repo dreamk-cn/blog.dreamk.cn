@@ -1,11 +1,7 @@
 import type { ComponentProps } from "react";
 import type { Components } from "react-markdown";
-
-/** react-markdown 传递 `node` 给自定义组件；永远不会转发到原生 DOM。 */
-function withoutNodeProps<T extends Record<string, unknown>>(props: T): Omit<T, "node"> {
-  const { node: _node, ...rest } = props as T & { node?: unknown };
-  return rest;
-}
+import { MarkdownImage } from "@/components/markdown";
+import { withoutNodeProps } from "@/lib/markdown-react-props";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
@@ -184,13 +180,8 @@ const mdBase: Components = {
       {children}
     </del>
   ),
-  img: ({ className, alt, ...props }) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      alt={alt ?? ""}
-      className={`mb-6 h-auto max-w-full rounded-xl border border-default-200/60 object-contain dark:border-default-100/15 ${className ?? ""}`}
-      {...props}
-    />
+  img: ({ className, alt, src, ...props }) => (
+    <MarkdownImage variant="article" alt={alt ?? ""} className={className} src={src} {...props} />
   ),
 };
 
