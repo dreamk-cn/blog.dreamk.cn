@@ -1,7 +1,5 @@
-import type { AccessLog, VisitorKind } from "@/generated/prisma";
-import { buildAccessLogEntry } from "@/lib/access-log/build-entry";
+import type { AccessLog, Prisma, VisitorKind } from "@/generated/prisma";
 import { prisma } from "@/lib/prisma";
-import type { NextRequest } from "next/server";
 
 export type AccessLogListFilters = {
   pageNo: number;
@@ -21,11 +19,7 @@ export type AccessLogUserPreview = {
   email: string;
 };
 
-export async function recordAccessLog(input: {
-  request: NextRequest;
-  userId?: string;
-}) {
-  const data = buildAccessLogEntry(input.request, input.userId);
+export async function recordAccessLog(data: Prisma.AccessLogCreateInput) {
   return prisma.accessLog.create({ data });
 }
 

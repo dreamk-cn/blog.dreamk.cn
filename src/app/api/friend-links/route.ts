@@ -1,5 +1,6 @@
 import { ResponseCode } from "@/config/response-code";
 import { fail, ok } from "@/lib/api-response";
+import { PUBLIC_CACHE_TAGS, revalidatePublicCache } from "@/lib/public-cache";
 import { parseJson, withAdmin } from "@/lib/route-handler";
 import {
   FriendLinkCreateSchema,
@@ -31,6 +32,7 @@ export const POST = withAdmin(async (request) => {
   const parsed = FriendLinkCreateSchema.parse(json ?? {});
   const result = await createFriendLink(parsed);
   if (result.error) return fail(ResponseCode.FAIL, result.error);
+  revalidatePublicCache(PUBLIC_CACHE_TAGS.friendLinks);
   return ok(result.data, "创建友链成功");
 }, "创建友链失败");
 
@@ -40,6 +42,7 @@ export const PUT = withAdmin(async (request) => {
   const parsed = FriendLinkUpdateSchema.parse(json ?? {});
   const result = await updateFriendLink(parsed);
   if (result.error) return fail(ResponseCode.FAIL, result.error);
+  revalidatePublicCache(PUBLIC_CACHE_TAGS.friendLinks);
   return ok(result.data, "更新友链成功");
 }, "更新友链失败");
 
@@ -49,5 +52,6 @@ export const DELETE = withAdmin(async (request) => {
   FriendLinkDeleteSchema.parse({ id });
   const result = await deleteFriendLink(id!);
   if (result.error) return fail(ResponseCode.FAIL, result.error);
+  revalidatePublicCache(PUBLIC_CACHE_TAGS.friendLinks);
   return ok(result.data, "删除友链成功");
 }, "删除友链失败");

@@ -117,7 +117,7 @@ async function collectApprovedSubtreeForRoots(postId: string, rootRows: FlatAppr
   return [...collected.values()];
 }
 
-export async function listApprovedCommentsBySlug(
+async function queryApprovedCommentsBySlug(
   slug: string,
   options?: { rootSkip?: number; rootTake?: number; replySkip?: number; replyTake?: number },
 ) {
@@ -162,7 +162,30 @@ export async function listApprovedCommentsBySlug(
   return { comments, totalRootCount };
 }
 
-export async function listApprovedRepliesForRootSlug(
+export function listApprovedCommentsBySlug(
+  slug: string,
+  options?: { rootSkip?: number; rootTake?: number; replySkip?: number; replyTake?: number },
+) {
+  const rootSkip = options?.rootSkip ?? 0;
+  const rootTake = options?.rootTake ?? 20;
+  const replySkip = options?.replySkip ?? 0;
+  const replyTake = options?.replyTake ?? 5;
+
+  return cachePublicContent(
+    () => queryApprovedCommentsBySlug(slug, options),
+    [
+      "listApprovedCommentsBySlug",
+      slug,
+      String(rootSkip),
+      String(rootTake),
+      String(replySkip),
+      String(replyTake),
+    ],
+    { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.comments] },
+  );
+}
+
+async function queryApprovedRepliesForRootSlug(
   slug: string,
   rootId: string,
   options: { skip: number; take: number },
@@ -199,6 +222,24 @@ export async function listApprovedRepliesForRootSlug(
   return { replies, totalReplyCount };
 }
 
+export function listApprovedRepliesForRootSlug(
+  slug: string,
+  rootId: string,
+  options: { skip: number; take: number },
+) {
+  return cachePublicContent(
+    () => queryApprovedRepliesForRootSlug(slug, rootId, options),
+    [
+      "listApprovedRepliesForRootSlug",
+      slug,
+      rootId,
+      String(options.skip),
+      String(options.take),
+    ],
+    { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.comments] },
+  );
+}
+
 export function listRecentApprovedComments(limit: number) {
   return cachePublicContent(
     () =>
@@ -231,7 +272,7 @@ export function listRecentApprovedComments(limit: number) {
   );
 }
 
-export async function countApprovedCommentsByPostSlug(slug: string) {
+async function queryApprovedCommentCountByPostSlug(slug: string) {
   return prisma.comment.count({
     where: {
       status: "APPROVED",
@@ -243,8 +284,16 @@ export async function countApprovedCommentsByPostSlug(slug: string) {
   });
 }
 
+export function countApprovedCommentsByPostSlug(slug: string) {
+  return cachePublicContent(
+    () => queryApprovedCommentCountByPostSlug(slug),
+    ["countApprovedCommentsByPostSlug", slug],
+    { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.comments] },
+  );
+}
+
 /** 邮件深链：定位某条已审核评论在分页中的位置（根楼层 + 楼内线序） */
-export async function getApprovedCommentAnchorMeta(slug: string, commentId: string) {
+async function queryApprovedCommentAnchorMeta(slug: string, commentId: string) {
   const postId = await getPublishedPostIdBySlug(slug);
   if (!postId) {
     return null;
@@ -332,6 +381,14 @@ export async function getApprovedCommentAnchorMeta(slug: string, commentId: stri
     totalRootCount,
     totalReplyCount,
   };
+}
+
+export function getApprovedCommentAnchorMeta(slug: string, commentId: string) {
+  return cachePublicContent(
+    () => queryApprovedCommentAnchorMeta(slug, commentId),
+    ["getApprovedCommentAnchorMeta", slug, commentId],
+    { revalidate: PUBLIC_CONTENT_REVALIDATE_SEC, tags: [PUBLIC_CACHE_TAGS.comments] },
+  );
 }
 
 function isDescendantOf(

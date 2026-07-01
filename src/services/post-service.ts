@@ -463,6 +463,26 @@ export async function deletePosts(ids: string[]) {
   });
 }
 
+const postRevalidationMetaSelect = {
+  slug: true,
+  tags: { select: { slug: true } },
+} as const;
+
+/** 文章写操作缓存失效用 */
+export async function getPostRevalidationMetaById(id: string) {
+  return prisma.post.findUnique({
+    where: { id },
+    select: postRevalidationMetaSelect,
+  });
+}
+
+export async function getPostsRevalidationMetaByIds(ids: string[]) {
+  return prisma.post.findMany({
+    where: { id: { in: ids } },
+    select: postRevalidationMetaSelect,
+  });
+}
+
 export async function incrementPostView(slug: string) {
   return prisma.post.updateMany({
     where: {

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { cache } from "react";
 import { notFound } from "next/navigation";
 import { siteConfig } from "@/config/site";
 import { AppLink } from "@/components/ui/app-link";
@@ -32,7 +31,7 @@ import {
   countApprovedCommentsByPostSlug,
   listApprovedCommentsBySlug,
 } from "@/services/comment-service";
-import { getPublishedPostBySlug } from "@/services/post-service";
+import { getPublishedPostBySlugCached } from "@/services/post-service";
 
 const POST_COMMENT_ROOT_PAGE_SIZE = 20;
 const POST_COMMENT_REPLY_PAGE_SIZE = 5;
@@ -40,10 +39,8 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-const getCachedPublishedPostBySlug = cache(getPublishedPostBySlug);
-
 function buildPostDescription(
-  post: NonNullable<Awaited<ReturnType<typeof getPublishedPostBySlug>>>,
+  post: NonNullable<Awaited<ReturnType<typeof getPublishedPostBySlugCached>>>,
 ) {
   if (post.excerpt?.trim()) {
     return normalizeMetaDescription(post.excerpt);
@@ -62,7 +59,7 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getCachedPublishedPostBySlug(slug);
+  const post = await getPublishedPostBySlugCached(slug);
 
   if (!post) {
     notFound();
@@ -95,7 +92,7 @@ export async function generateMetadata({
 
 export default async function PostDetail({ params }: PageProps) {
   const { slug } = await params;
-  const post = await getCachedPublishedPostBySlug(slug);
+  const post = await getPublishedPostBySlugCached(slug);
 
   if (!post) {
     notFound();

@@ -1,12 +1,18 @@
 import { auth } from "@/auth";
 import { ResponseCode } from "@/config/response-code";
 import { fail, ok } from "@/lib/api-response";
-import { prisma } from "@/lib/prisma";
 import { collectPostSlugs, collectTagSlugs, isPostWithTags } from "@/lib/post-revalidation";
 import { revalidatePostAndTagCaches } from "@/lib/public-cache";
 import { parseJson, withAdmin, withRoute } from "@/lib/route-handler";
 import { PostCreateSchema, PostDeleteSchema, PostDetailSchema, PostUpdateSchema } from "@/schemas/post";
-import { createPost, deletePosts, getPostDetail, updatePost } from "@/services/post-service";
+import {
+  createPost,
+  deletePosts,
+  getPostDetail,
+  getPostRevalidationMetaById,
+  getPostsRevalidationMetaByIds,
+  updatePost,
+} from "@/services/post-service";
 import { NextResponse } from "next/server";
 
 const POST_PRISMA_MESSAGES = {
@@ -104,10 +110,7 @@ export const PUT = withAdmin(async (request) => {
     publishedAt,
   } = parsed;
 
-  const existingPost = await prisma.post.findUnique({
-    where: { id },
-    select: { slug: true, tags: { select: { slug: true } } },
-  });
+  const existingPost = await getPostRevalidationMetaById(id);
 
   const updatedPost = await updatePost({
     id,
@@ -148,10 +151,7 @@ export const DELETE = withAdmin(async (request) => {
   if (json instanceof NextResponse) return json;
 
   const { ids } = PostDeleteSchema.parse(json ?? {});
-  const postsToDelete = await prisma.post.findMany({
-    where: { id: { in: ids } },
-    select: { slug: true, tags: { select: { slug: true } } },
-  });
+  const postsToDelete = await getPostsRevalidationMetaByIds(ids);
   const { count } = await deletePosts(ids);
 
   revalidatePostAndTagCaches({

@@ -27,6 +27,9 @@ export async function createCategory(input: { name: string; slug?: string }) {
 }
 
 export async function updateCategory(input: { id: string; name: string; slug?: string }) {
+  const existing = await prisma.category.findUnique({ where: { id: input.id } });
+  if (!existing) return { error: "分类不存在" as const };
+
   const normalizedSlug = normalizeSlug(input.slug || input.name, 100);
   const exists = await taxonomyConflictExists(prisma.category, input.name, normalizedSlug, input.id);
   if (exists) return { error: "分类名或Slug已被使用" as const };
@@ -35,14 +38,14 @@ export async function updateCategory(input: { id: string; name: string; slug?: s
     where: { id: input.id },
     data: { name: input.name, slug: normalizedSlug },
   });
-  return { data };
+  return { data, previousSlug: existing.slug };
 }
 
 export async function deleteCategory(id: string) {
   const exist = await prisma.category.findUnique({ where: { id } });
   if (!exist) return { error: "分类不存在" as const };
   await prisma.category.delete({ where: { id } });
-  return { data: null };
+  return { data: { slug: exist.slug } };
 }
 
 async function queryCategoryBySlug(slug: string) {
