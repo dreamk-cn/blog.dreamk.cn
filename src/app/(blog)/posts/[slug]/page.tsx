@@ -23,6 +23,7 @@ import {
   buildArticleJsonLd,
   buildBreadcrumbJsonLd,
   buildCanonical,
+  buildPostMetaKeywords,
   getMetadataBase,
   normalizeMetaDescription,
   stringifyJsonLd,
@@ -68,11 +69,16 @@ export async function generateMetadata({
   }
 
   const coverUrls = getCoverUrls(post.coverMedia);
+  const keywords = buildPostMetaKeywords({
+    tagNames: post.tags.map((tag) => tag.name),
+    categoryName: post.category?.name,
+  });
 
   return {
     title: post.title,
     description: buildPostDescription(post),
     alternates: buildCanonical(postPath(post.slug)),
+    keywords,
     ...(coverUrls.length > 0
       ? {
           openGraph: {

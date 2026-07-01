@@ -59,6 +59,38 @@ export function normalizeMetaDescription(text: string, maxLength = 160) {
   return truncateText(text, maxLength);
 }
 
+function normalizeKeywordTerms(terms: (string | null | undefined)[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const term of terms) {
+    const normalized = term?.trim();
+    if (!normalized || seen.has(normalized)) {
+      continue;
+    }
+    seen.add(normalized);
+    result.push(normalized);
+  }
+
+  return result;
+}
+
+export function buildPostMetaKeywords(input: {
+  tagNames?: string[];
+  categoryName?: string | null;
+}): string[] {
+  const keywords = normalizeKeywordTerms([
+    ...(input.tagNames ?? []),
+    input.categoryName,
+  ]);
+
+  if (keywords.length > 0) {
+    return keywords;
+  }
+
+  return normalizeKeywordTerms(siteConfig.keywords);
+}
+
 export function stringifyJsonLd(value: JsonLd) {
   return JSON.stringify(value).replace(/</g, "\\u003c");
 }
@@ -121,7 +153,7 @@ export function buildCollectionPageJsonLd(input: CollectionPageJsonLdInput): Jso
 }
 
 export function buildArticleJsonLd(input: ArticleJsonLdInput): JsonLd {
-  const keywords = input.tags?.filter(Boolean) ?? [];
+  const keywords = normalizeKeywordTerms(input.tags ?? []);
 
   return {
     "@context": "https://schema.org",
