@@ -4,7 +4,7 @@ import { ArticleMarkdown } from "@/components/post/article-markdown";
 import { PostComments } from "@/components/post/comment";
 import { contentConfig } from "@/config/content";
 import { siteConfig } from "@/config/site";
-import { formatDateTime } from "@/lib/format-datetime";
+import { formatDateTime, toIsoString } from "@/lib/format-datetime";
 import { buildCanonical } from "@/lib/seo";
 import {
   countApprovedCommentsByPostSlug,
@@ -170,7 +170,7 @@ export default async function AboutPage() {
             id: comment.id,
             content: comment.content,
             parentId: comment.parentId,
-            createdAt: comment.createdAt.toISOString(),
+            createdAt: toIsoString(comment.createdAt),
             user: comment.user,
             replyTo: comment.replyTo,
             totalReplyCount: comment.totalReplyCount,
@@ -178,7 +178,7 @@ export default async function AboutPage() {
               id: reply.id,
               content: reply.content,
               parentId: reply.parentId,
-              createdAt: reply.createdAt.toISOString(),
+              createdAt: toIsoString(reply.createdAt),
               user: reply.user,
               replyTo: reply.replyTo,
               replies: [],

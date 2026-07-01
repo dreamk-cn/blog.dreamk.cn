@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { siteConfig } from "@/config/site";
 import { absoluteUrl, getSiteOrigin, resolveAbsoluteUrl } from "@/lib/site-url";
 import { truncateText } from "@/lib/text";
+import { toIsoString } from "@/lib/format-datetime";
 
 type JsonLd = Record<string, unknown>;
 
@@ -15,8 +16,8 @@ type ArticleJsonLdInput = {
   description: string;
   path: string;
   authorName: string;
-  publishedAt: Date;
-  modifiedAt: Date;
+  publishedAt: Date | string;
+  modifiedAt: Date | string;
   categoryName?: string | null;
   coverUrls?: string[];
   tags?: string[];
@@ -171,8 +172,8 @@ export function buildArticleJsonLd(input: ArticleJsonLdInput): JsonLd {
     },
     mainEntityOfPage: absoluteUrl(input.path),
     url: absoluteUrl(input.path),
-    datePublished: input.publishedAt.toISOString(),
-    dateModified: input.modifiedAt.toISOString(),
+    datePublished: toIsoString(input.publishedAt),
+    dateModified: toIsoString(input.modifiedAt),
     inLanguage: "zh-CN",
     ...(input.categoryName ? { articleSection: input.categoryName } : {}),
     ...(keywords.length > 0 ? { keywords: keywords.join(", ") } : {}),

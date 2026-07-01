@@ -4,7 +4,7 @@ import { siteConfig } from "@/config/site";
 import { AppLink } from "@/components/ui/app-link";
 import { ArticleMarkdown } from "@/components/post/article-markdown";
 import { PostCoverGallery } from "@/components/post/post-cover-gallery";
-import { formatDateTime } from "@/lib/format-datetime";
+import { formatDateTime, toIsoString } from "@/lib/format-datetime";
 import { postPath, categoryPath, tagPath } from "@/lib/site-url";
 import { getCoverUrls } from "@/lib/post-cover";
 import { PostComments } from "@/components/post/comment";
@@ -230,7 +230,7 @@ export default async function PostDetail({ params }: PageProps) {
                   id: comment.id,
                   content: comment.content,
                   parentId: comment.parentId,
-                  createdAt: comment.createdAt.toISOString(),
+                  createdAt: toIsoString(comment.createdAt),
                   user: comment.user,
                   replyTo: comment.replyTo,
                   totalReplyCount: comment.totalReplyCount,
@@ -238,7 +238,7 @@ export default async function PostDetail({ params }: PageProps) {
                     id: reply.id,
                     content: reply.content,
                     parentId: reply.parentId,
-                    createdAt: reply.createdAt.toISOString(),
+                    createdAt: toIsoString(reply.createdAt),
                     user: reply.user,
                     replyTo: reply.replyTo,
                     replies: [],
