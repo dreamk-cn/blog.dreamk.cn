@@ -137,7 +137,7 @@ export default async function PostDetail({ params }: PageProps) {
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(breadcrumbItems);
 
   return (
-    <div className="min-h-full bg-gradient-to-b from-canvas/60 via-background to-background text-text-base">
+    <div className="min-h-full bg-linear-to-b from-canvas/60 via-background to-background text-text-base">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: stringifyJsonLd(articleJsonLd) }}
@@ -248,7 +248,7 @@ export default async function PostDetail({ params }: PageProps) {
             </div>
           </div>
 
-          <aside className="fixed left-1/2 top-28 z-20 hidden h-[calc(100vh-7.5rem)] w-[280px] min-h-0 -translate-x-0 ml-[27rem] 2xl:block">
+          <aside className="fixed left-1/2 top-28 z-20 hidden h-[calc(100vh-7.5rem)] w-[280px] min-h-0 translate-x-0 ml-108 2xl:block">
             <div className="flex max-h-full flex-col rounded-2xl border border-border bg-background p-5 shadow-[0_1px_2px_rgba(15,23,42,0.06)]">
               <h2 className="mb-3 shrink-0 text-sm font-semibold tracking-wide text-text-base">
                 目录

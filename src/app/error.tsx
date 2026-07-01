@@ -50,7 +50,7 @@ export default function Error({
                     </p>
                   ) : null}
                   {error.stack ? (
-                    <pre className="max-h-[min(50vh,320px)] overflow-auto whitespace-pre-wrap break-words rounded-md border border-border bg-canvas p-3 font-mono text-xs text-text-base">
+                    <pre className="max-h-[min(50vh,320px)] overflow-auto whitespace-pre-wrap wrap-break-word rounded-md border border-border bg-canvas p-3 font-mono text-xs text-text-base">
                       {error.stack}
                     </pre>
                   ) : null}

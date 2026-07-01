@@ -52,7 +52,7 @@ export default async function Home() {
           </div>
         </aside>
 
-        <main className="order-1 space-y-4 lg:order-none">
+        <main className="order-1 space-y-4 lg:order-0">
           {posts.map((post) => {
             return <PostCard post={post} key={post.id} />;
           })}
@@ -75,7 +75,7 @@ export default async function Home() {
           )}
         </main>
 
-        <aside className="order-2 space-y-4 lg:order-none">
+        <aside className="order-2 space-y-4 lg:order-0">
           <HotPosts posts={hotPosts} />
           <RecentComments comments={recentComments} />
         </aside>

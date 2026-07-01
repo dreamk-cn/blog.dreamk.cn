@@ -39,7 +39,7 @@ export function SignInClient() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-[40rem] flex-col items-center bg-background p-8 sm:p-20">
+    <div className="mx-auto flex min-h-screen max-w-160 flex-col items-center bg-background p-8 sm:p-20">
       <div className="mb-8 flex w-full max-w-md items-center justify-between">
         <AppLink
           aria-label="返回首页"

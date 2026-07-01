@@ -67,7 +67,7 @@ export function PostCommentItem({
       id={commentDomId(comment.id)}
       className={`scroll-mt-24 rounded-xl border border-default-200/70 bg-default-50/50 px-4 py-4 transition-[box-shadow,background-color] duration-500 dark:border-default-100/20 dark:bg-default-100/5 ${isReply ? "ml-6 mt-3" : ""} ${
         flashCommentId === comment.id
-          ? "z-[1] bg-primary/15 ring-2 ring-primary/75 ring-offset-2 ring-offset-content1 shadow-md dark:bg-primary/20 dark:ring-primary/60 dark:ring-offset-content1/80"
+          ? "z-1 bg-primary/15 ring-2 ring-primary/75 ring-offset-2 ring-offset-content1 shadow-md dark:bg-primary/20 dark:ring-primary/60 dark:ring-offset-content1/80"
           : ""
       }`}
     >
@@ -84,7 +84,7 @@ export function PostCommentItem({
         <span className="shrink-0 text-text-muted">{formatDateTime(comment.createdAt)}</span>
       </div>
 
-      <div className="prose prose-sm mt-2 max-w-none break-words prose-p:my-2 prose-pre:my-2 prose-code:text-xs dark:prose-invert">
+      <div className="prose prose-sm mt-2 max-w-none wrap-break-word prose-p:my-2 prose-pre:my-2 prose-code:text-xs dark:prose-invert">
         {isReply && comment.replyTo?.name ? (
           <p className="mb-2 text-xs text-primary">@{comment.replyTo.name}</p>
         ) : null}
