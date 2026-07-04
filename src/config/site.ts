@@ -30,6 +30,10 @@ export const siteConfig = {
       href: "/posts",
     },
     {
+      label: "友链",
+      href: "/links",
+    },
+    {
       label: "关于",
       href: "/about",
     },

@@ -25,3 +25,11 @@ export const FriendLinkUpdateSchema = FriendLinkCreateSchema.extend({
 export const FriendLinkDeleteSchema = z.object({
   id: zValue(z.string()),
 });
+
+export const FriendLinkApplySchema = z.object({
+  name: zValue(z.string().min(1).max(100)),
+  url: zValue(z.url().max(200)),
+  email: zValue(z.email().max(100)),
+  avatar: zValue(z.url().max(200).optional()),
+  description: zValue(z.string().max(500).optional()),
+});

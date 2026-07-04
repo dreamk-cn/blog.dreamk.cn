@@ -22,7 +22,8 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
     slug: { notIn: [...contentConfig.excludedPostSlugsForPublicFeed] },
   };
 
-  const [posts, postListTotal, categories, categoryCounts, tags, latestPublicPost, aboutPage] = await Promise.all([
+  const [posts, postListTotal, categories, categoryCounts, tags, latestPublicPost, aboutPage, latestFriendLink] =
+    await Promise.all([
     prisma.post.findMany({
       where: publicPostWhere,
       select: { slug: true, updatedAt: true, publishedAt: true },
@@ -65,6 +66,11 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
       },
       select: { updatedAt: true, publishedAt: true, createdAt: true },
     }),
+    prisma.friendLink.findFirst({
+      where: { status: "APPROVED" },
+      select: { updatedAt: true },
+      orderBy: [{ sortOrder: "desc" }, { updatedAt: "desc" }],
+    }),
   ]);
 
   const countByCategoryId = new Map<string, number>();
@@ -82,6 +88,7 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
   const latestCategoryModified = pickLatestDate(...categories.map((category) => category.updatedAt));
   const latestTagModified = pickLatestDate(...tags.map((tag) => tag.updatedAt));
   const aboutPageModified = pickLatestDate(aboutPage?.updatedAt, aboutPage?.publishedAt, aboutPage?.createdAt);
+  const latestFriendLinkModified = latestFriendLink?.updatedAt;
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: absoluteUrl("/"), lastModified: latestPostModified, changeFrequency: "daily", priority: 1 },
@@ -97,6 +104,12 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
       lastModified: latestTagModified ?? latestPostModified,
       changeFrequency: "weekly",
       priority: 0.8,
+    },
+    {
+      url: absoluteUrl("/links"),
+      lastModified: latestFriendLinkModified ?? latestPostModified,
+      changeFrequency: "weekly",
+      priority: 0.7,
     },
     ...(aboutPageModified
       ? [
@@ -165,6 +178,12 @@ async function buildSitemapEntries(): Promise<MetadataRoute.Sitemap> {
 export default function sitemap(): Promise<MetadataRoute.Sitemap> {
   return cachePublicContent(buildSitemapEntries, ["sitemap"], {
     revalidate: PUBLIC_CONTENT_REVALIDATE_SEC,
-    tags: [PUBLIC_CACHE_TAGS.sitemap, PUBLIC_CACHE_TAGS.posts, PUBLIC_CACHE_TAGS.categories, PUBLIC_CACHE_TAGS.tags],
+    tags: [
+      PUBLIC_CACHE_TAGS.sitemap,
+      PUBLIC_CACHE_TAGS.posts,
+      PUBLIC_CACHE_TAGS.categories,
+      PUBLIC_CACHE_TAGS.tags,
+      PUBLIC_CACHE_TAGS.friendLinks,
+    ],
   });
 }

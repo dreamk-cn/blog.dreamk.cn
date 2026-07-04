@@ -8,6 +8,8 @@ import type { Category, Tag } from "@/generated/prisma";
 import { getTagColor } from "@/lib/tag-color";
 import { tagPath } from "@/lib/site-url";
 
+const FRIEND_LINK_SIDEBAR_PREVIEW = 6;
+
 type FriendLinkItem = {
   id: string;
   name: string;
@@ -101,7 +103,7 @@ export function ProfileSidebar({
               {friendLinks.length === 0 ? (
                 <span className="text-sm text-text-muted">暂无友链</span>
               ) : (
-                friendLinks.map((item) => (
+                friendLinks.slice(0, FRIEND_LINK_SIDEBAR_PREVIEW).map((item) => (
                   <AppLink
                     href={item.url}
                     target="_blank"
@@ -114,6 +116,12 @@ export function ProfileSidebar({
                 ))
               )}
             </div>
+            <AppLink
+              href="/links"
+              className="mt-2 inline-block px-1 text-sm text-primary transition-colors hover:text-accent"
+            >
+              查看全部友链 →
+            </AppLink>
           </div>
         </Card.Content>
       </div>

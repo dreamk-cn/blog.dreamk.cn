@@ -26,6 +26,10 @@ export {
   POST_VIEW_RATE_CACHE_KEY_PREFIX,
 } from "./post-view-rate-limit";
 export {
+  consumeFriendLinkApplyRateLimit,
+  FRIEND_LINK_APPLY_RATE_CACHE_KEY_PREFIX,
+} from "./friend-link-apply-rate-limit";
+export {
   consumeFixedWindowRateLimit,
   readRateLimitEnvInt,
   type FixedWindowRateLimitResult,

@@ -17,6 +17,7 @@ components/
 │   ├── blog/          # navbar, footer, profile-sidebar
 │   └── admin/         # layout, sidebar, navbar（含 tv 样式）
 ├── post/              # 卡片、封面、TOC、评论、Markdown、表单
+├── friend-link/       # 友链 Hero、网格、申请表单
 ├── markdown/          # Markdown 图片 Lightbox（MarkdownImage、Provider）
 ├── auth/              # login-form, register-form
 ├── admin/             # 后台 UI：admin-list-layout、paginated-footer、string-select 等
@@ -46,6 +47,7 @@ components/
 | 文章列表 | `src/app/(blog)/posts/` |
 | 文章详情 | `src/app/(blog)/posts/[slug]/page.tsx` |
 | 分类 | `src/app/(blog)/categories/` |
+| 友链 | `src/app/(blog)/links/page.tsx` |
 | 关于 | `src/app/(blog)/about/page.tsx` |
 
 ## 后台页面示例

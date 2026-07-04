@@ -4,6 +4,22 @@ import { Prisma } from "@/generated/prisma";
 
 type LinkStatus = "PENDING" | "APPROVED" | "REJECTED" | "HIDDEN";
 
+export type PublicFriendLink = {
+  id: string;
+  name: string;
+  url: string;
+  avatar: string | null;
+  description: string | null;
+};
+
+type FriendLinkApplicationInput = {
+  name: string;
+  url: string;
+  email: string;
+  avatar?: string;
+  description?: string;
+};
+
 type FriendLinkInput = {
   name: string;
   url: string;
@@ -96,6 +112,18 @@ export async function deleteFriendLink(id: string) {
   return { data: null };
 }
 
+export async function submitFriendLinkApplication(input: FriendLinkApplicationInput) {
+  return createFriendLink({
+    name: input.name,
+    url: input.url,
+    email: input.email,
+    avatar: input.avatar,
+    description: input.description,
+    status: "PENDING",
+    sortOrder: 0,
+  });
+}
+
 export function listApprovedFriendLinks() {
   return cachePublicContent(
     () =>
@@ -108,6 +136,8 @@ export function listApprovedFriendLinks() {
           id: true,
           name: true,
           url: true,
+          avatar: true,
+          description: true,
         },
       }),
     ["listApprovedFriendLinks"],

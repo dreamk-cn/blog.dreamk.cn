@@ -7,5 +7,7 @@ export const ClientCardBody = Card.Content;
 export const ClientCardHeader = Card.Header;
 export const ClientLink = Link;
 export const ClientAvatar = Avatar;
+export const ClientAvatarImage = Avatar.Image;
+export const ClientAvatarFallback = Avatar.Fallback;
 export const ClientDivider = Separator;
 export const ClientChip = Chip;
