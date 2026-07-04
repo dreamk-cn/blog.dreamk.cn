@@ -18,6 +18,19 @@ type ReplyingState = {
 
 const commentMarkdownComponents = {
   img: (props: ComponentProps<typeof MarkdownImage>) => <MarkdownImage variant="comment" {...props} />,
+  a: ({ children, className, href, ...props }: ComponentProps<"a">) => {
+    const isInPageAnchor = typeof href === "string" && href.startsWith("#");
+    return (
+      <a
+        className={`text-primary font-medium hover:underline underline-offset-2 ${className ?? ""}`}
+        href={href}
+        {...(isInPageAnchor ? {} : { target: "_blank", rel: "noopener noreferrer" })}
+        {...props}
+      >
+        {children}
+      </a>
+    );
+  },
 };
 
 export function PostCommentItem({
