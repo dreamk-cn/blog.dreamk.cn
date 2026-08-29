@@ -5,19 +5,31 @@ import { recordAccessLog } from "@/services/access-log-service";
 import type { NextFetchEvent } from "next/server";
 import { NextRequest, NextResponse } from "next/server";
 
-const protectedRoutes = ["/admin"];
+const adminRoutes = ["/admin"];
+const userRoutes = ["/account"];
+
+function isAdminPath(pathname: string) {
+  return adminRoutes.includes(pathname) || pathname.startsWith("/admin/");
+}
+
+function isUserPath(pathname: string) {
+  return userRoutes.includes(pathname) || pathname.startsWith("/account/");
+}
 
 export default async function proxy(req: NextRequest, event: NextFetchEvent) {
   const session = await auth();
   const pathname = req.nextUrl.pathname;
-  const needAuth = protectedRoutes.includes(pathname) || pathname.startsWith("/admin");
 
-  if (needAuth) {
+  if (isAdminPath(pathname)) {
     if (!session) {
       return NextResponse.redirect(new URL(`/auth/signin?callbackUrl=${pathname}`, req.url));
     }
     if (session.user.role !== "ADMIN") {
       return NextResponse.redirect(new URL(`/`, req.url));
+    }
+  } else if (isUserPath(pathname)) {
+    if (!session) {
+      return NextResponse.redirect(new URL(`/auth/signin?callbackUrl=${pathname}`, req.url));
     }
   }
 

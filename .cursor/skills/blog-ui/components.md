@@ -7,6 +7,7 @@
 | 博客 | `src/app/(blog)/` | `layout.tsx` | Navbar + Footer，`bg-foreground` |
 | 后台 | `src/app/(admin)/` | `layout.tsx` + `layout-shell.tsx` | 侧栏仪表盘 |
 | 认证 | `src/app/auth/` | 根 layout | `signin-client`、`login-form` |
+| 账号 | `src/app/(blog)/account/` | 博客 layout | 登录后设置/修改密码 |
 | 全局 | `src/app/layout.tsx` | — | 字体、`AppProviders`、SEO |
 
 ## `src/components` 结构
@@ -19,7 +20,7 @@ components/
 ├── post/              # 卡片、封面、TOC、评论、Markdown、表单
 ├── friend-link/       # 友链 Hero、网格、申请表单
 ├── markdown/          # Markdown 图片 Lightbox（MarkdownImage、Provider）
-├── auth/              # login-form, register-form
+├── auth/              # login-form, register-form, password-form
 ├── admin/             # 后台 UI：admin-list-layout、paginated-footer、string-select 等
 ├── buttons/           # login-button
 ├── ui/
@@ -48,6 +49,7 @@ components/
 | 文章详情 | `src/app/(blog)/posts/[slug]/page.tsx` |
 | 分类 | `src/app/(blog)/categories/` |
 | 友链 | `src/app/(blog)/links/page.tsx` |
+| 账号设置 | `src/app/(blog)/account/page.tsx` |
 | 关于 | `src/app/(blog)/about/page.tsx` |
 
 ## 后台页面示例

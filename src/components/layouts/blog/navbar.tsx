@@ -49,6 +49,14 @@ export const NavBarUser = () => {
             </div>
           </Dropdown.Item>
           <Dropdown.Item
+            id="account"
+            textValue="account"
+            className="text-text-muted"
+            onAction={() => router.push("/account")}
+          >
+            账号设置
+          </Dropdown.Item>
+          <Dropdown.Item
             id="dashboard"
             textValue="dashboard"
             className={clsx("text-text-muted", session?.user?.role === 'ADMIN' ? '' : 'hidden')}

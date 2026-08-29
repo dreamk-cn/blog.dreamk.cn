@@ -1,6 +1,6 @@
 import { internalError, zodFail } from "@/lib/api-response";
 import { mapPrismaError, type PrismaErrorMessages } from "@/lib/prisma-errors";
-import { requireAdmin } from "@/lib/route-auth";
+import { requireAdmin, requireUser } from "@/lib/route-auth";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
@@ -46,6 +46,7 @@ export function handleRouteError(
   return internalError();
 }
 
+type UserAuth = Extract<Awaited<ReturnType<typeof requireUser>>, { ok: true }>;
 type AdminAuth = Extract<Awaited<ReturnType<typeof requireAdmin>>, { ok: true }>;
 
 export function withRoute(
@@ -55,6 +56,21 @@ export function withRoute(
   return async (request: NextRequest): Promise<NextResponse> => {
     try {
       return await handler(request);
+    } catch (err) {
+      return handleRouteError(err, options);
+    }
+  };
+}
+
+export function withUser(
+  handler: (request: NextRequest, auth: UserAuth) => Promise<NextResponse>,
+  options?: string | RouteHandlerOptions,
+) {
+  return async (request: NextRequest): Promise<NextResponse> => {
+    try {
+      const auth = await requireUser();
+      if (!auth.ok) return auth.response;
+      return await handler(request, auth);
     } catch (err) {
       return handleRouteError(err, options);
     }

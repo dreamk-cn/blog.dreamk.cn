@@ -106,3 +106,71 @@ export async function registerUser(input: RegisterInput) {
 
   return { data: null };
 }
+
+const passwordSelect = {
+  id: true,
+  password: true,
+} satisfies Prisma.UserSelect;
+
+export type AccountSecurity = {
+  email: string;
+  name: string | null;
+  hasPassword: boolean;
+};
+
+export async function getAccountSecurity(userId: string): Promise<AccountSecurity | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { email: true, name: true, password: true },
+  });
+  if (!user) return null;
+
+  return {
+    email: user.email,
+    name: user.name,
+    hasPassword: user.password !== null,
+  };
+}
+
+export async function setPassword(params: { userId: string; password: string }) {
+  const user = await prisma.user.findUnique({
+    where: { id: params.userId },
+    select: passwordSelect,
+  });
+  if (!user) return { error: "not_found" as const };
+  if (user.password) return { error: "already_set" as const };
+
+  const hashedPassword = await bcrypt.hash(params.password, 12);
+  await prisma.user.update({
+    where: { id: params.userId },
+    data: { password: hashedPassword },
+  });
+
+  return { data: { hasPassword: true as const } };
+}
+
+export async function changePassword(params: {
+  userId: string;
+  currentPassword: string;
+  password: string;
+}) {
+  const user = await prisma.user.findUnique({
+    where: { id: params.userId },
+    select: passwordSelect,
+  });
+  if (!user) return { error: "not_found" as const };
+  if (!user.password) return { error: "not_set" as const };
+
+  const currentMatch = await bcrypt.compare(params.currentPassword, user.password);
+  if (!currentMatch) {
+    return { error: "invalid_current" as const };
+  }
+
+  const hashedPassword = await bcrypt.hash(params.password, 12);
+  await prisma.user.update({
+    where: { id: params.userId },
+    data: { password: hashedPassword },
+  });
+
+  return { data: { hasPassword: true as const } };
+}

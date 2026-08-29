@@ -2,6 +2,14 @@ import z from "zod";
 
 import { PasswordRegex } from "@/lib/auth-validators";
 
+const PASSWORD_RULE_MESSAGE = "密码至少 8 位，且需包含大写、小写字母与数字";
+
+const newPasswordSchema = z
+  .string()
+  .regex(PasswordRegex, PASSWORD_RULE_MESSAGE);
+
+const confirmPasswordSchema = z.string().min(1, "请再次输入密码");
+
 /** 登录表单（与 credentials 提交字段一致） */
 export const LoginSchema = z.object({
   email: z
@@ -48,13 +56,8 @@ export const RegisterSchema = z
     name: z.string().trim().min(2, "用户名至少 2 个字符"),
     email: z.string().trim().pipe(z.email("邮箱格式不正确")),
     code: z.string().regex(/^\d{6}$/, "请输入 6 位验证码"),
-    password: z
-      .string()
-      .regex(
-        PasswordRegex,
-        "密码至少 8 位，且需包含大写、小写字母与数字",
-      ),
-    confirmPassword: z.string().min(1, "请再次输入密码"),
+    password: newPasswordSchema,
+    confirmPassword: confirmPasswordSchema,
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "两次输入的密码不一致",
@@ -94,6 +97,77 @@ export function getRegisterFieldErrors(data: {
       (key === "name" ||
         key === "email" ||
         key === "code" ||
+        key === "password" ||
+        key === "confirmPassword") &&
+      !out[key]
+    ) {
+      out[key] = issue.message;
+    }
+  }
+  return out;
+}
+
+/** 第三方登录后首次设置密码（与 POST /api/account/password 在无密码时校验一致） */
+export const SetPasswordSchema = z
+  .object({
+    password: newPasswordSchema,
+    confirmPassword: confirmPasswordSchema,
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "两次输入的密码不一致",
+    path: ["confirmPassword"],
+  });
+
+export type SetPasswordInput = z.infer<typeof SetPasswordSchema>;
+
+export function getSetPasswordFieldErrors(data: {
+  password: string;
+  confirmPassword: string;
+}): { password: string; confirmPassword: string } {
+  const empty = { password: "", confirmPassword: "" };
+  const result = SetPasswordSchema.safeParse(data);
+  if (result.success) {
+    return { ...empty };
+  }
+  const out = { ...empty };
+  for (const issue of result.error.issues) {
+    const key = issue.path[0];
+    if ((key === "password" || key === "confirmPassword") && !out[key]) {
+      out[key] = issue.message;
+    }
+  }
+  return out;
+}
+
+/** 已有密码用户修改密码 */
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "请输入当前密码"),
+    password: newPasswordSchema,
+    confirmPassword: confirmPasswordSchema,
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "两次输入的密码不一致",
+    path: ["confirmPassword"],
+  });
+
+export type ChangePasswordInput = z.infer<typeof ChangePasswordSchema>;
+
+export function getChangePasswordFieldErrors(data: {
+  currentPassword: string;
+  password: string;
+  confirmPassword: string;
+}): { currentPassword: string; password: string; confirmPassword: string } {
+  const empty = { currentPassword: "", password: "", confirmPassword: "" };
+  const result = ChangePasswordSchema.safeParse(data);
+  if (result.success) {
+    return { ...empty };
+  }
+  const out = { ...empty };
+  for (const issue of result.error.issues) {
+    const key = issue.path[0];
+    if (
+      (key === "currentPassword" ||
         key === "password" ||
         key === "confirmPassword") &&
       !out[key]

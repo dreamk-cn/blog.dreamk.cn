@@ -1,9 +1,11 @@
 import { Avatar, Dropdown } from "@heroui/react";
 import React from "react";
 import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export const UserDropdown = () => {
   const session = useSession();
+  const router = useRouter();
 
   return (
     <Dropdown>
@@ -24,10 +26,18 @@ export const UserDropdown = () => {
         </div>
       </Dropdown.Trigger>
       <Dropdown.Popover>
-        <Dropdown.Menu aria-label="User menu actions">
+        <Dropdown.Menu aria-label="User menu actions" disabledKeys={["profile"]}>
           <Dropdown.Item id="profile" textValue="profile" className="flex flex-col items-start justify-start text-text-muted">
             <p>{session.data?.user.name}</p>
             <p className="text-small">{session.data?.user.email}</p>
+          </Dropdown.Item>
+          <Dropdown.Item
+            id="account"
+            textValue="account"
+            className="text-text-muted"
+            onAction={() => router.push("/account")}
+          >
+            账号设置
           </Dropdown.Item>
           <Dropdown.Item
             id="logout"
