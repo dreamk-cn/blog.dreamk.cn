@@ -86,7 +86,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         }
       }
     }),
-    GitHub({}),
+    // GitHub 回调带 RFC 9207 的 iss；不声明 issuer 时 Auth.js 会拿默认值 https://authjs.dev 去校验并失败
+    GitHub({ issuer: "https://github.com/login/oauth" }),
     Google({})
   ],
   pages: {
