@@ -133,8 +133,6 @@ export default async function AboutPage() {
 
   const { post, commentBundle, totalApprovedCommentCount } = data;
   const { comments, totalRootCount } = commentBundle;
-  const published = post.publishedAt ?? post.createdAt;
-  const authorName = post.user?.name?.trim() || siteConfig.name;
 
   return (
     <div className="min-h-full bg-linear-to-b from-canvas/60 via-background to-background text-text-base">
@@ -144,15 +142,6 @@ export default async function AboutPage() {
             <h1 className="text-3xl font-bold leading-tight tracking-tight text-text-base sm:text-4xl">
               {post.title}
             </h1>
-            <div className="mt-6 flex flex-wrap items-center gap-x-1 gap-y-2 text-sm text-text-muted">
-              <span className="whitespace-nowrap">
-                {formatDateTime(published)}
-              </span>
-              <span className="mx-2 hidden text-text-sub sm:inline">·</span>
-              <span className="whitespace-nowrap">
-                作者：<span className="text-text-base">{authorName}</span>
-              </span>
-            </div>
           </header>
           <div className="px-6 py-8 sm:px-10 sm:py-10">
             <ArticleMarkdown content={post.content || ""} />
