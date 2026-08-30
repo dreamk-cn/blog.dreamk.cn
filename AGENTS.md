@@ -60,3 +60,14 @@ Skills 位于 `.cursor/skills/`。
 - **只改 UI** → 读 `blog-ui` skill，参考 `components.md` 找同类组件。
 - **加后台 CRUD / API** → 读 `blog-fullstack` skill，按 Prisma → schema → service → route 流水线；涉及 UI 再切 `blog-ui`。
 - **改公开列表/详情缓存** → 读 `public-cache` rule；读用 `cachePublicContent`，写后按需 `revalidatePublicCache`。
+
+## Cursor Cloud specific instructions
+
+依赖刷新（`pnpm install`，含 `postinstall` 的 `prisma generate`）由启动更新脚本自动完成。以下为**非显而易见**的运行注意事项：
+
+- **PostgreSQL 是原生 apt 安装，非 Docker**（该环境无 Docker）。每个会话需手动启动：`sudo pg_ctlcluster 16 main start`。数据库 `blog`、用户 `blog`、密码 `blog_password`，监听 `127.0.0.1:5432`，与 `.env.example` 的 `DATABASE_URL` 一致。数据目录随快照持久化。
+- **需要 `.env.development`（被 `.gitignore` 忽略，不入库）**，最少含 `DATABASE_URL`、`AUTH_SECRET`（`openssl rand -base64 32`）、`ADMIN_EMAIL`。Next.js 读 `.env.development`；**Prisma CLI 只读 `.env`**，跑 `pnpm prisma migrate deploy` 前需 `export DATABASE_URL=...`。
+- 初始化 schema：`export DATABASE_URL=postgresql://blog:blog_password@127.0.0.1:5432/blog?schema=public && pnpm prisma migrate deploy`。
+- 开发服务器 `pnpm dev`（Turbopack，端口 3000）。lint/typecheck/test 见 `package.json`（`pnpm lint` / `pnpm typecheck` / `pnpm test`）。
+- **注册需邮箱验证码；未配 SMTP 时，dev 下验证码打印在服务端日志**：`[register-verify] email=<x> code=<6位>`。据此可脚本化注册。邮箱等于 `ADMIN_EMAIL` 的新用户自动获得 `ADMIN` 角色。
+- 前台文章详情路由为 `/posts/<slug>`；前台仅展示 `PUBLISHED` 文章。
