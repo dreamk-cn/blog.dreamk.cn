@@ -12,11 +12,7 @@ export function PostTableOfContents({ items, className = "" }: { items: Markdown
   const itemSet = useMemo(() => new Set(items.map((i) => i.id)), [items]);
 
   if (items.length === 0) {
-    return (
-      <div className={className}>
-        <p className="text-sm leading-6 text-text-muted">本文暂无二级以上标题，目录将在你使用 ##、### 等标题后出现。</p>
-      </div>
-    );
+    return null;
   }
 
   return (
